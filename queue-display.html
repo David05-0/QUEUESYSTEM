@@ -651,13 +651,15 @@ function sendToHold(type){
   if(!t) return;
   t.compliance  =(type==='comply');
   t.paymentHold =(type==='payment');
-  // Do NOT mark served — it goes back into the hold pool
+  // Clear lastCall so audience removes this number from display
+  if(window._lastCall && window._lastCall.ticketId===activeTicketId){
+    window._lastCall=null;
+  }
   saveShared();
   const label=type==='comply'?'Compliance Hold':'Payment Hold';
   showToast(`#${String(t.id).padStart(3,'0')} → ${label}`);
   activeTicketId=null;
   clearDisplay();
-  // Update pill to show hold status
   document.getElementById('cvPill').textContent=type==='comply'?'Compliance':'Payment';
   document.getElementById('cvPill').className=`cv-pill ${type}`;
   renderView();
@@ -713,9 +715,11 @@ window.onHoldDrop=function(e,type){
   if(!t){ dragId=null; return; }
   t.compliance =(type==='comply');
   t.paymentHold=(type==='payment');
-  // Do NOT auto-serve
-  // If the dragged item is the currently active one, clear active
-  if(t.id===activeTicketId){ activeTicketId=null; clearDisplay(); }
+  // If this is the active ticket, clear it from audience too
+  if(t.id===activeTicketId){
+    activeTicketId=null; clearDisplay();
+    if(window._lastCall && window._lastCall.ticketId===t.id) window._lastCall=null;
+  }
   t.counter=activeCounter;
   saveShared();
   showToast(`#${String(t.id).padStart(3,'0')} → ${type==='comply'?'Compliance':'Payment'} Hold`);
