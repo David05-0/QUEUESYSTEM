@@ -399,6 +399,32 @@ function triggerCallFlash(ticket){
   if(numEl){ numEl.classList.remove('pop'); void numEl.offsetWidth; numEl.classList.add('pop'); setTimeout(()=>numEl.classList.remove('pop'),600); }
   const waveEl=document.getElementById(`cpwave-${ticket.counter}`);
   if(waveEl){ waveEl.classList.add('active'); setTimeout(()=>waveEl.classList.remove('active'),5000); }
+
+  // ── Speak the announcement ──
+  speak(ticket);
+}
+
+function speak(ticket) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+
+  const counterName = COUNTER_NAMES[ticket.counter - 1];
+  const num = ticket.id;
+  let text = `Now serving number ${num} at ${counterName}.`;
+  if (ticket.customer) text += ` ${ticket.customer},`;
+  text += ` Number ${num}, please proceed to ${counterName}.`;
+  if (ticket.priority === 'priority') text = 'Priority customer. ' + text;
+
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.rate = 0.86; utter.pitch = 1.0; utter.volume = 1;
+
+  const voices = window.speechSynthesis.getVoices();
+  const preferred = voices.find(v =>
+    v.lang.startsWith('en') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium'))
+  ) || voices.find(v => v.lang.startsWith('en')) || voices[0];
+  if (preferred) utter.voice = preferred;
+
+  window.speechSynthesis.speak(utter);
 }
 
 function renderAll(){
@@ -407,6 +433,11 @@ function renderAll(){
 
 buildCounters();
 renderAll();
+
+if (window.speechSynthesis) {
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+}
 </script>
 </body>
 </html>
