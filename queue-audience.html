@@ -268,10 +268,6 @@ let audioUnlocked = false;
 let audioCtx = null;
 let counterDisplay = [1,2,3,4].map(id=>({id,current:null,service:null,customer:null,priority:null,time:null,calledAt:0}));
 
-// ── Speech queue: multiple counters calling at once are announced in order ──
-let speechQueue = [];    // [{ticket}] ordered by calledAt
-let isSpeaking  = false;
-
 function startDisplay() {
   audioUnlocked = true;
   document.getElementById('startOverlay').classList.add('hidden');
@@ -343,7 +339,7 @@ onValue(stateRef,snap=>{
     sharedLog=[]; activityLog=[]; lastCallTs=null;
     counterDisplay=[1,2,3,4].map(id=>({id,current:null,service:null,customer:null,priority:null,time:null}));
     if(flashTimer) clearTimeout(flashTimer);
-    flashQueue=[]; isFlashing=false;
+    announceQueue=[]; isAnnouncing=false;
     document.getElementById('callFlash').classList.remove('show');
     [1,2,3,4].forEach(id=>{const w=document.getElementById(`cpwave-${id}`);if(w)w.classList.remove('active');});
     renderAll(); return;
@@ -360,16 +356,12 @@ onValue(stateRef,snap=>{
 
     // If this counter was already announcing a different number, cancel it
     if(cd.current!==null && cd.current!==lc.ticketId){
-      // Remove old number from speech queue
-      speechQueue=speechQueue.filter(q=>q.counter!==lc.counter);
-      // If currently speaking for this counter, cancel and restart
-      if(isSpeaking){
-        window.speechSynthesis && window.speechSynthesis.cancel();
-        isSpeaking=false;
-      }
+      // Remove old number from announce queue
+      announceQueue=announceQueue.filter(q=>q.counter!==lc.counter);
       // Hide call flash if it was showing the old number for this counter
       if(flashTimer) clearTimeout(flashTimer);
       document.getElementById('callFlash').classList.remove('show');
+      isAnnouncing=false;
     }
 
     cd.current=lc.ticketId; cd.service=lc.service; cd.customer=lc.customer;
@@ -399,8 +391,8 @@ onValue(stateRef,snap=>{
       const cd=counterDisplay[t.counter-1];
       if(cd.current===t.id){
         cd.current=null; cd.service=null; cd.customer=null; cd.priority=null; cd.time=null; cd.calledAt=0;
-        // Remove from speech queue if pending
-        speechQueue=speechQueue.filter(q=>q.id!==t.id);
+        // Remove from announce queue if pending
+        announceQueue=announceQueue.filter(q=>q.id!==t.id);
       }
     });
   }
@@ -413,8 +405,8 @@ onValue(stateRef,snap=>{
     if(cd.current===t.id){
       cd.current=null; cd.service=null; cd.customer=null; cd.priority=null; cd.time=null; cd.calledAt=0;
     }
-    // Remove from speech queue too (no point announcing a served ticket)
-    speechQueue=speechQueue.filter(q=>q.id!==t.id);
+    // Remove from announce queue too (no point announcing a served ticket)
+    announceQueue=announceQueue.filter(q=>q.id!==t.id);
   });
   window._prevLog=[...sharedLog];
 
@@ -426,64 +418,68 @@ function nowTime(){
   return [n.getHours(),n.getMinutes(),n.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':');
 }
 
-// ── Flash queue: shows one number at a time with a pause between ──
-let flashQueue = [];
-let isFlashing = false;
+// ── Unified announcement queue ──
+// Each item is announced in full (chime → flash visible → speak → hide → pause) before the next.
+// Sorted by calledAt so the counter that called first is always announced first.
+let announceQueue = [];
+let isAnnouncing  = false;
 
 function triggerCallFlash(ticket){
-  flashQueue.push({...ticket, calledAt: ticket.calledAt||Date.now()});
-  flashQueue.sort((a,b)=>a.calledAt-b.calledAt);
-  if(!isFlashing) processFlashQueue();
+  announceQueue.push({...ticket, calledAt: ticket.calledAt||Date.now()});
+  announceQueue.sort((a,b)=>a.calledAt-b.calledAt);
+  if(!isAnnouncing) processAnnounceQueue();
 }
 
-function processFlashQueue(){
-  if(!flashQueue.length){ isFlashing=false; return; }
-  isFlashing=true;
-  const ticket=flashQueue.shift();
-  showFlash(ticket);
+function processAnnounceQueue(){
+  if(!announceQueue.length){ isAnnouncing=false; return; }
+  isAnnouncing=true;
+  const ticket=announceQueue.shift();
+  runAnnouncement(ticket);
 }
 
-function showFlash(ticket){
+function runAnnouncement(ticket){
   const color=COLOR_HEX[ticket.counter];
   const num=String(ticket.id).padStart(3,'0');
   const cname=COUNTER_NAMES[ticket.counter-1];
 
-  // Update projected text
+  // ── Update flash overlay ──
   document.getElementById('cfNumber').textContent=num;
   document.getElementById('cfNumber').style.color=color;
-
-  // "No. 001 → Counter 1"
   document.getElementById('cfGotoNum').textContent=`No. ${num}`;
   document.getElementById('cfGotoNum').style.color=color;
   document.getElementById('cfGotoCounter').textContent=cname;
   document.getElementById('cfGotoCounter').style.color=color;
-
-  // Counter badge
   document.getElementById('cfCounterDot').style.background=color;
   document.getElementById('cfCounterText').textContent=cname;
   document.getElementById('cfCounterText').style.color=color;
   document.getElementById('cfCounterBadge').style.background=COLOR_BG[ticket.counter];
   document.getElementById('cfCounterBadge').style.border=`1px solid ${color}44`;
-
-  document.getElementById('cfService').textContent=ticket.service?`${ticket.service}`:'';
+  document.getElementById('cfService').textContent=ticket.service||'';
   document.getElementById('cfCustomer').textContent=ticket.customer||'';
-  const prioEl=document.getElementById('cfPriority');
-  prioEl.style.display=ticket.priority==='priority'?'inline-flex':'none';
+  document.getElementById('cfPriority').style.display=ticket.priority==='priority'?'inline-flex':'none';
 
-  document.getElementById('callFlash').classList.add('show');
+  // ── Show flash ──
   if(flashTimer) clearTimeout(flashTimer);
-  flashTimer=setTimeout(()=>{
-    document.getElementById('callFlash').classList.remove('show');
-    setTimeout(()=>processFlashQueue(), flashQueue.length>0 ? 800 : 0);
-  }, 4200);
+  document.getElementById('callFlash').classList.add('show');
 
+  // ── Counter panel effects ──
   const numEl=document.getElementById(`cpnum-${ticket.counter}`);
   if(numEl){numEl.classList.remove('pop');void numEl.offsetWidth;numEl.classList.add('pop');setTimeout(()=>numEl.classList.remove('pop'),700);}
   const waveEl=document.getElementById(`cpwave-${ticket.counter}`);
   if(waveEl){waveEl.classList.add('active');setTimeout(()=>waveEl.classList.remove('active'),5500);}
 
+  // ── Chime then speak; when speech finishes, hide flash and move to next ──
   playChime();
-  enqueueSpeech(ticket);
+  setTimeout(()=>{
+    doSpeak(ticket, ()=>{
+      // Speech done — brief pause, then hide flash, then next item
+      setTimeout(()=>{
+        document.getElementById('callFlash').classList.remove('show');
+        // Gap between announcements: 700ms when more are waiting
+        setTimeout(()=>processAnnounceQueue(), announceQueue.length>0 ? 700 : 0);
+      }, 400);
+    });
+  }, 350); // slight delay after chime before voice starts
 }
 
 function playChime(){
@@ -499,26 +495,6 @@ function playChime(){
       osc.start(audioCtx.currentTime+start); osc.stop(audioCtx.currentTime+start+dur+0.05);
     });
   }catch(e){console.warn('Chime:',e);}
-}
-
-// ── Speech queue: announces in order of who called first ──
-function enqueueSpeech(ticket){
-  // Add to queue, sort by calledAt ascending (first caller first)
-  speechQueue.push({...ticket, calledAt: ticket.calledAt||Date.now()});
-  speechQueue.sort((a,b)=>a.calledAt-b.calledAt);
-  if(!isSpeaking) processSpeechQueue();
-}
-
-function processSpeechQueue(){
-  if(!speechQueue.length){ isSpeaking=false; return; }
-  isSpeaking=true;
-  const ticket=speechQueue.shift();
-  // Cancel any lingering utterance before starting next
-  window.speechSynthesis && window.speechSynthesis.cancel();
-  setTimeout(()=>doSpeak(ticket, ()=>{
-    // 900ms pause between consecutive announcements
-    setTimeout(()=>processSpeechQueue(), speechQueue.length>0 ? 900 : 0);
-  }), 150);
 }
 
 function doSpeak(ticket, onDone){
@@ -546,9 +522,8 @@ function doSpeak(ticket, onDone){
     if(preferred) u.voice=preferred;
     let started=false;
     u.onstart=()=>{ started=true; };
-    u.onend=()=>{ isSpeaking=false; if(onDone) onDone(); };
+    u.onend=()=>{ if(onDone) onDone(); };
     u.onerror=(e)=>{
-      isSpeaking=false;
       if(e.error!=='canceled' && onDone) setTimeout(onDone,400);
     };
     window.speechSynthesis.speak(u);
@@ -556,7 +531,6 @@ function doSpeak(ticket, onDone){
     setTimeout(()=>{
       if(!started&&audioUnlocked){
         window.speechSynthesis.cancel();
-        isSpeaking=false;
         setTimeout(()=>{ if(onDone) onDone(); },300);
       }
     },2500);
