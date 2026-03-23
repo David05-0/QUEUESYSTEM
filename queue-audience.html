@@ -339,8 +339,7 @@ onValue(stateRef,snap=>{
     sharedLog=[]; activityLog=[]; lastCallTs=null;
     counterDisplay=[1,2,3,4].map(id=>({id,current:null,service:null,customer:null,priority:null,time:null}));
     if(flashTimer) clearTimeout(flashTimer);
-    if(announceDebounce){ clearTimeout(announceDebounce); announceDebounce=null; }
-    announceQueue=[]; isAnnouncing=false;
+    announceQueue=[]; isAnnouncing=false; lockedCounter=null;
     document.getElementById('callFlash').classList.remove('show');
     [1,2,3,4].forEach(id=>{const w=document.getElementById(`cpwave-${id}`);if(w)w.classList.remove('active');});
     renderAll(); return;
@@ -424,25 +423,31 @@ function nowTime(){
 // Sorted by calledAt so the counter that called first is always announced first.
 let announceQueue = [];
 let isAnnouncing  = false;
-let announceDebounce = null;   // collects burst calls before starting
-const DEBOUNCE_MS  = 1500;     // wait this long after last call before starting
-const COOLDOWN_MS  = 2000;     // quiet gap between consecutive announcements
+let lockedCounter = null;   // counter currently holding the mic
+const COOLDOWN_MS = 3000;   // silence after each announcement before next starts
 
 function triggerCallFlash(ticket){
-  announceQueue.push({...ticket, calledAt: ticket.calledAt||Date.now()});
-  announceQueue.sort((a,b)=>a.calledAt-b.calledAt);
-  // If already mid-announcement, just queue — the chain will continue on its own
-  if(isAnnouncing) return;
-  // Debounce: reset the timer each time a new call arrives so we collect all
-  // near-simultaneous calls before starting
-  if(announceDebounce) clearTimeout(announceDebounce);
-  announceDebounce=setTimeout(()=>{ announceDebounce=null; processAnnounceQueue(); }, DEBOUNCE_MS);
+  // If a different counter is currently announcing, queue this one and wait
+  if(isAnnouncing && lockedCounter !== ticket.counter){
+    if(!announceQueue.find(q=>q.counter===ticket.counter && q.id===ticket.id)){
+      announceQueue.push({...ticket, calledAt: ticket.calledAt||Date.now()});
+      announceQueue.sort((a,b)=>a.calledAt-b.calledAt);
+    }
+    return;
+  }
+  // Same counter re-calling or nobody announcing — start immediately
+  if(!announceQueue.find(q=>q.counter===ticket.counter && q.id===ticket.id)){
+    announceQueue.push({...ticket, calledAt: ticket.calledAt||Date.now()});
+    announceQueue.sort((a,b)=>a.calledAt-b.calledAt);
+  }
+  if(!isAnnouncing) processAnnounceQueue();
 }
 
 function processAnnounceQueue(){
-  if(!announceQueue.length){ isAnnouncing=false; return; }
+  if(!announceQueue.length){ isAnnouncing=false; lockedCounter=null; return; }
   isAnnouncing=true;
   const ticket=announceQueue.shift();
+  lockedCounter=ticket.counter;
   runAnnouncement(ticket);
 }
 
