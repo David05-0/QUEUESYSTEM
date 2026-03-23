@@ -551,9 +551,16 @@ function callNext(){
   const q=myQueue();
   if(!q.length) return;
   const ticket=q[0];
+
+  // If a previous ticket was being served, stop its announcement first
+  if(activeTicketId!==null && window.speechSynthesis){
+    window.speechSynthesis.cancel();
+  }
+
   activeTicketId=ticket.id;
 
-  // Push lastCall to Firebase so audience screen projects & announces
+  // Push lastCall to Firebase — overwrites previous call for this counter
+  // Audience detects new ts → cancels old speech → plays new announcement
   window._lastCall={
     ticketId: ticket.id,
     counter:  activeCounter,
