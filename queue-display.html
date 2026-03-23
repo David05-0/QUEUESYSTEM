@@ -360,7 +360,7 @@ function callNext() {
   document.getElementById('cvStatus').textContent = 'Serving';
   document.getElementById('cvStatus').className = 'cv-status-pill serving';
 
-  renderView(); speak(ticket); showToast(`Calling #${String(ticket.id).padStart(3,'0')}`);
+  renderView(); showToast(`Calling #${String(ticket.id).padStart(3,'0')}`);
 }
 window.callNext = callNext;
 
@@ -397,26 +397,7 @@ function renderView() {
     : myHistory.map(n=>`<span class="cv-hist-chip">${String(n).padStart(3,'0')}</span>`).join('');
 }
 
-// ── Speech ──
-function speak(ticket) {
-  if (!window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
-  const waveEl = document.getElementById('cvWave');
-  waveEl.classList.add('active');
-  const counterName = COUNTER_NAMES[activeCounter-1];
-  let text = `Now serving number ${ticket.id} at ${counterName}.`;
-  if (ticket.customer) text += ` ${ticket.customer},`;
-  text += ` Number ${ticket.id}, please proceed to ${counterName}.`;
-  if (ticket.priority==='priority') text = 'Priority customer. ' + text;
-  const utter = new SpeechSynthesisUtterance(text);
-  utter.rate=0.86; utter.pitch=1.0; utter.volume=1;
-  const voices = window.speechSynthesis.getVoices();
-  const preferred = voices.find(v=>v.lang.startsWith('en')&&(v.name.includes('Google')||v.name.includes('Natural')||v.name.includes('Premium')))
-    || voices.find(v=>v.lang.startsWith('en')) || voices[0];
-  if (preferred) utter.voice = preferred;
-  utter.onend = utter.onerror = () => waveEl.classList.remove('active');
-  window.speechSynthesis.speak(utter);
-}
+// ── Speech handled by queue-audience.html ──
 
 function showToast(msg) {
   const el = document.getElementById('toast');
@@ -425,10 +406,6 @@ function showToast(msg) {
 }
 
 // ── Init ──
-if (window.speechSynthesis) {
-  window.speechSynthesis.getVoices();
-  window.speechSynthesis.onvoiceschanged = ()=>window.speechSynthesis.getVoices();
-}
 buildLogin();
 </script>
 </body>
