@@ -369,6 +369,18 @@ onValue(stateRef,snap=>{
     });
   }
 
+  // ── Clear counter panel when a ticket is marked served ──
+  const prevServedIds=new Set((window._prevLog||[]).filter(t=>t.served).map(t=>t.id));
+  const newlyServed=sharedLog.filter(t=>t.served && !prevServedIds.has(t.id));
+  newlyServed.forEach(t=>{
+    // If this counter was showing that ticket, clear it
+    const cd=counterDisplay[t.counter-1];
+    if(cd.current===t.id){
+      cd.current=null; cd.service=null; cd.customer=null; cd.priority=null; cd.time=null;
+    }
+  });
+  window._prevLog=[...sharedLog];
+
   renderAll();
 },()=>{document.getElementById('fbLiveIndicator').style.opacity='0.3';});
 
@@ -435,11 +447,11 @@ function playChime(){
 function doSpeak(ticket){
   if(!audioUnlocked||!window.speechSynthesis) return;
   const cname=COUNTER_NAMES[ticket.counter-1];
+  const cnum=ticket.counter;
   const num=ticket.id;
-  let text=`Number ${num}.`;
-  if(ticket.customer) text+=` ${ticket.customer},`;
-  text+=` Please go to ${cname}.`;
-  text+=` Number ${num}, ${cname}.`;
+  // "Now serving number 1, please go to Counter 1."
+  let text=`Now serving number ${num}, please go to Counter number ${cnum}.`;
+  if(ticket.customer) text=`Now serving number ${num}, ${ticket.customer}. Please go to Counter number ${cnum}.`;
   if(ticket.priority==='priority') text=`Priority customer. `+text;
 
   window.speechSynthesis.cancel();
