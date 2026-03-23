@@ -261,11 +261,15 @@ const COLOR_BG  = {1:'rgba(230,126,34,0.1)',2:'rgba(36,113,163,0.1)',3:'rgba(30,
 let sharedLog = [];
 let activityLog = [];
 let lastResetFlag = null;
-let lastCallTs = null; // tracks lastCall.ts to detect new calls
+let lastCallTs = null;
 let flashTimer = null;
 let audioUnlocked = false;
 let audioCtx = null;
-let counterDisplay = [1,2,3,4].map(id=>({id,current:null,service:null,customer:null,priority:null,time:null}));
+let counterDisplay = [1,2,3,4].map(id=>({id,current:null,service:null,customer:null,priority:null,time:null,calledAt:0}));
+
+// ── Speech queue: multiple counters calling at once are announced in order ──
+let speechQueue = [];    // [{ticket}] ordered by calledAt
+let isSpeaking  = false;
 
 function startDisplay() {
   audioUnlocked = true;
@@ -348,24 +352,39 @@ onValue(stateRef,snap=>{
   sharedLog=data.log||[];
 
   // ── React to a number being CALLED (lastCall.ts changes) ──
-  // This fires the moment a counter clicks "Call Next", before they click Done
   const lc=data.lastCall||null;
   if(lc && lc.ts && lc.ts!==lastCallTs){
-    lastCallTs=lc.ts;
-    // Update the counter display panel
     const cd=counterDisplay[lc.counter-1];
     cd.current=lc.ticketId; cd.service=lc.service; cd.customer=lc.customer;
-    cd.priority=lc.priority; cd.time=nowTime();
-    // Add to activity feed
+    cd.priority=lc.priority; cd.time=nowTime(); cd.calledAt=lc.ts;
     activityLog.unshift({
       num:lc.ticketId, counter:lc.counter, service:lc.service,
       customer:lc.customer, priority:lc.priority, time:nowTime()
     });
     if(activityLog.length>40) activityLog.pop();
-    // Trigger the full-screen flash + voice announcement
+    // Flash + enqueue speech ranked by call time
     triggerCallFlash({
       id:lc.ticketId, counter:lc.counter, service:lc.service,
-      customer:lc.customer, priority:lc.priority
+      customer:lc.customer, priority:lc.priority, calledAt:lc.ts
+    });
+  }
+
+  // Update tracked ts (null means hold happened)
+  if(lc) lastCallTs=lc.ts;
+
+  // ── Clear counter panel when lastCall is nulled (ticket went to hold) ──
+  if(!lc && lastCallTs!==null){
+    lastCallTs=null; // reset so next null→null doesn't re-trigger
+    // Find which counter had its call cleared — check all counters
+    // We detect by comparing: if a counter's current ticket is no longer in active call
+    // (safe approach: just check if any counter's ticket is now on hold)
+    sharedLog.filter(t=>(t.compliance||t.paymentHold)&&!t.served).forEach(t=>{
+      const cd=counterDisplay[t.counter-1];
+      if(cd.current===t.id){
+        cd.current=null; cd.service=null; cd.customer=null; cd.priority=null; cd.time=null; cd.calledAt=0;
+        // Remove from speech queue if pending
+        speechQueue=speechQueue.filter(q=>q.id!==t.id);
+      }
     });
   }
 
@@ -373,11 +392,12 @@ onValue(stateRef,snap=>{
   const prevServedIds=new Set((window._prevLog||[]).filter(t=>t.served).map(t=>t.id));
   const newlyServed=sharedLog.filter(t=>t.served && !prevServedIds.has(t.id));
   newlyServed.forEach(t=>{
-    // If this counter was showing that ticket, clear it
     const cd=counterDisplay[t.counter-1];
     if(cd.current===t.id){
-      cd.current=null; cd.service=null; cd.customer=null; cd.priority=null; cd.time=null;
+      cd.current=null; cd.service=null; cd.customer=null; cd.priority=null; cd.time=null; cd.calledAt=0;
     }
+    // Remove from speech queue too (no point announcing a served ticket)
+    speechQueue=speechQueue.filter(q=>q.id!==t.id);
   });
   window._prevLog=[...sharedLog];
 
@@ -426,7 +446,8 @@ function triggerCallFlash(ticket){
   if(waveEl){waveEl.classList.add('active');setTimeout(()=>waveEl.classList.remove('active'),5500);}
 
   playChime();
-  setTimeout(()=>doSpeak(ticket),750);
+  // Enqueue speech — ranked by calledAt so first caller speaks first
+  enqueueSpeech(ticket);
 }
 
 function playChime(){
@@ -444,15 +465,31 @@ function playChime(){
   }catch(e){console.warn('Chime:',e);}
 }
 
-function doSpeak(ticket){
-  if(!audioUnlocked||!window.speechSynthesis) return;
-  const cname=COUNTER_NAMES[ticket.counter-1];
+// ── Speech queue: announces in order of who called first ──
+function enqueueSpeech(ticket){
+  // Add to queue, sort by calledAt ascending (first caller first)
+  speechQueue.push({...ticket, calledAt: ticket.calledAt||Date.now()});
+  speechQueue.sort((a,b)=>a.calledAt-b.calledAt);
+  if(!isSpeaking) processSpeechQueue();
+}
+
+function processSpeechQueue(){
+  if(!speechQueue.length){ isSpeaking=false; return; }
+  isSpeaking=true;
+  const ticket=speechQueue.shift();
+  doSpeak(ticket, ()=>processSpeechQueue());
+}
+
+function doSpeak(ticket, onDone){
+  if(!audioUnlocked||!window.speechSynthesis){ if(onDone) onDone(); return; }
   const cnum=ticket.counter;
   const num=ticket.id;
-  // "Now serving number 1, please go to Counter 1."
-  let text=`Now serving number ${num}, please go to Counter number ${cnum}.`;
-  if(ticket.customer) text=`Now serving number ${num}, ${ticket.customer}. Please go to Counter number ${cnum}.`;
-  if(ticket.priority==='priority') text=`Priority customer. `+text;
+  // "Number 1, please go to Counter 4. Number 1, Counter 4."
+  const line1=`Number ${num}, please go to Counter ${cnum}.`;
+  const line2=`Number ${num}, Counter ${cnum}.`;
+  const full = ticket.priority==='priority'
+    ? `Priority customer. ${line1} ${line2}`
+    : `${line1} ${line2}`;
 
   window.speechSynthesis.cancel();
   setTimeout(()=>{
@@ -463,14 +500,25 @@ function doSpeak(ticket){
       voices.find(v=>v.lang.startsWith('en')&&!v.localService)||
       voices.find(v=>v.lang.startsWith('en'))||
       (voices.length>0?voices[0]:null);
-    const u=new SpeechSynthesisUtterance(text);
-    u.rate=0.82; u.pitch=1.0; u.volume=1; u.lang='en-US';
+    const u=new SpeechSynthesisUtterance(full);
+    u.rate=0.85; u.pitch=1.0; u.volume=1; u.lang='en-US';
     if(preferred) u.voice=preferred;
     let started=false;
-    u.onstart=()=>{started=true;};
-    u.onerror=(e)=>{if(e.error!=='canceled'){setTimeout(()=>{const r=new SpeechSynthesisUtterance(text);r.rate=0.82;r.volume=1;r.lang='en-US';window.speechSynthesis.speak(r);},500);}};
+    u.onstart=()=>{ started=true; };
+    u.onend=()=>{ isSpeaking=false; if(onDone) onDone(); };
+    u.onerror=(e)=>{
+      isSpeaking=false;
+      if(e.error!=='canceled' && onDone) setTimeout(onDone,400);
+    };
     window.speechSynthesis.speak(u);
-    setTimeout(()=>{if(!started&&audioUnlocked){window.speechSynthesis.cancel();setTimeout(()=>{const r=new SpeechSynthesisUtterance(text);r.rate=0.82;r.volume=1;r.lang='en-US';window.speechSynthesis.speak(r);},300);}},2000);
+    // Watchdog
+    setTimeout(()=>{
+      if(!started&&audioUnlocked){
+        window.speechSynthesis.cancel();
+        isSpeaking=false;
+        setTimeout(()=>{ if(onDone) onDone(); },300);
+      }
+    },2500);
   },200);
 }
 
