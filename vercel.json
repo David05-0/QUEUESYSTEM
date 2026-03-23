@@ -1,8 +1,0 @@
-{
-  "rewrites": [
-    { "source": "/",        "destination": "/queue-admin.html" },
-    { "source": "/admin",   "destination": "/queue-admin.html" },
-    { "source": "/display", "destination": "/queue-display.html" },
-    { "source": "/audience","destination": "/queue-audience.html" }
-  ]
-}
