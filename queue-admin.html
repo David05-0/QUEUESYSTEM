@@ -156,8 +156,8 @@
       <div class="clock" id="clock">00:00:00</div>
       <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
         <span class="fb-status" id="fbStatus"><span class="fb-dot"></span>Connecting…</span>
-        <a href="queue-display.html" target="_blank" class="nav-link">→ Display Board</a>
-        <a href="queue-audience.html" target="_blank" class="nav-link">→ Audience Screen</a>
+        <a href="/display" target="_blank" class="nav-link">→ Display Board</a>
+        <a href="/audience" target="_blank" class="nav-link">→ Audience Screen</a>
       </div>
     </div>
   </header>
@@ -251,6 +251,7 @@ const firebaseConfig = {
   appId: "1:314957208142:web:51f960c760f8682e77811f",
   measurementId: "G-R293DG1RZZ"
 };
+
 const app = initializeApp(firebaseConfig);
 const db  = getDatabase(app);
 const stateRef = ref(db, 'queueState');
