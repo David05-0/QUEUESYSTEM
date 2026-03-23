@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Queue — Counter Display</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0a0a0f; --panel:#111118; --border:#1c1c2e; --text:#eeeef6;
+    --muted:#46465e; --green:#3ddc84; --red:#ff5f5f; --accent:#f0c040;
+    --c1:#e67e22; --c1bg:rgba(230,126,34,0.08); --c1b:rgba(230,126,34,0.35);
+    --c2:#2980b9; --c2bg:rgba(41,128,185,0.08);  --c2b:rgba(41,128,185,0.35);
+    --c3:#27ae60; --c3bg:rgba(39,174,96,0.08);   --c3b:rgba(39,174,96,0.35);
+    --c4:#8e44ad; --c4bg:rgba(142,68,173,0.08);  --c4b:rgba(142,68,173,0.35);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;overflow:hidden}
+  body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:0.4}
+
+  /* LOGIN */
+  #loginScreen{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);gap:40px}
+  #loginScreen.hidden{display:none}
+  .login-sup{font-size:10px;letter-spacing:0.32em;color:var(--accent);text-transform:uppercase;margin-bottom:4px;text-align:center}
+  .login-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(44px,7vw,80px);letter-spacing:0.06em;line-height:1;text-align:center}
+  .login-title span{color:var(--accent)}
+  .login-sub{font-size:11px;letter-spacing:0.22em;color:var(--muted);text-transform:uppercase;margin-top:8px;text-align:center}
+  .fb-badge{font-size:9px;letter-spacing:0.18em;text-transform:uppercase;padding:4px 12px;border-radius:20px;border:1px solid var(--border);color:var(--muted);display:inline-flex;align-items:center;gap:6px}
+  .fb-badge.live{color:var(--green);border-color:rgba(61,220,132,0.4);background:rgba(61,220,132,0.07)}
+  .fb-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+  .login-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:min(560px,90vw)}
+  .counter-login-btn{background:var(--panel);border:2px solid var(--border);border-radius:6px;padding:32px 20px;cursor:pointer;transition:all 0.18s ease;display:flex;flex-direction:column;align-items:center;gap:10px;position:relative;overflow:hidden}
+  .counter-login-btn::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity 0.2s}
+  .counter-login-btn[data-c="1"]{--cc:var(--c1);--ccbg:var(--c1bg);--ccb:var(--c1b)}
+  .counter-login-btn[data-c="2"]{--cc:var(--c2);--ccbg:var(--c2bg);--ccb:var(--c2b)}
+  .counter-login-btn[data-c="3"]{--cc:var(--c3);--ccbg:var(--c3bg);--ccb:var(--c3b)}
+  .counter-login-btn[data-c="4"]{--cc:var(--c4);--ccbg:var(--c4bg);--ccb:var(--c4b)}
+  .counter-login-btn::before{background:var(--ccbg)}
+  .counter-login-btn:hover{border-color:var(--cc);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,0.4),0 0 0 1px var(--ccb)}
+  .counter-login-btn:hover::before{opacity:1}
+  .clb-number{font-family:'Bebas Neue',sans-serif;font-size:72px;line-height:1;letter-spacing:0.04em;color:var(--cc);position:relative;z-index:1;text-shadow:0 0 40px var(--ccb)}
+  .clb-label{font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:var(--muted);position:relative;z-index:1}
+  .clb-queue-count{font-size:10px;letter-spacing:0.14em;color:var(--cc);opacity:0.8;position:relative;z-index:1;border:1px solid var(--ccb);background:var(--ccbg);padding:3px 10px;border-radius:20px;transition:all 0.2s}
+
+  /* COUNTER VIEW */
+  #counterView{position:fixed;inset:0;z-index:5;display:none;flex-direction:column}
+  #counterView.visible{display:flex}
+  #counterView::before{content:'';position:absolute;inset:0;z-index:0;opacity:0;transition:opacity 1s;pointer-events:none}
+  #counterView.c1::before{background:radial-gradient(ellipse at 50% 0%,rgba(230,126,34,0.07) 0%,transparent 65%);opacity:1}
+  #counterView.c2::before{background:radial-gradient(ellipse at 50% 0%,rgba(41,128,185,0.07) 0%,transparent 65%);opacity:1}
+  #counterView.c3::before{background:radial-gradient(ellipse at 50% 0%,rgba(39,174,96,0.07) 0%,transparent 65%);opacity:1}
+  #counterView.c4::before{background:radial-gradient(ellipse at 50% 0%,rgba(142,68,173,0.07) 0%,transparent 65%);opacity:1}
+
+  .cv-topbar{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);background:rgba(10,10,15,0.7);backdrop-filter:blur(10px);flex-shrink:0}
+  .cv-counter-id{display:flex;align-items:center;gap:14px}
+  .cv-color-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+  .cv-counter-name{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:0.12em}
+  .cv-status-pill{font-size:9px;letter-spacing:0.18em;text-transform:uppercase;padding:4px 10px;border-radius:20px;border:1px solid var(--border);color:var(--muted);transition:all 0.4s}
+  .cv-status-pill.serving{color:var(--green);border-color:rgba(61,220,132,0.4);background:rgba(61,220,132,0.07);animation:pillPulse 2s ease infinite}
+  @keyframes pillPulse{0%,100%{opacity:1}50%{opacity:0.55}}
+  .cv-topbar-right{display:flex;align-items:center;gap:16px}
+  .cv-clock{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:0.1em;color:var(--muted)}
+  .cv-logout-btn{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;background:none;border:1px solid var(--border);color:var(--muted);border-radius:3px;padding:7px 14px;cursor:pointer;transition:all 0.15s}
+  .cv-logout-btn:hover{color:var(--red);border-color:var(--red)}
+
+  .cv-body{position:relative;z-index:1;flex:1;display:grid;grid-template-columns:1fr 320px;overflow:hidden}
+  .cv-main{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 40px;border-right:1px solid var(--border);gap:0}
+  .cv-now-lbl{font-size:11px;letter-spacing:0.35em;text-transform:uppercase;color:var(--muted);margin-bottom:16px}
+  .cv-big-number{font-family:'Bebas Neue',sans-serif;font-size:clamp(120px,20vw,220px);line-height:0.9;letter-spacing:0.02em;color:var(--muted);transition:color 0.4s,text-shadow 0.4s;text-align:center}
+  .cv-big-number.pop{animation:bigPop 0.6s cubic-bezier(0.34,1.56,0.64,1)}
+  @keyframes bigPop{0%{transform:scale(0.55) translateY(24px);opacity:0}60%{transform:scale(1.06) translateY(-4px);opacity:1}100%{transform:scale(1) translateY(0)}}
+  #counterView.c1 .cv-big-number.has-num{color:var(--c1);text-shadow:0 0 80px rgba(230,126,34,0.4)}
+  #counterView.c2 .cv-big-number.has-num{color:var(--c2);text-shadow:0 0 80px rgba(41,128,185,0.4)}
+  #counterView.c3 .cv-big-number.has-num{color:var(--c3);text-shadow:0 0 80px rgba(39,174,96,0.4)}
+  #counterView.c4 .cv-big-number.has-num{color:var(--c4);text-shadow:0 0 80px rgba(142,68,173,0.4)}
+  .cv-ticket-info{display:flex;flex-direction:column;align-items:center;gap:4px;margin-top:16px;min-height:52px}
+  .cv-ticket-service{font-size:13px;letter-spacing:0.1em;color:var(--muted)}
+  .cv-ticket-customer{font-size:18px;letter-spacing:0.06em;color:var(--text);font-weight:500}
+  .cv-priority-tag{font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:#e74c3c;border:1px solid rgba(231,76,60,0.4);background:rgba(231,76,60,0.08);padding:4px 10px;border-radius:20px;margin-top:2px}
+  .cv-wave{display:flex;align-items:center;gap:8px;height:24px;margin-top:16px;opacity:0;transition:opacity 0.3s}
+  .cv-wave.active{opacity:1}
+  .cv-wave-lbl{font-size:9px;letter-spacing:0.2em;text-transform:uppercase}
+  #counterView.c1 .cv-wave-lbl{color:var(--c1)} #counterView.c2 .cv-wave-lbl{color:var(--c2)}
+  #counterView.c3 .cv-wave-lbl{color:var(--c3)} #counterView.c4 .cv-wave-lbl{color:var(--c4)}
+  .wave-bars{display:flex;gap:3px;align-items:flex-end}
+  .wave-bars span{display:block;width:3px;border-radius:1px;animation:barWave 0.9s ease infinite}
+  #counterView.c1 .wave-bars span{background:var(--c1)} #counterView.c2 .wave-bars span{background:var(--c2)}
+  #counterView.c3 .wave-bars span{background:var(--c3)} #counterView.c4 .wave-bars span{background:var(--c4)}
+  .wave-bars span:nth-child(1){height:6px;animation-delay:0s}.wave-bars span:nth-child(2){height:14px;animation-delay:0.15s}
+  .wave-bars span:nth-child(3){height:20px;animation-delay:0.28s}.wave-bars span:nth-child(4){height:12px;animation-delay:0.1s}
+  .wave-bars span:nth-child(5){height:8px;animation-delay:0.22s}
+  @keyframes barWave{0%,100%{transform:scaleY(0.3)}50%{transform:scaleY(1)}}
+  .cv-call-btn{margin-top:40px;font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:0.14em;border:none;border-radius:6px;padding:22px 60px;cursor:pointer;transition:all 0.15s ease;width:min(440px,100%)}
+  #counterView.c1 .cv-call-btn{background:var(--c1);color:#fff} #counterView.c2 .cv-call-btn{background:var(--c2);color:#fff}
+  #counterView.c3 .cv-call-btn{background:var(--c3);color:#0a0a0f} #counterView.c4 .cv-call-btn{background:var(--c4);color:#fff}
+  .cv-call-btn:hover:not(:disabled){filter:brightness(1.14);transform:translateY(-2px);box-shadow:0 10px 40px rgba(0,0,0,0.5)}
+  .cv-call-btn:active:not(:disabled){transform:translateY(0);filter:brightness(0.95)}
+  .cv-call-btn:disabled{opacity:0.2;cursor:not-allowed;transform:none;box-shadow:none;filter:none}
+
+  .cv-sidebar{display:flex;flex-direction:column;overflow:hidden;background:rgba(10,10,15,0.3)}
+  .cv-section{padding:18px 20px;border-bottom:1px solid var(--border)}
+  .cv-section:last-child{border-bottom:none;flex:1;overflow:hidden;display:flex;flex-direction:column}
+  .cv-section-title{font-size:8px;letter-spacing:0.28em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .cv-section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+  .cv-stats-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .cv-stat{background:var(--panel);border:1px solid var(--border);border-radius:3px;padding:10px 12px}
+  .cv-stat-val{font-family:'Bebas Neue',sans-serif;font-size:28px;line-height:1;letter-spacing:0.04em}
+  .cv-stat-lbl{font-size:8px;letter-spacing:0.18em;color:var(--muted);text-transform:uppercase;margin-top:2px}
+  .cv-queue-list{display:flex;flex-direction:column;gap:6px;overflow-y:auto;flex:1;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+  .cv-queue-item{display:flex;align-items:center;padding:9px 12px;background:var(--panel);border:1px solid var(--border);border-radius:3px;gap:10px;animation:slideIn 0.2s ease}
+  @keyframes slideIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+  .cv-q-num{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:0.05em}
+  .cv-queue-item.next-up .cv-q-num{color:var(--text)} .cv-queue-item:not(.next-up) .cv-q-num{color:var(--muted)}
+  .cv-q-badge{font-size:8px;letter-spacing:0.12em;text-transform:uppercase;padding:2px 7px;border-radius:20px;flex-shrink:0}
+  .next-badge{border:1px solid;animation:nextGlow 2s ease infinite}
+  #counterView.c1 .next-badge{color:var(--c1);border-color:var(--c1b);background:var(--c1bg)}
+  #counterView.c2 .next-badge{color:var(--c2);border-color:var(--c2b);background:var(--c2bg)}
+  #counterView.c3 .next-badge{color:var(--c3);border-color:var(--c3b);background:var(--c3bg)}
+  #counterView.c4 .next-badge{color:var(--c4);border-color:var(--c4b);background:var(--c4bg)}
+  @keyframes nextGlow{0%,100%{opacity:1}50%{opacity:0.55}}
+  .priority-badge{color:#e74c3c;border:1px solid rgba(231,76,60,0.3);background:rgba(231,76,60,0.08)}
+  .cv-q-info{flex:1;overflow:hidden}
+  .cv-q-svc{font-size:10px;letter-spacing:0.06em;color:var(--muted)}
+  .cv-q-cust{font-size:11px;letter-spacing:0.04em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cv-queue-empty{font-size:11px;letter-spacing:0.1em;color:var(--muted);text-align:center;padding:24px 0}
+  .cv-hist-chips{display:flex;flex-wrap:wrap;gap:5px}
+  .cv-hist-chip{font-family:'Bebas Neue',sans-serif;font-size:14px;padding:2px 8px;border-radius:2px;background:var(--panel);border:1px solid var(--border);color:var(--muted);letter-spacing:0.05em;text-decoration:line-through;opacity:0.5;animation:popIn 0.2s ease}
+  @keyframes popIn{from{transform:scale(0.82);opacity:0}to{transform:scale(1);opacity:1}}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(14px);background:var(--panel);border:1px solid var(--border);color:var(--text);padding:11px 26px;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.1em;opacity:0;transition:all 0.3s;pointer-events:none;z-index:99}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <div>
+    <div class="login-sup">Counter Staff Login</div>
+    <div class="login-title">QUEUE<span>SYS</span></div>
+    <div class="login-sub">Select your counter to continue</div>
+  </div>
+  <div id="fbLoginBadge" style="text-align:center">
+    <span class="fb-badge" id="fbBadge"><span class="fb-dot"></span>Connecting to Firebase…</span>
+  </div>
+  <div class="login-grid" id="loginGrid"></div>
+</div>
+
+<div id="counterView">
+  <div class="cv-topbar">
+    <div class="cv-counter-id">
+      <div class="cv-color-dot" id="cvDot"></div>
+      <div class="cv-counter-name" id="cvName">Counter 1</div>
+      <div class="cv-status-pill idle" id="cvStatus">Idle</div>
+    </div>
+    <div class="cv-topbar-right">
+      <span class="fb-badge live" id="cvFbBadge"><span class="fb-dot"></span>Live</span>
+      <div class="cv-clock" id="cvClock">00:00:00</div>
+      <button class="cv-logout-btn" onclick="logout()">← Change Counter</button>
+    </div>
+  </div>
+  <div class="cv-body">
+    <div class="cv-main">
+      <div class="cv-now-lbl">Now Serving</div>
+      <div class="cv-big-number" id="cvBigNum">—</div>
+      <div class="cv-ticket-info">
+        <div class="cv-ticket-service" id="cvSvc"></div>
+        <div class="cv-ticket-customer" id="cvCust"></div>
+        <div id="cvPrioTag"></div>
+      </div>
+      <div class="cv-wave" id="cvWave">
+        <div class="wave-bars"><span></span><span></span><span></span><span></span><span></span></div>
+        <div class="cv-wave-lbl">Announcing</div>
+      </div>
+      <button class="cv-call-btn" id="cvCallBtn" onclick="callNext()" disabled>▶ CALL NEXT</button>
+    </div>
+    <div class="cv-sidebar">
+      <div class="cv-section">
+        <div class="cv-section-title">My Counter Stats</div>
+        <div class="cv-stats-row">
+          <div class="cv-stat"><div class="cv-stat-val" id="cvStatWaiting">0</div><div class="cv-stat-lbl">In My Queue</div></div>
+          <div class="cv-stat"><div class="cv-stat-val" id="cvStatServed">0</div><div class="cv-stat-lbl">Served</div></div>
+        </div>
+      </div>
+      <div class="cv-section">
+        <div class="cv-section-title">Already Called</div>
+        <div class="cv-hist-chips" id="cvHistChips"><span style="font-size:11px;color:var(--muted)">None yet</span></div>
+      </div>
+      <div class="cv-section">
+        <div class="cv-section-title">My Queue</div>
+        <div class="cv-queue-list" id="cvQueueList"><div class="cv-queue-empty">No tickets assigned</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ════════════════════════════════════════
+     FIREBASE SDK
+════════════════════════════════════════ -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getDatabase, ref, set, onValue }
+  from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+/* ══════════════════════════════════════════
+   🔧 PASTE YOUR FIREBASE CONFIG HERE
+   (same config as queue-admin.html)
+══════════════════════════════════════════ */
+const firebaseConfig = {
+  apiKey:            "PASTE_YOUR_apiKey_HERE",
+  authDomain:        "PASTE_YOUR_authDomain_HERE",
+  databaseURL:       "PASTE_YOUR_databaseURL_HERE",
+  projectId:         "PASTE_YOUR_projectId_HERE",
+  storageBucket:     "PASTE_YOUR_storageBucket_HERE",
+  messagingSenderId: "PASTE_YOUR_messagingSenderId_HERE",
+  appId:             "PASTE_YOUR_appId_HERE"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+const stateRef = ref(db, 'queueState');
+
+const COUNTER_NAMES = ['Counter 1','Counter 2','Counter 3','Counter 4'];
+const COLOR_HEX = {1:'#e67e22',2:'#2980b9',3:'#27ae60',4:'#8e44ad'};
+
+let activeCounter = null;
+let sharedLog = [];
+let sharedTicketCounter = 0;
+let myHistory = [];
+let myServed  = 0;
+let lastResetFlag = null;
+
+// ── Clock ──
+function updateClock() {
+  const n = new Date();
+  document.getElementById('cvClock').textContent =
+    [n.getHours(),n.getMinutes(),n.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':');
+}
+setInterval(updateClock, 1000); updateClock();
+
+// ── Firebase listener ──
+onValue(stateRef, snap => {
+  // Mark Firebase as connected
+  document.getElementById('fbBadge').className = 'fb-badge live';
+  document.getElementById('fbBadge').innerHTML = '<span class="fb-dot"></span>Firebase Connected';
+
+  const data = snap.val() || {};
+  const newReset = data.resetFlag || null;
+
+  // Detect reset
+  if (newReset && newReset !== lastResetFlag) {
+    lastResetFlag = newReset;
+    sharedLog = []; sharedTicketCounter = 0;
+    myHistory = []; myServed = 0;
+    clearCounterDisplay();
+    showToast('↺ Queue reset by admin');
+  } else {
+    sharedLog = data.log || [];
+    sharedTicketCounter = data.ticketCounter || 0;
+  }
+  lastResetFlag = newReset;
+
+  refreshLoginCounts();
+  if (activeCounter) renderView();
+}, err => {
+  document.getElementById('fbBadge').className = 'fb-badge';
+  document.getElementById('fbBadge').innerHTML = '<span class="fb-dot"></span>Offline';
+});
+
+// ── Save: mark ticket served ──
+function saveSharedState() {
+  set(stateRef, {
+    ticketCounter: sharedTicketCounter,
+    log: sharedLog,
+    lastUpdate: Date.now(),
+    resetFlag: lastResetFlag
+  });
+}
+
+function getMyQueue() {
+  return sharedLog
+    .filter(t => !t.served && t.counter === activeCounter)
+    .sort((a,b) => a.priority===b.priority ? a.id-b.id : a.priority==='priority'?-1:1);
+}
+
+// ── Build login ──
+function buildLogin() {
+  const grid = document.getElementById('loginGrid');
+  grid.innerHTML = '';
+  [1,2,3,4].forEach(id => {
+    const q = sharedLog.filter(t=>!t.served&&t.counter===id).length;
+    const btn = document.createElement('button');
+    btn.className = 'counter-login-btn'; btn.dataset.c = id;
+    btn.innerHTML = `<div class="clb-number">${id}</div><div class="clb-label">${COUNTER_NAMES[id-1]}</div><div class="clb-queue-count" id="lq-${id}">${q} in queue</div>`;
+    btn.onclick = () => login(id);
+    grid.appendChild(btn);
+  });
+}
+
+function refreshLoginCounts() {
+  [1,2,3,4].forEach(id => {
+    const el = document.getElementById(`lq-${id}`);
+    if (el) el.textContent = `${sharedLog.filter(t=>!t.served&&t.counter===id).length} in queue`;
+  });
+}
+
+// ── Login / Logout ──
+function login(id) {
+  activeCounter = id; myHistory = []; myServed = 0;
+  const view = document.getElementById('counterView');
+  view.className = `visible c${id}`;
+  document.getElementById('cvName').textContent = COUNTER_NAMES[id-1];
+  document.getElementById('cvDot').style.background = COLOR_HEX[id];
+  document.getElementById('loginScreen').classList.add('hidden');
+  clearCounterDisplay();
+  renderView();
+}
+
+function logout() {
+  activeCounter = null;
+  document.getElementById('counterView').classList.remove('visible');
+  document.getElementById('loginScreen').classList.remove('hidden');
+  window.speechSynthesis && window.speechSynthesis.cancel();
+  buildLogin();
+}
+window.logout = logout;
+
+function clearCounterDisplay() {
+  document.getElementById('cvBigNum').textContent = '—';
+  document.getElementById('cvBigNum').className = 'cv-big-number';
+  document.getElementById('cvSvc').textContent = '';
+  document.getElementById('cvCust').textContent = '';
+  document.getElementById('cvPrioTag').innerHTML = '';
+  document.getElementById('cvStatus').textContent = 'Idle';
+  document.getElementById('cvStatus').className = 'cv-status-pill idle';
+  document.getElementById('cvWave').classList.remove('active');
+}
+
+// ── Call next ──
+function callNext() {
+  const q = getMyQueue();
+  if (!q.length) return;
+  const ticket = q[0];
+  const entry = sharedLog.find(t=>t.id===ticket.id);
+  if (entry) entry.served = true;
+  saveSharedState();
+  myHistory.unshift(ticket.id);
+  if (myHistory.length>6) myHistory.pop();
+  myServed++;
+
+  const numEl = document.getElementById('cvBigNum');
+  numEl.textContent = String(ticket.id).padStart(3,'0');
+  numEl.className = 'cv-big-number has-num pop';
+  setTimeout(()=>numEl.classList.remove('pop'), 700);
+
+  document.getElementById('cvSvc').textContent = ticket.service||'';
+  document.getElementById('cvCust').textContent = ticket.customer||'';
+  document.getElementById('cvPrioTag').innerHTML = ticket.priority==='priority'
+    ? '<div class="cv-priority-tag">⚡ Priority</div>' : '';
+  document.getElementById('cvStatus').textContent = 'Serving';
+  document.getElementById('cvStatus').className = 'cv-status-pill serving';
+
+  renderView(); speak(ticket); showToast(`Calling #${String(ticket.id).padStart(3,'0')}`);
+}
+window.callNext = callNext;
+
+function renderView() {
+  if (!activeCounter) return;
+  const q = getMyQueue();
+  document.getElementById('cvStatWaiting').textContent = q.length;
+  document.getElementById('cvStatServed').textContent  = myServed;
+
+  const btn = document.getElementById('cvCallBtn');
+  btn.disabled = q.length===0;
+  btn.textContent = q.length>0
+    ? `▶ CALL #${String(q[0].id).padStart(3,'0')}${q[0].priority==='priority'?' ⚡':''}`
+    : '▶ CALL NEXT';
+
+  const listEl = document.getElementById('cvQueueList');
+  listEl.innerHTML = '';
+  if (!q.length) { listEl.innerHTML = '<div class="cv-queue-empty">No tickets assigned</div>'; }
+  else q.forEach((t,i)=>{
+    const item = document.createElement('div');
+    item.className = 'cv-queue-item'+(i===0?' next-up':'');
+    const badges = [];
+    if (i===0) badges.push(`<span class="cv-q-badge next-badge">Next</span>`);
+    if (t.priority==='priority') badges.push(`<span class="cv-q-badge priority-badge">⚡</span>`);
+    item.innerHTML = `<div class="cv-q-num">${String(t.id).padStart(3,'0')}</div>
+      <div class="cv-q-info"><div class="cv-q-svc">${t.service||''}</div>${t.customer?`<div class="cv-q-cust">${t.customer}</div>`:''}</div>
+      <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">${badges.join('')}</div>`;
+    listEl.appendChild(item);
+  });
+
+  const histEl = document.getElementById('cvHistChips');
+  histEl.innerHTML = myHistory.length===0
+    ? '<span style="font-size:11px;color:var(--muted)">None yet</span>'
+    : myHistory.map(n=>`<span class="cv-hist-chip">${String(n).padStart(3,'0')}</span>`).join('');
+}
+
+// ── Speech ──
+function speak(ticket) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const waveEl = document.getElementById('cvWave');
+  waveEl.classList.add('active');
+  const counterName = COUNTER_NAMES[activeCounter-1];
+  let text = `Now serving number ${ticket.id} at ${counterName}.`;
+  if (ticket.customer) text += ` ${ticket.customer},`;
+  text += ` Number ${ticket.id}, please proceed to ${counterName}.`;
+  if (ticket.priority==='priority') text = 'Priority customer. ' + text;
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.rate=0.86; utter.pitch=1.0; utter.volume=1;
+  const voices = window.speechSynthesis.getVoices();
+  const preferred = voices.find(v=>v.lang.startsWith('en')&&(v.name.includes('Google')||v.name.includes('Natural')||v.name.includes('Premium')))
+    || voices.find(v=>v.lang.startsWith('en')) || voices[0];
+  if (preferred) utter.voice = preferred;
+  utter.onend = utter.onerror = () => waveEl.classList.remove('active');
+  window.speechSynthesis.speak(utter);
+}
+
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 2000);
+}
+
+// ── Init ──
+if (window.speechSynthesis) {
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged = ()=>window.speechSynthesis.getVoices();
+}
+buildLogin();
+</script>
+</body>
+</html>

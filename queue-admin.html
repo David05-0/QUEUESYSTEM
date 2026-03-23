@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Queue Admin — Issue Tickets</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f2eb; --paper: #fdfaf4; --ink: #1a1a14;
+    --rule: #d8d3c5; --accent: #c0392b; --accent2: #2c3e50;
+    --muted: #8a8578; --c1: #e67e22; --c2: #2980b9;
+    --c3: #27ae60; --c4: #8e44ad; --shadow: rgba(26,26,20,0.10);
+    --green: #27ae60;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--ink); font-family:'DM Mono',monospace; min-height:100vh; }
+  body::before { content:''; position:fixed; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height%3D'100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E"); pointer-events:none; z-index:0; opacity:0.4; }
+  .app { position:relative; z-index:1; max-width:1100px; margin:0 auto; padding:32px 24px 60px; }
+  header { display:flex; align-items:flex-end; justify-content:space-between; border-bottom:2px solid var(--ink); padding-bottom:18px; margin-bottom:36px; flex-wrap:wrap; gap:12px; }
+  .brand-sup { font-size:9px; letter-spacing:0.32em; color:var(--muted); text-transform:uppercase; margin-bottom:3px; }
+  .brand-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(38px,5vw,62px); letter-spacing:0.04em; line-height:1; }
+  .brand-title span { color:var(--accent); }
+  .header-right { display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
+  .clock { font-family:'Bebas Neue',sans-serif; font-size:clamp(28px,3.5vw,42px); color:var(--muted); letter-spacing:0.08em; }
+  .nav-link { font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:var(--accent2); text-decoration:none; border-bottom:1px solid var(--accent2); padding-bottom:1px; transition:color 0.15s; }
+  .nav-link:hover { color:var(--accent); border-color:var(--accent); }
+
+  /* Firebase status badge */
+  .fb-status { display:inline-flex; align-items:center; gap:6px; font-size:9px; letter-spacing:0.18em; text-transform:uppercase; padding:4px 10px; border-radius:20px; border:1px solid var(--rule); color:var(--muted); }
+  .fb-status.connected { color:var(--green); border-color:rgba(39,174,96,0.4); background:rgba(39,174,96,0.07); }
+  .fb-status.error { color:var(--accent); border-color:rgba(192,57,43,0.4); background:rgba(192,57,43,0.07); }
+  .fb-dot { width:6px; height:6px; border-radius:50%; background:currentColor; }
+
+  .main-grid { display:grid; grid-template-columns:1.1fr 0.9fr; gap:28px; align-items:start; }
+  @media (max-width:760px) { .main-grid { grid-template-columns:1fr; } }
+
+  .issue-panel { background:var(--paper); border:1px solid var(--rule); border-radius:2px; box-shadow:0 2px 12px var(--shadow); overflow:hidden; }
+  .panel-head { background:var(--ink); color:var(--bg); padding:14px 24px; display:flex; align-items:center; justify-content:space-between; }
+  .panel-head-title { font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:0.1em; }
+  .panel-head-sub { font-size:9px; letter-spacing:0.2em; color:rgba(245,242,235,0.5); text-transform:uppercase; }
+  .panel-body { padding:28px 24px; }
+
+  .field-label { font-size:9px; letter-spacing:0.25em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+  .service-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:24px; }
+  .service-btn { border:1.5px solid var(--rule); background:var(--bg); border-radius:3px; padding:14px 10px; cursor:pointer; transition:all 0.15s; text-align:center; font-family:'DM Mono',monospace; }
+  .service-btn:hover { border-color:var(--ink); }
+  .service-btn.selected { border-color:var(--ink); background:var(--ink); color:var(--bg); }
+  .service-btn .svc-icon { font-size:22px; margin-bottom:6px; display:block; }
+  .service-btn .svc-name { font-size:11px; letter-spacing:0.12em; text-transform:uppercase; font-weight:500; display:block; }
+  .service-btn .svc-desc { font-size:9px; letter-spacing:0.08em; color:var(--muted); margin-top:3px; display:block; transition:color 0.15s; }
+  .service-btn.selected .svc-desc { color:rgba(245,242,235,0.55); }
+
+  .counter-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:24px; }
+  .counter-btn { border:2px solid var(--rule); background:var(--bg); border-radius:3px; padding:14px 6px; cursor:pointer; transition:all 0.15s; text-align:center; font-family:'DM Mono',monospace; position:relative; }
+  .counter-btn .cb-num { font-family:'Bebas Neue',sans-serif; font-size:26px; line-height:1; display:block; }
+  .counter-btn .cb-lbl { font-size:8px; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); margin-top:3px; display:block; transition:color 0.15s; }
+  .counter-btn .cb-count { position:absolute; top:5px; right:7px; font-size:9px; color:var(--muted); letter-spacing:0.05em; }
+  .counter-btn[data-c="1"]:hover,.counter-btn[data-c="1"].selected { border-color:var(--c1); }
+  .counter-btn[data-c="2"]:hover,.counter-btn[data-c="2"].selected { border-color:var(--c2); }
+  .counter-btn[data-c="3"]:hover,.counter-btn[data-c="3"].selected { border-color:var(--c3); }
+  .counter-btn[data-c="4"]:hover,.counter-btn[data-c="4"].selected { border-color:var(--c4); }
+  .counter-btn[data-c="1"].selected { background:#fdf3ec; } .counter-btn[data-c="1"].selected .cb-num { color:var(--c1); } .counter-btn[data-c="1"].selected .cb-lbl { color:var(--c1); }
+  .counter-btn[data-c="2"].selected { background:#eaf3fb; } .counter-btn[data-c="2"].selected .cb-num { color:var(--c2); } .counter-btn[data-c="2"].selected .cb-lbl { color:var(--c2); }
+  .counter-btn[data-c="3"].selected { background:#eafaf1; } .counter-btn[data-c="3"].selected .cb-num { color:var(--c3); } .counter-btn[data-c="3"].selected .cb-lbl { color:var(--c3); }
+  .counter-btn[data-c="4"].selected { background:#f5eefb; } .counter-btn[data-c="4"].selected .cb-num { color:var(--c4); } .counter-btn[data-c="4"].selected .cb-lbl { color:var(--c4); }
+
+  .name-row { margin-bottom:24px; }
+  .name-input { width:100%; font-family:'DM Mono',monospace; font-size:13px; padding:11px 14px; background:var(--bg); border:1.5px solid var(--rule); border-radius:3px; color:var(--ink); letter-spacing:0.05em; transition:border-color 0.15s; outline:none; }
+  .name-input:focus { border-color:var(--ink); }
+  .name-input::placeholder { color:var(--muted); }
+
+  .priority-row { display:flex; align-items:center; gap:12px; margin-bottom:28px; }
+  .toggle-wrap { display:flex; gap:8px; }
+  .priority-opt { border:1.5px solid var(--rule); background:var(--bg); border-radius:3px; padding:8px 16px; font-size:10px; letter-spacing:0.15em; text-transform:uppercase; cursor:pointer; font-family:'DM Mono',monospace; transition:all 0.15s; }
+  .priority-opt.selected.normal { border-color:var(--ink); background:var(--ink); color:var(--bg); }
+  .priority-opt.selected.priority { border-color:var(--accent); background:var(--accent); color:#fff; }
+
+  .issue-btn { width:100%; background:var(--ink); color:var(--bg); border:none; border-radius:3px; font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:0.12em; padding:18px; cursor:pointer; transition:all 0.15s; display:flex; align-items:center; justify-content:center; gap:10px; }
+  .issue-btn:hover:not(:disabled) { background:var(--accent); transform:translateY(-1px); box-shadow:0 6px 20px rgba(192,57,43,0.25); }
+  .issue-btn:disabled { opacity:0.35; cursor:not-allowed; transform:none; box-shadow:none; }
+  .reset-btn { width:100%; margin-top:10px; background:transparent; color:var(--muted); border:1.5px dashed var(--rule); border-radius:3px; font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.16em; text-transform:uppercase; padding:12px; cursor:pointer; transition:all 0.15s ease; }
+  .reset-btn:hover { color:var(--accent); border-color:var(--accent); border-style:solid; background:rgba(192,57,43,0.04); }
+
+  .right-col { display:flex; flex-direction:column; gap:20px; }
+  .stats-panel { background:var(--paper); border:1px solid var(--rule); border-radius:2px; box-shadow:0 2px 8px var(--shadow); overflow:hidden; }
+  .stats-head { padding:10px 18px; border-bottom:1px solid var(--rule); font-size:9px; letter-spacing:0.28em; text-transform:uppercase; color:var(--muted); }
+  .stats-grid { display:grid; grid-template-columns:1fr 1fr; }
+  .stat-cell { padding:16px 18px; border-right:1px solid var(--rule); border-bottom:1px solid var(--rule); }
+  .stat-cell:nth-child(even) { border-right:none; }
+  .stat-cell:nth-last-child(-n+2) { border-bottom:none; }
+  .stat-val { font-family:'Bebas Neue',sans-serif; font-size:32px; line-height:1; letter-spacing:0.04em; }
+  .stat-lbl { font-size:8px; letter-spacing:0.2em; color:var(--muted); text-transform:uppercase; margin-top:3px; }
+
+  .counter-summary { background:var(--paper); border:1px solid var(--rule); border-radius:2px; box-shadow:0 2px 8px var(--shadow); overflow:hidden; }
+  .cs-head { padding:10px 18px; border-bottom:1px solid var(--rule); font-size:9px; letter-spacing:0.28em; text-transform:uppercase; color:var(--muted); }
+  .cs-row { display:flex; align-items:center; padding:12px 18px; border-bottom:1px solid var(--rule); gap:12px; }
+  .cs-row:last-child { border-bottom:none; }
+  .cs-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .cs-row[data-c="1"] .cs-dot { background:var(--c1); } .cs-row[data-c="2"] .cs-dot { background:var(--c2); } .cs-row[data-c="3"] .cs-dot { background:var(--c3); } .cs-row[data-c="4"] .cs-dot { background:var(--c4); }
+  .cs-name { font-size:11px; letter-spacing:0.12em; text-transform:uppercase; flex:1; }
+  .cs-nums { display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-end; }
+  .cs-chip { font-family:'Bebas Neue',sans-serif; font-size:14px; padding:2px 7px; border-radius:2px; letter-spacing:0.05em; animation:popIn 0.2s ease; }
+  .cs-row[data-c="1"] .cs-chip { background:#fdf3ec; color:var(--c1); border:1px solid rgba(230,126,34,0.3); }
+  .cs-row[data-c="2"] .cs-chip { background:#eaf3fb; color:var(--c2); border:1px solid rgba(41,128,185,0.3); }
+  .cs-row[data-c="3"] .cs-chip { background:#eafaf1; color:var(--c3); border:1px solid rgba(39,174,96,0.3); }
+  .cs-row[data-c="4"] .cs-chip { background:#f5eefb; color:var(--c4); border:1px solid rgba(142,68,173,0.3); }
+  .cs-empty { font-size:10px; color:var(--muted); letter-spacing:0.1em; }
+
+  .log-panel { background:var(--paper); border:1px solid var(--rule); border-radius:2px; box-shadow:0 2px 8px var(--shadow); overflow:hidden; }
+  .log-head { padding:10px 18px; border-bottom:1px solid var(--rule); font-size:9px; letter-spacing:0.28em; text-transform:uppercase; color:var(--muted); display:flex; justify-content:space-between; align-items:center; }
+  .log-clear { font-size:8px; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); background:none; border:none; cursor:pointer; font-family:'DM Mono',monospace; }
+  .log-clear:hover { color:var(--accent); }
+  .log-list { max-height:220px; overflow-y:auto; scrollbar-width:thin; scrollbar-color:var(--rule) transparent; }
+  .log-item { display:flex; align-items:center; padding:9px 18px; border-bottom:1px solid var(--rule); gap:10px; animation:slideDown 0.2s ease; }
+  .log-item:last-child { border-bottom:none; }
+  @keyframes slideDown { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+  .log-num { font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:0.05em; min-width:44px; }
+  .log-item[data-c="1"] .log-num { color:var(--c1); } .log-item[data-c="2"] .log-num { color:var(--c2); }
+  .log-item[data-c="3"] .log-num { color:var(--c3); } .log-item[data-c="4"] .log-num { color:var(--c4); }
+  .log-info { flex:1; }
+  .log-svc { font-size:10px; letter-spacing:0.1em; }
+  .log-cust { font-size:9px; color:var(--muted); letter-spacing:0.08em; margin-top:1px; }
+  .log-meta { text-align:right; font-size:9px; color:var(--muted); letter-spacing:0.08em; }
+  .log-priority { font-size:8px; letter-spacing:0.12em; padding:2px 6px; border-radius:2px; background:#fdecea; color:var(--accent); border:1px solid rgba(192,57,43,0.2); text-transform:uppercase; margin-top:2px; display:inline-block; }
+  .log-empty { padding:24px 18px; font-size:11px; color:var(--muted); letter-spacing:0.1em; }
+
+  #receiptArea { display:none; position:fixed; left:-9999px; top:0; }
+
+  .issue-flash { position:fixed; bottom:32px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--ink); color:var(--bg); padding:14px 32px; border-radius:3px; font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:0.12em; opacity:0; transition:all 0.3s ease; pointer-events:none; z-index:999; white-space:nowrap; }
+  .issue-flash.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+  @keyframes popIn { from{transform:scale(0.85);opacity:0} to{transform:scale(1);opacity:1} }
+
+  @media print {
+    body > *:not(#receiptArea) { display:none !important; }
+    #receiptArea { display:block !important; position:static !important; left:auto !important; width:80mm; margin:0; padding:0; }
+    * { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
+    body { background:#fff !important; }
+    .receipt { width:78mm; padding:4mm 3mm; font-family:'Courier New',Courier,monospace; color:#000 !important; background:#fff !important; }
+    .r-number { text-align:center; font-size:72pt; font-weight:900; letter-spacing:0.04em; line-height:1.05; margin:2mm 0 3mm; color:#000 !important; display:block; font-family:'Courier New',Courier,monospace; }
+  }
+</style>
+</head>
+<body>
+
+<div id="receiptArea"><div class="receipt" id="receiptContent"></div></div>
+
+<div class="app">
+  <header>
+    <div>
+      <div class="brand-sup">Admin Console · Queue Management</div>
+      <div class="brand-title">TICKET<span>DESK</span></div>
+    </div>
+    <div class="header-right">
+      <div class="clock" id="clock">00:00:00</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
+        <span class="fb-status" id="fbStatus"><span class="fb-dot"></span>Connecting…</span>
+        <a href="queue-display.html" target="_blank" class="nav-link">→ Display Board</a>
+        <a href="queue-audience.html" target="_blank" class="nav-link">→ Audience Screen</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="main-grid">
+    <div class="issue-panel">
+      <div class="panel-head">
+        <div><div class="panel-head-title">Issue New Ticket</div></div>
+        <div class="panel-head-sub">Receipt prints on issue</div>
+      </div>
+      <div class="panel-body">
+        <div class="field-label">1 · Select Service</div>
+        <div class="service-grid">
+          <button class="service-btn selected" data-svc="Cashier" onclick="selectService(this)"><span class="svc-icon">💳</span><span class="svc-name">Cashier</span><span class="svc-desc">Payment & billing</span></button>
+          <button class="service-btn" data-svc="Inquiry" onclick="selectService(this)"><span class="svc-icon">💬</span><span class="svc-name">Inquiry</span><span class="svc-desc">Questions & info</span></button>
+          <button class="service-btn" data-svc="Application" onclick="selectService(this)"><span class="svc-icon">📋</span><span class="svc-name">Application</span><span class="svc-desc">Forms & documents</span></button>
+          <button class="service-btn" data-svc="Complaints" onclick="selectService(this)"><span class="svc-icon">📢</span><span class="svc-name">Complaints</span><span class="svc-desc">Concerns & feedback</span></button>
+        </div>
+
+        <div class="field-label">2 · Assign to Counter</div>
+        <div class="counter-grid" id="counterGrid">
+          <button class="counter-btn selected" data-c="1" onclick="selectCounter(this)"><span class="cb-count" id="cbcount-1">0</span><span class="cb-num">1</span><span class="cb-lbl">Counter</span></button>
+          <button class="counter-btn" data-c="2" onclick="selectCounter(this)"><span class="cb-count" id="cbcount-2">0</span><span class="cb-num">2</span><span class="cb-lbl">Counter</span></button>
+          <button class="counter-btn" data-c="3" onclick="selectCounter(this)"><span class="cb-count" id="cbcount-3">0</span><span class="cb-num">3</span><span class="cb-lbl">Counter</span></button>
+          <button class="counter-btn" data-c="4" onclick="selectCounter(this)"><span class="cb-count" id="cbcount-4">0</span><span class="cb-num">4</span><span class="cb-lbl">Counter</span></button>
+        </div>
+
+        <div class="field-label">3 · Customer Name <span style="color:var(--muted)">(optional)</span></div>
+        <div class="name-row"><input type="text" class="name-input" id="customerName" placeholder="Enter customer name…" maxlength="40" autocomplete="off"></div>
+
+        <div class="field-label">4 · Priority</div>
+        <div class="priority-row">
+          <div class="toggle-wrap">
+            <button class="priority-opt selected normal" onclick="selectPriority('normal',this)">Normal</button>
+            <button class="priority-opt priority" onclick="selectPriority('priority',this)">⚡ Priority</button>
+          </div>
+          <span style="font-size:9px;letter-spacing:0.12em;color:var(--muted);text-transform:uppercase;">For seniors, PWD &amp; urgent</span>
+        </div>
+
+        <button class="issue-btn" id="issueBtn" onclick="issueTicket()">🖨 Issue &amp; Print Ticket</button>
+        <button class="reset-btn" onclick="resetNumbering()">↺ Reset Numbering to 001</button>
+      </div>
+    </div>
+
+    <div class="right-col">
+      <div class="stats-panel">
+        <div class="stats-head">Today's Summary</div>
+        <div class="stats-grid">
+          <div class="stat-cell"><div class="stat-val" id="stTotal" style="color:var(--accent)">0</div><div class="stat-lbl">Tickets Issued</div></div>
+          <div class="stat-cell"><div class="stat-val" id="stWaiting">0</div><div class="stat-lbl">In Queue</div></div>
+          <div class="stat-cell"><div class="stat-val" id="stServed">0</div><div class="stat-lbl">Served</div></div>
+          <div class="stat-cell"><div class="stat-val" id="stPriority" style="color:var(--accent)">0</div><div class="stat-lbl">Priority</div></div>
+        </div>
+      </div>
+
+      <div class="counter-summary">
+        <div class="cs-head">Queue by Counter</div>
+        <div id="counterSummaryList"></div>
+      </div>
+
+      <div class="log-panel">
+        <div class="log-head"><span>Recently Issued</span><button class="log-clear" onclick="clearLog()">Clear log</button></div>
+        <div class="log-list" id="logList"><div class="log-empty" id="logEmpty">No tickets issued yet</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="issue-flash" id="issueFlash"></div>
+
+<!-- ════════════════════════════════════════
+     FIREBASE SDK
+════════════════════════════════════════ -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getDatabase, ref, set, get, onValue, runTransaction }
+  from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+/* ══════════════════════════════════════════
+   🔧 PASTE YOUR FIREBASE CONFIG HERE
+   Go to: Firebase Console → Project Settings
+   → Your apps → Web app → SDK setup
+══════════════════════════════════════════ */
+const firebaseConfig = {
+  apiKey:            "PASTE_YOUR_apiKey_HERE",
+  authDomain:        "PASTE_YOUR_authDomain_HERE",
+  databaseURL:       "PASTE_YOUR_databaseURL_HERE",
+  projectId:         "PASTE_YOUR_projectId_HERE",
+  storageBucket:     "PASTE_YOUR_storageBucket_HERE",
+  messagingSenderId: "PASTE_YOUR_messagingSenderId_HERE",
+  appId:             "PASTE_YOUR_appId_HERE"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+const stateRef = ref(db, 'queueState');
+
+// ── UI Helpers ──
+const COUNTER_NAMES = ['Counter 1','Counter 2','Counter 3','Counter 4'];
+let selectedService  = 'Cashier';
+let selectedCounter  = 1;
+let selectedPriority = 'normal';
+let log = [];
+let ticketCounter = 0;
+
+function setFbStatus(status) {
+  const el = document.getElementById('fbStatus');
+  el.className = 'fb-status ' + status;
+  el.innerHTML = `<span class="fb-dot"></span>${
+    status === 'connected' ? 'Live' : status === 'error' ? 'Offline' : 'Connecting…'
+  }`;
+}
+
+// ── Clock ──
+function updateClock() {
+  const n = new Date();
+  document.getElementById('clock').textContent =
+    [n.getHours(),n.getMinutes(),n.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':');
+}
+setInterval(updateClock, 1000); updateClock();
+
+// ── Firebase: push state ──
+function saveState(isReset = false) {
+  const queues = getQueues();
+  set(stateRef, {
+    ticketCounter,
+    log,
+    queues,
+    lastUpdate: Date.now(),
+    resetFlag: isReset ? Date.now() : (window._lastResetFlag || null)
+  }).catch(e => { console.error(e); setFbStatus('error'); });
+}
+
+function getQueues() {
+  const q = {1:[],2:[],3:[],4:[]};
+  log.filter(t => !t.served).forEach(t => { if (q[t.counter]) q[t.counter].push(t); });
+  return q;
+}
+
+// ── Firebase: listen for changes ──
+onValue(stateRef, snap => {
+  setFbStatus('connected');
+  const data = snap.val();
+  if (!data) return;
+  window._lastResetFlag = data.resetFlag || null;
+  ticketCounter = data.ticketCounter || 0;
+  log = data.log || [];
+  renderAll();
+}, err => { console.error(err); setFbStatus('error'); });
+
+// ── Selectors ──
+function selectService(btn) {
+  document.querySelectorAll('.service-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedService = btn.dataset.svc;
+}
+window.selectService = selectService;
+
+function selectCounter(btn) {
+  document.querySelectorAll('.counter-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedCounter = parseInt(btn.dataset.c);
+}
+window.selectCounter = selectCounter;
+
+function selectPriority(val, btn) {
+  selectedPriority = val;
+  document.querySelectorAll('.priority-opt').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+window.selectPriority = selectPriority;
+
+// ── Issue Ticket ──
+function issueTicket() {
+  ticketCounter++;
+  const now = new Date();
+  const timeStr = [now.getHours(),now.getMinutes(),now.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':');
+  const dateStr = now.toLocaleDateString('en-PH', { month:'short', day:'numeric', year:'numeric' });
+  const ticket = {
+    id: ticketCounter, counter: selectedCounter,
+    service: selectedService,
+    customer: document.getElementById('customerName').value.trim() || null,
+    priority: selectedPriority,
+    time: timeStr, date: dateStr, served: false
+  };
+  log.unshift(ticket);
+  document.getElementById('customerName').value = '';
+  saveState();
+  printReceipt(ticket);
+  showFlash(`Ticket #${String(ticket.id).padStart(3,'0')} → Counter ${ticket.counter}`);
+}
+window.issueTicket = issueTicket;
+
+// ── Print receipt ──
+function printReceipt(ticket) {
+  const num = String(ticket.id).padStart(3,'0');
+  const barcode = generateBarcode(ticket.id);
+  const priorityLine = ticket.priority === 'priority'
+    ? `<div style="text-align:center;font-size:13px;font-weight:900;letter-spacing:0.15em;border:2px solid #000;padding:2mm 4mm;margin:2mm auto;display:table;">⚡ PRIORITY CUSTOMER</div>` : '';
+  const customerLine = ticket.customer
+    ? `<div style="text-align:center;font-size:13px;font-weight:700;margin-top:2mm;">${ticket.customer.toUpperCase()}</div>` : '';
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ticket #${num}</title>
+  <style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:80mm;background:#fff;color:#000;font-family:'Courier New',Courier,monospace}@page{size:80mm auto;margin:0}body{padding:5mm 4mm}</style>
+  </head><body>
+  <div style="text-align:center;font-size:22px;font-weight:900;letter-spacing:0.14em;margin-bottom:1mm;">QUEUESYS</div>
+  <div style="text-align:center;font-size:10px;color:#444;margin-bottom:4mm;">Service Queue Ticket</div>
+  <hr style="border:none;border-top:1px dashed #000;margin:3mm 0;">
+  <div style="text-align:center;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:1mm;">Your Number</div>
+  <div style="text-align:center;font-family:'Courier New',Courier,monospace;font-size:96pt;font-weight:900;line-height:1.05;color:#000;letter-spacing:0.04em;margin:2mm 0 3mm;">${num}</div>
+  <hr style="border:none;border-top:1px dashed #000;margin:3mm 0;">
+  <div style="text-align:center;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#555;margin-bottom:1mm;">Proceed To</div>
+  <div style="text-align:center;font-size:26px;font-weight:900;letter-spacing:0.1em;color:#000;margin-bottom:2mm;">COUNTER ${ticket.counter}</div>
+  <div style="text-align:center;font-size:11px;color:#222;margin-bottom:1mm;">Service: ${ticket.service}</div>
+  ${priorityLine}${customerLine}
+  <hr style="border:none;border-top:1px dashed #000;margin:3mm 0;">
+  <div style="text-align:center;font-size:9px;color:#555;margin-bottom:1mm;">${ticket.date} · ${ticket.time}</div>
+  <div style="text-align:center;font-size:18px;letter-spacing:0.03em;font-family:'Courier New',monospace;color:#000;margin:2mm 0 1mm;word-break:break-all;">${barcode}</div>
+  <div style="text-align:center;font-size:9px;color:#555;">Ticket ID: ${num}</div>
+  <hr style="border:none;border-top:1px dashed #000;margin:3mm 0;">
+  <div style="text-align:center;font-size:9px;font-style:italic;color:#555;line-height:1.5;">Please wait for your number to be called.<br>Thank you for your patience.</div>
+  <script>window.onload=function(){window.print();setTimeout(function(){window.close()},800)}<\/script>
+  </body></html>`;
+
+  const popup = window.open('', '_blank', 'width=320,height=600,toolbar=0,menubar=0,location=0');
+  if (popup) { popup.document.write(html); popup.document.close(); }
+  else { document.getElementById('receiptContent').innerHTML = html; setTimeout(() => window.print(), 150); }
+}
+
+function generateBarcode(id) {
+  const seed = id * 2654435761; let bars = '|';
+  for (let i=0;i<28;i++) bars += ((seed>>i)&1) ? '█' : '▌';
+  return bars + '|';
+}
+
+// ── Render ──
+function renderAll() {
+  renderStats(); renderCounterSummary(); renderLog(); renderCounterCounts();
+}
+
+function renderStats() {
+  document.getElementById('stTotal').textContent    = log.length;
+  document.getElementById('stWaiting').textContent  = log.filter(t=>!t.served).length;
+  document.getElementById('stServed').textContent   = log.filter(t=>t.served).length;
+  document.getElementById('stPriority').textContent = log.filter(t=>t.priority==='priority').length;
+}
+
+function renderCounterSummary() {
+  const queues = getQueues();
+  const list = document.getElementById('counterSummaryList');
+  list.innerHTML = '';
+  [1,2,3,4].forEach(c => {
+    const row = document.createElement('div');
+    row.className = 'cs-row'; row.dataset.c = c;
+    const tickets = queues[c];
+    const chipsHtml = tickets.length === 0 ? '<span class="cs-empty">Empty</span>'
+      : tickets.slice(0,6).map(t=>`<span class="cs-chip">${String(t.id).padStart(3,'0')}${t.priority==='priority'?'⚡':''}</span>`).join('')
+        + (tickets.length>6?`<span class="cs-empty">+${tickets.length-6}</span>`:'');
+    row.innerHTML = `<div class="cs-dot"></div><div class="cs-name">${COUNTER_NAMES[c-1]}</div><div class="cs-nums">${chipsHtml}</div>`;
+    list.appendChild(row);
+  });
+}
+
+function renderLog() {
+  const listEl = document.getElementById('logList');
+  document.getElementById('logEmpty').style.display = log.length===0?'block':'none';
+  Array.from(listEl.querySelectorAll('.log-item')).forEach(e=>e.remove());
+  log.slice(0,20).forEach(t => {
+    const item = document.createElement('div');
+    item.className = 'log-item'; item.dataset.c = t.counter;
+    item.innerHTML = `
+      <div class="log-num">${String(t.id).padStart(3,'0')}</div>
+      <div class="log-info">
+        <div class="log-svc">${t.service} · C${t.counter}${t.served?' <span style="font-size:9px;color:var(--muted)">[served]</span>':''}</div>
+        ${t.customer?`<div class="log-cust">${t.customer}</div>`:''}
+        ${t.priority==='priority'?'<div class="log-priority">⚡ Priority</div>':''}
+      </div>
+      <div class="log-meta">${t.time}</div>`;
+    listEl.appendChild(item);
+  });
+}
+
+function renderCounterCounts() {
+  const queues = getQueues();
+  [1,2,3,4].forEach(c => {
+    const el = document.getElementById(`cbcount-${c}`);
+    if (el) el.textContent = queues[c].length;
+  });
+}
+
+function clearLog() {
+  if (!confirm('Clear all log entries and reset queue?')) return;
+  log = []; ticketCounter = 0; saveState();
+}
+window.clearLog = clearLog;
+
+function resetNumbering() {
+  if (!confirm('Reset ticket numbering back to 001?\n\nThis will clear all existing tickets and queues on ALL connected devices.')) return;
+  log = []; ticketCounter = 0;
+  saveState(true);
+  showFlash('✓ Numbering reset — next ticket will be 001');
+}
+window.resetNumbering = resetNumbering;
+
+function showFlash(msg) {
+  const el = document.getElementById('issueFlash');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 2200);
+}
+</script>
+</body>
+</html>

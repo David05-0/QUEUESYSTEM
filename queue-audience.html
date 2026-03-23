@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Queue Display — Now Serving</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#06060a; --deep:#0d0d14; --panel:#10101a; --border:#1c1c2e;
+    --text:#eeeef6; --muted:#44445a; --dim:#2a2a3e;
+    --c1:#e67e22; --c2:#2980b9; --c3:#27ae60; --c4:#8e44ad;
+    --gold:#f0c040; --priority:#e74c3c;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;overflow:hidden}
+  .bg-grid{position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 1px);background-size:60px 60px;z-index:0;animation:gridDrift 40s linear infinite}
+  @keyframes gridDrift{from{background-position:0 0,0 0}to{background-position:60px 60px,60px 60px}}
+  .bg-vignette{position:fixed;inset:0;background:radial-gradient(ellipse at center,transparent 30%,rgba(6,6,10,0.85) 100%);z-index:0}
+  .shell{position:relative;z-index:1;width:100vw;height:100vh;display:grid;grid-template-rows:auto 1fr auto}
+
+  /* TOP BAR */
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 40px 16px;border-bottom:1px solid var(--border);background:rgba(13,13,20,0.85);backdrop-filter:blur(8px)}
+  .topbar-left{display:flex;align-items:center;gap:20px}
+  .logo-mark{width:38px;height:38px;border:2px solid var(--gold);border-radius:3px;display:flex;align-items:center;justify-content:center}
+  .logo-mark svg{width:20px;height:20px;fill:var(--gold)}
+  .brand-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:0.1em;line-height:1}
+  .brand-title span{color:var(--gold)}
+  .brand-sub{font-size:9px;letter-spacing:0.28em;color:var(--muted);text-transform:uppercase;margin-top:1px}
+  .topbar-center{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:0.3em;color:var(--muted);text-transform:uppercase;border:1px solid var(--border);padding:6px 16px;border-radius:2px}
+  .topbar-right{display:flex;align-items:center;gap:28px}
+  .stat-badge{text-align:center}
+  .stat-badge-val{font-family:'Bebas Neue',sans-serif;font-size:26px;line-height:1;letter-spacing:0.05em}
+  .stat-badge-lbl{font-size:8px;letter-spacing:0.22em;color:var(--muted);text-transform:uppercase;margin-top:1px}
+  .clock-display{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:0.1em;color:var(--text);border-left:1px solid var(--border);padding-left:28px}
+  .fb-live{font-size:8px;letter-spacing:0.2em;text-transform:uppercase;padding:3px 10px;border-radius:20px;color:#3ddc84;border:1px solid rgba(61,220,132,0.35);background:rgba(61,220,132,0.07);display:flex;align-items:center;gap:5px}
+  .fb-live-dot{width:5px;height:5px;border-radius:50%;background:#3ddc84;animation:fbPulse 2s ease infinite}
+  @keyframes fbPulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+  /* MAIN */
+  .main-content{display:grid;grid-template-columns:1fr 340px;overflow:hidden}
+
+  /* Counter panels */
+  .counters-area{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;border-right:1px solid var(--border)}
+  .counter-panel{position:relative;display:flex;flex-direction:column;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:28px 32px;overflow:hidden;transition:background 0.5s ease}
+  .counter-panel:nth-child(2){border-right:none}.counter-panel:nth-child(3){border-bottom:none}.counter-panel:nth-child(4){border-right:none;border-bottom:none}
+  .counter-panel::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity 0.8s ease;pointer-events:none}
+  .counter-panel[data-c="1"]::before{background:radial-gradient(ellipse at 30% 40%,rgba(230,126,34,0.12) 0%,transparent 65%)}
+  .counter-panel[data-c="2"]::before{background:radial-gradient(ellipse at 30% 40%,rgba(41,128,185,0.12) 0%,transparent 65%)}
+  .counter-panel[data-c="3"]::before{background:radial-gradient(ellipse at 30% 40%,rgba(39,174,96,0.12) 0%,transparent 65%)}
+  .counter-panel[data-c="4"]::before{background:radial-gradient(ellipse at 30% 40%,rgba(142,68,173,0.12) 0%,transparent 65%)}
+  .counter-panel.active::before{opacity:1}
+  .counter-accent-bar{position:absolute;left:0;top:0;bottom:0;width:4px}
+  .counter-panel[data-c="1"] .counter-accent-bar{background:var(--c1)}
+  .counter-panel[data-c="2"] .counter-accent-bar{background:var(--c2)}
+  .counter-panel[data-c="3"] .counter-accent-bar{background:var(--c3)}
+  .counter-panel[data-c="4"] .counter-accent-bar{background:var(--c4)}
+  .cp-label{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .cp-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .counter-panel[data-c="1"] .cp-dot{background:var(--c1)}.counter-panel[data-c="2"] .cp-dot{background:var(--c2)}
+  .counter-panel[data-c="3"] .cp-dot{background:var(--c3)}.counter-panel[data-c="4"] .cp-dot{background:var(--c4)}
+  .cp-name{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:0.18em;color:var(--muted)}
+  .cp-status-pill{margin-left:auto;font-size:8px;letter-spacing:0.18em;text-transform:uppercase;padding:3px 9px;border-radius:20px;border:1px solid var(--border);color:var(--muted);transition:all 0.4s}
+  .cp-status-pill.serving{color:#3ddc84;border-color:rgba(61,220,132,0.4);background:rgba(61,220,132,0.07);animation:pillPulse 2s ease infinite}
+  @keyframes pillPulse{0%,100%{opacity:1}50%{opacity:0.6}}
+  .cp-number-wrap{flex:1;display:flex;align-items:center;gap:20px}
+  .cp-number{font-family:'Bebas Neue',sans-serif;font-size:clamp(72px,9vw,130px);line-height:0.9;letter-spacing:0.02em;color:var(--muted);transition:color 0.4s,text-shadow 0.4s;position:relative}
+  .counter-panel[data-c="1"] .cp-number.has-num{color:var(--c1);text-shadow:0 0 60px rgba(230,126,34,0.35)}
+  .counter-panel[data-c="2"] .cp-number.has-num{color:var(--c2);text-shadow:0 0 60px rgba(41,128,185,0.35)}
+  .counter-panel[data-c="3"] .cp-number.has-num{color:var(--c3);text-shadow:0 0 60px rgba(39,174,96,0.35)}
+  .counter-panel[data-c="4"] .cp-number.has-num{color:var(--c4);text-shadow:0 0 60px rgba(142,68,173,0.35)}
+  .cp-number.pop{animation:numPop 0.55s cubic-bezier(0.34,1.56,0.64,1)}
+  @keyframes numPop{0%{transform:scale(0.6) translateY(20px);opacity:0}60%{transform:scale(1.08) translateY(-4px);opacity:1}100%{transform:scale(1) translateY(0)}}
+  .cp-now-lbl{font-size:9px;letter-spacing:0.25em;text-transform:uppercase;color:var(--muted)}
+  .cp-service-tag{font-size:11px;letter-spacing:0.1em;color:var(--text);opacity:0.7;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cp-customer{font-size:13px;letter-spacing:0.06em;font-weight:500;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .priority-tag{display:inline-flex;align-items:center;gap:4px;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--priority);border:1px solid rgba(231,76,60,0.35);background:rgba(231,76,60,0.08);padding:3px 7px;border-radius:2px;margin-top:2px}
+  .cp-wave{position:absolute;bottom:20px;right:28px;display:flex;align-items:center;gap:5px;opacity:0;transition:opacity 0.3s}
+  .cp-wave.active{opacity:1}
+  .cp-wave-label{font-size:8px;letter-spacing:0.2em;text-transform:uppercase}
+  .counter-panel[data-c="1"] .cp-wave-label{color:var(--c1)}.counter-panel[data-c="2"] .cp-wave-label{color:var(--c2)}
+  .counter-panel[data-c="3"] .cp-wave-label{color:var(--c3)}.counter-panel[data-c="4"] .cp-wave-label{color:var(--c4)}
+  .wave-bars{display:flex;gap:2px;align-items:flex-end}
+  .wave-bars span{display:block;width:3px;border-radius:1px;animation:barWave 0.9s ease infinite}
+  .counter-panel[data-c="1"] .wave-bars span{background:var(--c1)}.counter-panel[data-c="2"] .wave-bars span{background:var(--c2)}
+  .counter-panel[data-c="3"] .wave-bars span{background:var(--c3)}.counter-panel[data-c="4"] .wave-bars span{background:var(--c4)}
+  .wave-bars span:nth-child(1){height:6px;animation-delay:0s}.wave-bars span:nth-child(2){height:14px;animation-delay:0.15s}
+  .wave-bars span:nth-child(3){height:20px;animation-delay:0.28s}.wave-bars span:nth-child(4){height:12px;animation-delay:0.1s}
+  .wave-bars span:nth-child(5){height:8px;animation-delay:0.22s}
+  @keyframes barWave{0%,100%{transform:scaleY(0.3)}50%{transform:scaleY(1)}}
+  .cp-queue-row{display:flex;align-items:center;gap:8px;margin-top:14px;flex-wrap:wrap}
+  .cp-queue-lbl{font-size:8px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);flex-shrink:0}
+  .q-badge{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:0.06em;padding:2px 8px;border-radius:2px;background:var(--panel);border:1px solid var(--border);color:var(--dim)}
+  .q-badge.up-next{border-color:var(--muted);color:var(--text);opacity:0.8}
+  @keyframes fadeIn{from{opacity:0;transform:scale(0.88)}to{opacity:1;transform:scale(1)}}
+
+  /* SIDEBAR */
+  .sidebar{display:flex;flex-direction:column;overflow:hidden}
+  .last-called-section{flex-shrink:0;padding:20px 24px 16px;border-bottom:1px solid var(--border)}
+  .section-title{font-size:8px;letter-spacing:0.3em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+  .section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+  .last-called-card{background:var(--deep);border:1px solid var(--border);border-radius:3px;padding:16px 18px;display:flex;align-items:center;gap:14px;animation:slideInRight 0.4s ease}
+  @keyframes slideInRight{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+  .lc-num{font-family:'Bebas Neue',sans-serif;font-size:52px;line-height:1;letter-spacing:0.04em;flex-shrink:0}
+  .lc-info{flex:1;overflow:hidden}
+  .lc-counter{font-size:10px;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:3px}
+  .lc-svc{font-size:11px;letter-spacing:0.06em;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lc-cust{font-size:12px;letter-spacing:0.05em;color:var(--text);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lc-time{font-size:10px;color:var(--muted);letter-spacing:0.08em;flex-shrink:0}
+  .activity-section{flex:1;overflow:hidden;display:flex;flex-direction:column;padding:16px 24px 0}
+  .activity-feed{flex:1;overflow-y:auto;scrollbar-width:none}
+  .activity-feed::-webkit-scrollbar{display:none}
+  .activity-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);animation:feedSlide 0.35s ease}
+  @keyframes feedSlide{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+  .activity-item:last-child{border-bottom:none}
+  .ai-num{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:0.05em;min-width:46px;flex-shrink:0}
+  .activity-item[data-c="1"] .ai-num{color:var(--c1)}.activity-item[data-c="2"] .ai-num{color:var(--c2)}
+  .activity-item[data-c="3"] .ai-num{color:var(--c3)}.activity-item[data-c="4"] .ai-num{color:var(--c4)}
+  .ai-body{flex:1;overflow:hidden}
+  .ai-top{font-size:10px;letter-spacing:0.08em;color:var(--text);opacity:0.75}
+  .ai-bot{font-size:9px;letter-spacing:0.06em;color:var(--muted);margin-top:1px}
+  .ai-time{font-size:9px;color:var(--muted);flex-shrink:0}
+  .ai-prio{font-size:8px;padding:1px 5px;border-radius:2px;color:var(--priority);border:1px solid rgba(231,76,60,0.3);background:rgba(231,76,60,0.07);flex-shrink:0;letter-spacing:0.1em}
+
+  /* TICKER */
+  .bottom-bar{border-top:1px solid var(--border);background:rgba(13,13,20,0.9);backdrop-filter:blur(8px);display:flex;align-items:center;height:44px;overflow:hidden}
+  .ticker-label{flex-shrink:0;background:var(--gold);color:#06060a;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:0.15em;padding:0 18px;height:100%;display:flex;align-items:center}
+  .ticker-track{flex:1;overflow:hidden;height:100%;display:flex;align-items:center}
+  .ticker-inner{display:inline-block;white-space:nowrap;animation:tickerScroll 30s linear infinite;font-size:11px;letter-spacing:0.2em;color:var(--muted);text-transform:uppercase}
+  @keyframes tickerScroll{from{transform:translateX(100vw)}to{transform:translateX(-100%)}}
+
+  /* FLASH */
+  .call-flash{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;flex-direction:column;background:rgba(6,6,10,0.92);opacity:0;pointer-events:none;transition:opacity 0.3s}
+  .call-flash.show{opacity:1;pointer-events:all}
+  .cf-label{font-size:14px;letter-spacing:0.35em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;animation:cfFadeIn 0.4s ease}
+  .cf-number{font-family:'Bebas Neue',sans-serif;font-size:clamp(140px,22vw,260px);line-height:0.85;letter-spacing:0.04em;animation:cfZoomIn 0.5s cubic-bezier(0.34,1.56,0.64,1)}
+  .cf-counter{font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,4vw,48px);letter-spacing:0.15em;margin-top:12px;animation:cfFadeIn 0.5s ease 0.1s both}
+  .cf-service{font-size:14px;letter-spacing:0.15em;color:var(--muted);margin-top:6px;animation:cfFadeIn 0.5s ease 0.2s both}
+  .cf-customer{font-size:18px;letter-spacing:0.1em;color:var(--text);margin-top:4px;animation:cfFadeIn 0.5s ease 0.25s both}
+  @keyframes cfZoomIn{from{transform:scale(0.5);opacity:0}to{transform:scale(1);opacity:1}}
+  @keyframes cfFadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-vignette"></div>
+
+<div class="call-flash" id="callFlash">
+  <div class="cf-label">NOW SERVING</div>
+  <div class="cf-number" id="cfNumber" style="color:var(--gold)">000</div>
+  <div class="cf-counter" id="cfCounter" style="color:var(--muted)">Counter 1</div>
+  <div class="cf-service" id="cfService"></div>
+  <div class="cf-customer" id="cfCustomer"></div>
+</div>
+
+<div class="shell">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M4 4h6v6H4V4zm0 10h6v6H4v-6zm10-10h6v6h-6V4zm0 10h6v6h-6v-6z"/></svg></div>
+      <div>
+        <div class="brand-title">QUEUE<span>SYS</span></div>
+        <div class="brand-sub">Audience Display</div>
+      </div>
+    </div>
+    <div class="topbar-center">PLEASE WAIT FOR YOUR NUMBER TO BE CALLED</div>
+    <div class="topbar-right">
+      <div id="fbLiveIndicator" class="fb-live" style="opacity:0.4"><span class="fb-live-dot"></span>Firebase</div>
+      <div class="stat-badge"><div class="stat-badge-val" id="sbWaiting" style="color:var(--gold)">0</div><div class="stat-badge-lbl">Waiting</div></div>
+      <div class="stat-badge"><div class="stat-badge-val" id="sbServed" style="color:var(--c3)">0</div><div class="stat-badge-lbl">Served</div></div>
+      <div class="clock-display" id="clock">00:00:00</div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="counters-area" id="countersArea"></div>
+    <div class="sidebar">
+      <div class="last-called-section">
+        <div class="section-title">Last Called</div>
+        <div id="lastCalledWrap"><div style="font-size:10px;color:var(--muted);letter-spacing:0.15em;text-transform:uppercase;padding:12px 0">No calls yet</div></div>
+      </div>
+      <div class="activity-section">
+        <div class="section-title" style="flex-shrink:0">Recent Activity</div>
+        <div class="activity-feed" id="activityFeed"><div style="font-size:10px;color:var(--muted);letter-spacing:0.15em;text-transform:uppercase">No activity yet</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="ticker-label">NOTICE</div>
+    <div class="ticker-track"><div class="ticker-inner">PLEASE KEEP YOUR TICKET SAFE &nbsp;·&nbsp; LISTEN FOR YOUR NUMBER TO BE ANNOUNCED &nbsp;·&nbsp; PROCEED IMMEDIATELY TO YOUR ASSIGNED COUNTER &nbsp;·&nbsp; PRIORITY LANE: SENIORS, PWD &amp; PREGNANT WOMEN &nbsp;·&nbsp; THANK YOU FOR YOUR PATIENCE &nbsp;·&nbsp;</div></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     FIREBASE SDK
+════════════════════════════════════════ -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getDatabase, ref, onValue }
+  from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+/* ══════════════════════════════════════════
+   🔧 PASTE YOUR FIREBASE CONFIG HERE
+   (same config as the other two files)
+══════════════════════════════════════════ */
+const firebaseConfig = {
+  apiKey:            "PASTE_YOUR_apiKey_HERE",
+  authDomain:        "PASTE_YOUR_authDomain_HERE",
+  databaseURL:       "PASTE_YOUR_databaseURL_HERE",
+  projectId:         "PASTE_YOUR_projectId_HERE",
+  storageBucket:     "PASTE_YOUR_storageBucket_HERE",
+  messagingSenderId: "PASTE_YOUR_messagingSenderId_HERE",
+  appId:             "PASTE_YOUR_appId_HERE"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+const stateRef = ref(db, 'queueState');
+
+const COUNTER_NAMES = ['Counter 1','Counter 2','Counter 3','Counter 4'];
+const COLOR_HEX = {1:'#e67e22',2:'#2980b9',3:'#27ae60',4:'#8e44ad'};
+
+let sharedLog = [];
+let activityLog = [];
+let lastResetFlag = null;
+let flashTimer = null;
+
+let counterDisplay = [1,2,3,4].map(id=>({id,current:null,service:null,customer:null,priority:null,time:null}));
+
+// ── Clock ──
+function updateClock() {
+  const n = new Date();
+  document.getElementById('clock').textContent =
+    [n.getHours(),n.getMinutes(),n.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':');
+}
+setInterval(updateClock,1000); updateClock();
+
+// ── Build counter panels ──
+function buildCounters() {
+  const area = document.getElementById('countersArea');
+  area.innerHTML = '';
+  [1,2,3,4].forEach(id=>{
+    const panel = document.createElement('div');
+    panel.className='counter-panel'; panel.dataset.c=id;
+    panel.innerHTML=`
+      <div class="counter-accent-bar"></div>
+      <div class="cp-label"><div class="cp-dot"></div><div class="cp-name">${COUNTER_NAMES[id-1]}</div><div class="cp-status-pill" id="cpstatus-${id}">Idle</div></div>
+      <div class="cp-number-wrap">
+        <div class="cp-number" id="cpnum-${id}">—</div>
+        <div class="cp-info" id="cpinfo-${id}">
+          <div class="cp-now-lbl">Now Serving</div>
+          <div class="cp-service-tag" id="cpsvc-${id}"></div>
+          <div class="cp-customer" id="cpcust-${id}"></div>
+        </div>
+      </div>
+      <div class="cp-queue-row" id="cpqueue-${id}"><span class="cp-queue-lbl">Next:</span><span style="font-size:10px;color:var(--muted)">—</span></div>
+      <div class="cp-wave" id="cpwave-${id}">
+        <div class="wave-bars"><span></span><span></span><span></span><span></span><span></span></div>
+        <div class="cp-wave-label">Announcing</div>
+      </div>`;
+    area.appendChild(panel);
+  });
+}
+
+function getQueues() {
+  const q={1:[],2:[],3:[],4:[]};
+  sharedLog.filter(t=>!t.served).forEach(t=>{ if(q[t.counter]) q[t.counter].push(t); });
+  [1,2,3,4].forEach(c=>q[c].sort((a,b)=>a.priority===b.priority?a.id-b.id:a.priority==='priority'?-1:1));
+  return q;
+}
+
+// ── Firebase listener ──
+onValue(stateRef, snap=>{
+  document.getElementById('fbLiveIndicator').style.opacity='1';
+  const data = snap.val()||{};
+  const newReset = data.resetFlag||null;
+
+  if (newReset && newReset!==lastResetFlag) {
+    // Full reset
+    lastResetFlag = newReset;
+    sharedLog=[]; activityLog=[];
+    counterDisplay=[1,2,3,4].map(id=>({id,current:null,service:null,customer:null,priority:null,time:null}));
+    if(flashTimer) clearTimeout(flashTimer);
+    document.getElementById('callFlash').classList.remove('show');
+    [1,2,3,4].forEach(id=>{ const w=document.getElementById(`cpwave-${id}`); if(w) w.classList.remove('active'); });
+    renderAll(); return;
+  }
+  lastResetFlag=newReset;
+
+  const newLog = data.log||[];
+  // Detect newly served tickets
+  const prevServedIds = new Set(sharedLog.filter(t=>t.served).map(t=>t.id));
+  const newlyServed = newLog.filter(t=>t.served && !prevServedIds.has(t.id));
+
+  sharedLog = newLog;
+
+  newlyServed.forEach(t=>{
+    const cd = counterDisplay[t.counter-1];
+    cd.current=t.id; cd.service=t.service; cd.customer=t.customer; cd.priority=t.priority; cd.time=t.time;
+    activityLog.unshift({num:t.id,counter:t.counter,service:t.service,customer:t.customer,priority:t.priority,time:t.time||nowTime()});
+    if(activityLog.length>40) activityLog.pop();
+    triggerCallFlash(t);
+  });
+
+  renderAll();
+}, err=>{ console.error(err); document.getElementById('fbLiveIndicator').style.opacity='0.3'; });
+
+function nowTime(){
+  const n=new Date();
+  return [n.getHours(),n.getMinutes(),n.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':');
+}
+
+function renderCounters(){
+  const queues=getQueues();
+  [1,2,3,4].forEach(id=>{
+    const cd=counterDisplay[id-1];
+    const waiting=queues[id]||[];
+    const panel=document.querySelector(`.counter-panel[data-c="${id}"]`);
+    const numEl=document.getElementById(`cpnum-${id}`);
+    const statusEl=document.getElementById(`cpstatus-${id}`);
+
+    if(cd.current!==null){
+      numEl.textContent=String(cd.current).padStart(3,'0');
+      numEl.className='cp-number has-num';
+      panel.classList.add('active');
+      statusEl.textContent='Serving'; statusEl.className='cp-status-pill serving';
+    } else {
+      numEl.textContent='—'; numEl.className='cp-number';
+      panel.classList.remove('active');
+      statusEl.textContent=waiting.length>0?'Ready':'Idle'; statusEl.className='cp-status-pill';
+    }
+
+    document.getElementById(`cpsvc-${id}`).textContent=cd.service||'';
+    document.getElementById(`cpcust-${id}`).textContent=cd.customer||'';
+
+    const queueEl=document.getElementById(`cpqueue-${id}`);
+    queueEl.innerHTML=`<span class="cp-queue-lbl">Next:</span>`;
+    if(!waiting.length){ queueEl.innerHTML+='<span style="font-size:10px;color:var(--muted)">—</span>'; }
+    else {
+      waiting.slice(0,5).forEach((t,i)=>{
+        const b=document.createElement('span'); b.className='q-badge'+(i===0?' up-next':'');
+        b.textContent=String(t.id).padStart(3,'0')+(t.priority==='priority'?' ⚡':'');
+        queueEl.appendChild(b);
+      });
+      if(waiting.length>5){ const m=document.createElement('span'); m.style.cssText='font-size:10px;color:var(--muted);letter-spacing:0.1em'; m.textContent=`+${waiting.length-5}`; queueEl.appendChild(m); }
+    }
+  });
+}
+
+function renderStats(){
+  document.getElementById('sbWaiting').textContent=sharedLog.filter(t=>!t.served).length;
+  document.getElementById('sbServed').textContent=sharedLog.filter(t=>t.served).length;
+}
+
+function renderLastCalled(){
+  const wrap=document.getElementById('lastCalledWrap');
+  if(!activityLog.length){ wrap.innerHTML='<div style="font-size:10px;color:var(--muted);letter-spacing:0.15em;text-transform:uppercase;padding:12px 0">No calls yet</div>'; return; }
+  const last=activityLog[0];
+  const color=COLOR_HEX[last.counter];
+  wrap.innerHTML=`<div class="last-called-card">
+    <div class="lc-num" style="color:${color}">${String(last.num).padStart(3,'0')}</div>
+    <div class="lc-info">
+      <div class="lc-counter" style="color:${color}">${COUNTER_NAMES[last.counter-1]}</div>
+      <div class="lc-svc">${last.service||''}${last.priority==='priority'?' ⚡':''}</div>
+      ${last.customer?`<div class="lc-cust">${last.customer}</div>`:''}
+    </div>
+    <div class="lc-time">${last.time||''}</div>
+  </div>`;
+}
+
+function renderActivityFeed(){
+  const feed=document.getElementById('activityFeed');
+  if(!activityLog.length){ feed.innerHTML='<div style="font-size:10px;color:var(--muted);letter-spacing:0.15em;text-transform:uppercase">No activity yet</div>'; return; }
+  feed.innerHTML='';
+  activityLog.slice(0,20).forEach(a=>{
+    const item=document.createElement('div');
+    item.className='activity-item'; item.dataset.c=a.counter;
+    item.innerHTML=`<div class="ai-num">${String(a.num).padStart(3,'0')}</div>
+      <div class="ai-body"><div class="ai-top">${COUNTER_NAMES[a.counter-1]} · ${a.service||''}</div>${a.customer?`<div class="ai-bot">${a.customer}</div>`:''}</div>
+      ${a.priority==='priority'?'<div class="ai-prio">⚡</div>':''}
+      <div class="ai-time">${a.time||''}</div>`;
+    feed.appendChild(item);
+  });
+}
+
+function triggerCallFlash(ticket){
+  const color=COLOR_HEX[ticket.counter];
+  document.getElementById('cfNumber').textContent=String(ticket.id).padStart(3,'0');
+  document.getElementById('cfNumber').style.color=color;
+  document.getElementById('cfCounter').textContent=COUNTER_NAMES[ticket.counter-1].toUpperCase();
+  document.getElementById('cfCounter').style.color=color;
+  document.getElementById('cfService').textContent=ticket.service?`Service: ${ticket.service}`:'';
+  document.getElementById('cfCustomer').textContent=ticket.customer||'';
+  document.getElementById('callFlash').classList.add('show');
+  if(flashTimer) clearTimeout(flashTimer);
+  flashTimer=setTimeout(()=>document.getElementById('callFlash').classList.remove('show'),3500);
+
+  const numEl=document.getElementById(`cpnum-${ticket.counter}`);
+  if(numEl){ numEl.classList.remove('pop'); void numEl.offsetWidth; numEl.classList.add('pop'); setTimeout(()=>numEl.classList.remove('pop'),600); }
+  const waveEl=document.getElementById(`cpwave-${ticket.counter}`);
+  if(waveEl){ waveEl.classList.add('active'); setTimeout(()=>waveEl.classList.remove('active'),5000); }
+}
+
+function renderAll(){
+  renderCounters(); renderStats(); renderLastCalled(); renderActivityFeed();
+}
+
+buildCounters();
+renderAll();
+</script>
+</body>
+</html>
