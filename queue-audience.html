@@ -261,6 +261,7 @@ const COLOR_BG  = {1:'rgba(230,126,34,0.1)',2:'rgba(36,113,163,0.1)',3:'rgba(30,
 let sharedLog = [];
 let activityLog = [];
 let lastResetFlag = null;
+let lastCallTs = null; // tracks lastCall.ts to detect new calls
 let flashTimer = null;
 let audioUnlocked = false;
 let audioCtx = null;
@@ -331,9 +332,10 @@ onValue(stateRef,snap=>{
   document.getElementById('fbLiveIndicator').style.opacity='1';
   const data=snap.val()||{};
   const newReset=data.resetFlag||null;
+
   if(newReset&&newReset!==lastResetFlag){
     lastResetFlag=newReset;
-    sharedLog=[]; activityLog=[];
+    sharedLog=[]; activityLog=[]; lastCallTs=null;
     counterDisplay=[1,2,3,4].map(id=>({id,current:null,service:null,customer:null,priority:null,time:null}));
     if(flashTimer) clearTimeout(flashTimer);
     document.getElementById('callFlash').classList.remove('show');
@@ -341,17 +343,32 @@ onValue(stateRef,snap=>{
     renderAll(); return;
   }
   lastResetFlag=newReset;
-  const newLog=data.log||[];
-  const prevServedIds=new Set(sharedLog.filter(t=>t.served).map(t=>t.id));
-  const newlyServed=newLog.filter(t=>t.served&&!prevServedIds.has(t.id));
-  sharedLog=newLog;
-  newlyServed.forEach(t=>{
-    const cd=counterDisplay[t.counter-1];
-    cd.current=t.id; cd.service=t.service; cd.customer=t.customer; cd.priority=t.priority; cd.time=t.time;
-    activityLog.unshift({num:t.id,counter:t.counter,service:t.service,customer:t.customer,priority:t.priority,time:t.time||nowTime()});
+
+  // Update shared log for queue display counters
+  sharedLog=data.log||[];
+
+  // ── React to a number being CALLED (lastCall.ts changes) ──
+  // This fires the moment a counter clicks "Call Next", before they click Done
+  const lc=data.lastCall||null;
+  if(lc && lc.ts && lc.ts!==lastCallTs){
+    lastCallTs=lc.ts;
+    // Update the counter display panel
+    const cd=counterDisplay[lc.counter-1];
+    cd.current=lc.ticketId; cd.service=lc.service; cd.customer=lc.customer;
+    cd.priority=lc.priority; cd.time=nowTime();
+    // Add to activity feed
+    activityLog.unshift({
+      num:lc.ticketId, counter:lc.counter, service:lc.service,
+      customer:lc.customer, priority:lc.priority, time:nowTime()
+    });
     if(activityLog.length>40) activityLog.pop();
-    triggerCallFlash(t);
-  });
+    // Trigger the full-screen flash + voice announcement
+    triggerCallFlash({
+      id:lc.ticketId, counter:lc.counter, service:lc.service,
+      customer:lc.customer, priority:lc.priority
+    });
+  }
+
   renderAll();
 },()=>{document.getElementById('fbLiveIndicator').style.opacity='0.3';});
 
