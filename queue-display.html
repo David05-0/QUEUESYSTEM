@@ -238,6 +238,15 @@
   #counterView.c3 .claim-flash{background:rgba(30,132,73,0.18);color:var(--c3)}
   #counterView.c4 .claim-flash{background:rgba(125,60,152,0.18);color:var(--c4)}
 
+  /* Served log */
+  .served-list{display:flex;flex-direction:column;gap:4px;max-height:130px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+  .served-item{display:flex;align-items:center;gap:8px;padding:5px 8px;background:var(--panel);border:1px solid var(--border);border-left:2px solid var(--green);border-radius:3px;animation:slideIn 0.2s ease}
+  .served-num{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:0.04em;color:var(--green);min-width:34px;flex-shrink:0}
+  .served-info{flex:1;overflow:hidden}
+  .served-svc{font-size:7.5px;letter-spacing:0.07em;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .served-cust{font-size:9px;letter-spacing:0.04em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .served-time{font-size:7px;color:var(--muted);flex-shrink:0}
+
   @keyframes popIn{from{transform:scale(0.82);opacity:0}to{transform:scale(1);opacity:1}}
 
   .toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--panel);border:1px solid var(--border);color:var(--text);padding:9px 22px;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:0.1em;opacity:0;transition:all 0.3s;pointer-events:none;z-index:99}
@@ -340,6 +349,13 @@
         <div class="hist-chips" id="cvHist"><span style="font-size:9px;color:var(--muted)">None yet</span></div>
       </div>
 
+      <div class="cv-sec">
+        <div class="cv-sec-title">Served Today</div>
+        <div class="served-list" id="cvServedLog">
+          <span style="font-size:9px;color:var(--muted)">None yet</span>
+        </div>
+      </div>
+
       <div class="cv-sec grow">
         <div class="cv-sec-title">My Queue <span style="font-size:6.5px;color:var(--muted);letter-spacing:0.06em;margin-left:3px">DRAG → HOLD ZONE</span></div>
         <div class="cv-queue-list" id="cvQueueList"
@@ -401,6 +417,7 @@ let myHistory  = [];
 let myServed   = 0;
 let lastResetFlag = null;
 let dragId = null;
+let myServedLog = []; // local list of clients marked done this session
 
 // ── Clock ──
 function updateClock(){
@@ -418,7 +435,7 @@ onValue(stateRef,snap=>{
   const newReset=data.resetFlag||null;
   if(newReset&&newReset!==lastResetFlag){
     lastResetFlag=newReset;
-    sharedLog=[]; sharedTicketCounter=0; myHistory=[]; myServed=0; activeTicketId=null;
+    sharedLog=[]; sharedTicketCounter=0; myHistory=[]; myServed=0; activeTicketId=null; myServedLog=[];
     clearDisplay(); showToast('↺ Queue reset by admin');
   } else {
     sharedLog=data.log||[];
@@ -433,7 +450,7 @@ onValue(stateRef,snap=>{
 });
 
 function saveShared(){
-  set(stateRef,{ticketCounter:sharedTicketCounter,log:sharedLog,lastUpdate:Date.now(),resetFlag:lastResetFlag});
+  set(stateRef,{ticketCounter:sharedTicketCounter,log:sharedLog,lastUpdate:Date.now(),resetFlag:lastResetFlag,lastCall:window._lastCall||null});
 }
 
 // ── Queue helpers ──
@@ -453,6 +470,11 @@ function unassigned(){
 function activeTicket(){ return sharedLog.find(t=>t.id===activeTicketId)||null; }
 
 // ── Login ──
+function nowTime(){
+  const n=new Date();
+  return [n.getHours(),n.getMinutes(),n.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':');
+}
+
 function buildLogin(){
   const grid=document.getElementById('loginGrid');
   grid.innerHTML='';
@@ -480,7 +502,7 @@ function refreshLoginCounts(){
 }
 
 function login(id){
-  activeCounter=id; myHistory=[]; myServed=0; activeTicketId=null;
+  activeCounter=id; myHistory=[]; myServed=0; activeTicketId=null; myServedLog=[];
   const view=document.getElementById('counterView');
   view.className=`visible c${id}`;
   document.getElementById('cvName').textContent=COUNTER_NAMES[id-1];
@@ -530,6 +552,17 @@ function callNext(){
   if(!q.length) return;
   const ticket=q[0];
   activeTicketId=ticket.id;
+
+  // Push lastCall to Firebase so audience screen projects & announces
+  window._lastCall={
+    ticketId: ticket.id,
+    counter:  activeCounter,
+    service:  ticket.service||'',
+    customer: ticket.customer||null,
+    priority: ticket.priority||'normal',
+    ts:       Date.now()
+  };
+  saveShared();
 
   updateNowServing(ticket);
   renderView();
@@ -632,6 +665,7 @@ function sendToHold(type){
 window.sendToHold=sendToHold;
 
 // ── Mark active ticket as Done / Served ──
+// Once served it stays served — cannot be re-called
 function markDone(){
   if(activeTicketId===null) return;
   const t=sharedLog.find(x=>x.id===activeTicketId);
@@ -639,6 +673,8 @@ function markDone(){
   t.served=true;
   t.compliance=false;
   t.paymentHold=false;
+  // Track in local served log for display
+  myServedLog.unshift({ id:t.id, service:t.service||'', customer:t.customer||null, time: nowTime() });
   saveShared();
   myHistory.unshift(t.id);
   if(myHistory.length>6) myHistory.pop();
@@ -789,11 +825,27 @@ function renderView(){
   renderHoldZone(comply, 'complyChips','complyEmpty','c-chip');
   renderHoldZone(payment,'paymentChips','paymentEmpty','p-chip');
 
-  // History
+  // History (called numbers)
   const histEl=document.getElementById('cvHist');
   histEl.innerHTML=myHistory.length===0
     ?'<span style="font-size:9px;color:var(--muted)">None yet</span>'
     :myHistory.map(n=>`<span class="hist-chip">${String(n).padStart(3,'0')}</span>`).join('');
+
+  // Served log
+  const servedEl=document.getElementById('cvServedLog');
+  if(!myServedLog.length){
+    servedEl.innerHTML='<span style="font-size:9px;color:var(--muted)">None yet</span>';
+  } else {
+    servedEl.innerHTML=myServedLog.map(s=>`
+      <div class="served-item">
+        <div class="served-num">${String(s.id).padStart(3,'0')}</div>
+        <div class="served-info">
+          <div class="served-svc">${s.service}</div>
+          ${s.customer?`<div class="served-cust">${s.customer}</div>`:''}
+        </div>
+        <div class="served-time">${s.time}</div>
+      </div>`).join('');
+  }
 
   // Pool
   const poolList=document.getElementById('poolList');
