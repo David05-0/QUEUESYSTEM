@@ -502,7 +502,7 @@ function doSpeak(ticket, onDone){
   const cnum=ticket.counter;
   const num=ticket.id;
   // "Number 1, please go to Counter 4. Number 1, Counter 4."
-  const line1=`Number ${num}, please go to Counter ${cnum}.`;
+  const line1=`Number ${num}, proceed to Counter ${cnum}.`;
   const line2=`Number ${num}, Counter ${cnum}.`;
   const full = ticket.priority==='priority'
     ? `Priority customer. ${line1} ${line2}`
