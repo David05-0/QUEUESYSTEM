@@ -244,6 +244,7 @@ let activityLog = [];
 let lastResetFlag = null;
 let flashTimer = null;
 let audioUnlocked = false;
+let audioCtx = null;
 
 let counterDisplay = [1,2,3,4].map(id=>({id,current:null,service:null,customer:null,priority:null,time:null}));
 
@@ -252,10 +253,22 @@ function startDisplay() {
   audioUnlocked = true;
   document.getElementById('startOverlay').classList.add('hidden');
 
-  // Warm up speech synthesis with a silent utterance so TV browser is ready
+  // Unlock Web Audio Context (required by Samsung TV browser)
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const buf = audioCtx.createBuffer(1, 1, 22050);
+    const src = audioCtx.createBufferSource();
+    src.buffer = buf;
+    src.connect(audioCtx.destination);
+    src.start(0);
+  } catch(e) { console.warn('AudioContext init failed:', e); }
+
+  // Warm up SpeechSynthesis with a barely-audible utterance
   if (window.speechSynthesis) {
+    window.speechSynthesis.cancel();
     const warmup = new SpeechSynthesisUtterance(' ');
-    warmup.volume = 0;
+    warmup.volume = 0.01;
+    warmup.rate = 1;
     window.speechSynthesis.speak(warmup);
   }
 }
@@ -438,27 +451,95 @@ function triggerCallFlash(ticket){
   speak(ticket);
 }
 
+// ── Attention chime via Web Audio API ──
+function playChime() {
+  if (!audioCtx) return;
+  try {
+    [[880, 0, 0.15], [660, 0.2, 0.25]].forEach(([freq, start, dur]) => {
+      const osc  = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime + start);
+      gain.gain.setValueAtTime(0, audioCtx.currentTime + start);
+      gain.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + start + dur);
+      osc.start(audioCtx.currentTime + start);
+      osc.stop(audioCtx.currentTime + start + dur + 0.05);
+    });
+  } catch(e) { console.warn('Chime failed:', e); }
+}
+
+// ── Speak: Samsung TV compatible ──
 function speak(ticket) {
-  if (!window.speechSynthesis || !audioUnlocked) return;
-  window.speechSynthesis.cancel();
+  if (!audioUnlocked) return;
 
   const counterName = COUNTER_NAMES[ticket.counter - 1];
   const num = ticket.id;
-  let text = `Now serving number ${num} at ${counterName}.`;
-  if (ticket.customer) text += ` ${ticket.customer},`;
-  text += ` Number ${num}, please proceed to ${counterName}.`;
+  let text = `Now serving number ${num} at ${counterName}. Number ${num}, please proceed to ${counterName}.`;
   if (ticket.priority === 'priority') text = 'Priority customer. ' + text;
 
-  const utter = new SpeechSynthesisUtterance(text);
-  utter.rate = 0.86; utter.pitch = 1.0; utter.volume = 1;
+  // Play chime first, then speak
+  playChime();
+  setTimeout(() => doSpeak(text), 700);
+}
 
-  const voices = window.speechSynthesis.getVoices();
-  const preferred = voices.find(v =>
-    v.lang.startsWith('en') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium'))
-  ) || voices.find(v => v.lang.startsWith('en')) || voices[0];
-  if (preferred) utter.voice = preferred;
+function doSpeak(text) {
+  if (!window.speechSynthesis) return;
 
-  window.speechSynthesis.speak(utter);
+  // Samsung TV needs a cancel + delay before new utterance
+  window.speechSynthesis.cancel();
+
+  setTimeout(() => {
+    const voices = window.speechSynthesis.getVoices();
+
+    // Pick best English voice — prefer network/cloud voices over local
+    const preferred =
+      voices.find(v => v.lang === 'en-US' && v.name.includes('Google')) ||
+      voices.find(v => v.lang === 'en-US' && !v.localService)           ||
+      voices.find(v => v.lang.startsWith('en') && !v.localService)      ||
+      voices.find(v => v.lang.startsWith('en'))                         ||
+      (voices.length > 0 ? voices[0] : null);
+
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.rate   = 0.82;
+    utter.pitch  = 1.0;
+    utter.volume = 1;
+    utter.lang   = 'en-US';
+    if (preferred) utter.voice = preferred;
+
+    utter.onerror = (e) => {
+      console.warn('SpeechSynthesis error:', e.error);
+      // Last resort: try again with no voice specified
+      if (e.error !== 'canceled') {
+        setTimeout(() => {
+          const retry = new SpeechSynthesisUtterance(text);
+          retry.rate = 0.82; retry.volume = 1; retry.lang = 'en-US';
+          window.speechSynthesis.speak(retry);
+        }, 500);
+      }
+    };
+
+    window.speechSynthesis.speak(utter);
+
+    // Watchdog: Samsung TV sometimes silently swallows utterances
+    // If speech hasn't started in 2 seconds, retry
+    let started = false;
+    utter.onstart = () => { started = true; };
+    setTimeout(() => {
+      if (!started && audioUnlocked) {
+        console.warn('Speech did not start — retrying');
+        window.speechSynthesis.cancel();
+        setTimeout(() => {
+          const retry = new SpeechSynthesisUtterance(text);
+          retry.rate = 0.82; retry.volume = 1; retry.lang = 'en-US';
+          window.speechSynthesis.speak(retry);
+        }, 300);
+      }
+    }, 2000);
+
+  }, 200);
 }
 
 function renderAll(){
