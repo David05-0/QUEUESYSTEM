@@ -6,62 +6,60 @@
 <title>Queue Admin — POEA / OWWA Desk</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg:#f4f1ea; --paper:#fdfaf3; --ink:#18180f;
-    --rule:#d5d0c2; --accent:#b03a2e; --accent2:#1a3a5c;
-    --muted:#857f72; --shadow:rgba(24,24,15,0.10);
-    --green:#1e8449;
-    --c1:#e67e22; --c1bg:#fdf3ec; --c1b:rgba(230,126,34,0.35);
-    --c2:#2471a3; --c2bg:#eaf3fb; --c2b:rgba(36,113,163,0.35);
-    --c3:#1e8449; --c3bg:#eafaf1; --c3b:rgba(30,132,73,0.35);
-    --c4:#7d3c98; --c4bg:#f5eefb; --c4b:rgba(125,60,152,0.35);
+  :root{
+    --bg:#f4f1ea;--paper:#fdfaf3;--ink:#18180f;
+    --rule:#d5d0c2;--accent:#b03a2e;--accent2:#1a3a5c;
+    --muted:#857f72;--shadow:rgba(24,24,15,0.10);--green:#1e8449;
+    --c1:#e67e22;--c1bg:#fdf3ec;--c1b:rgba(230,126,34,0.35);
+    --c2:#2471a3;--c2bg:#eaf3fb;--c2b:rgba(36,113,163,0.35);
+    --c3:#1e8449;--c3bg:#eafaf1;--c3b:rgba(30,132,73,0.35);
+    --c4:#7d3c98;--c4bg:#f5eefb;--c4b:rgba(125,60,152,0.35);
   }
   *{margin:0;padding:0;box-sizing:border-box}
   body{background:var(--bg);color:var(--ink);font-family:'DM Mono',monospace;min-height:100vh}
   body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
-  .app{position:relative;z-index:1;max-width:1140px;margin:0 auto;padding:28px 20px 60px}
+  .app{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:24px 20px 60px}
 
-  header{display:flex;align-items:flex-end;justify-content:space-between;border-bottom:2px solid var(--ink);padding-bottom:16px;margin-bottom:28px;flex-wrap:wrap;gap:10px}
+  header{display:flex;align-items:flex-end;justify-content:space-between;border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:24px;flex-wrap:wrap;gap:10px}
   .brand-sup{font-size:9px;letter-spacing:0.32em;color:var(--muted);text-transform:uppercase;margin-bottom:2px}
-  .brand-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(34px,5vw,58px);letter-spacing:0.04em;line-height:1}
+  .brand-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(32px,4vw,52px);letter-spacing:0.04em;line-height:1}
   .brand-title span{color:var(--accent)}
-  .header-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
-  .clock{font-family:'Bebas Neue',sans-serif;font-size:clamp(26px,3.5vw,40px);color:var(--muted);letter-spacing:0.08em}
-  .fb-status{display:inline-flex;align-items:center;gap:5px;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;padding:3px 9px;border-radius:20px;border:1px solid var(--rule);color:var(--muted)}
+  .header-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+  .clock{font-family:'Bebas Neue',sans-serif;font-size:clamp(24px,3vw,38px);color:var(--muted);letter-spacing:0.08em}
+  .fb-status{display:inline-flex;align-items:center;gap:5px;font-size:8px;letter-spacing:0.16em;text-transform:uppercase;padding:3px 9px;border-radius:20px;border:1px solid var(--rule);color:var(--muted)}
   .fb-status.connected{color:var(--green);border-color:rgba(30,132,73,0.4);background:rgba(30,132,73,0.07)}
   .fb-status.error{color:var(--accent);border-color:rgba(176,58,46,0.4);background:rgba(176,58,46,0.07)}
   .fb-dot{width:5px;height:5px;border-radius:50%;background:currentColor}
-  .nav-links{display:flex;gap:10px;margin-top:2px}
-  .nav-link{font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:var(--accent2);text-decoration:none;border-bottom:1px solid var(--accent2);padding-bottom:1px;transition:color 0.15s}
+  .nav-links{display:flex;gap:8px;margin-top:2px}
+  .nav-link{font-size:8px;letter-spacing:0.16em;text-transform:uppercase;color:var(--accent2);text-decoration:none;border-bottom:1px solid var(--accent2);padding-bottom:1px;transition:color 0.15s}
   .nav-link:hover{color:var(--accent);border-color:var(--accent)}
 
-  .main-grid{display:grid;grid-template-columns:1.15fr 0.85fr;gap:24px;align-items:start}
-  @media(max-width:740px){.main-grid{grid-template-columns:1fr}}
+  /* ── 3-column layout ── */
+  .layout{display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start}
+  @media(max-width:860px){.layout{grid-template-columns:1fr}}
 
   /* Issue panel */
-  .issue-panel{background:var(--paper);border:1px solid var(--rule);border-radius:2px;box-shadow:0 2px 12px var(--shadow);overflow:hidden}
-  .panel-head{background:var(--ink);color:var(--bg);padding:13px 22px;display:flex;align-items:center;justify-content:space-between}
-  .panel-head-title{font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:0.1em}
-  .panel-head-sub{font-size:8px;letter-spacing:0.2em;color:rgba(244,241,234,0.45);text-transform:uppercase}
-  .panel-body{padding:22px 20px}
-  .field-label{font-size:9px;letter-spacing:0.25em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+  .issue-panel{background:var(--paper);border:1px solid var(--rule);border-radius:2px;box-shadow:0 2px 12px var(--shadow);overflow:hidden;position:sticky;top:20px}
+  .panel-head{background:var(--ink);color:var(--bg);padding:12px 20px;display:flex;align-items:center;justify-content:space-between}
+  .panel-head-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:0.1em}
+  .panel-head-sub{font-size:8px;letter-spacing:0.18em;color:rgba(244,241,234,0.45);text-transform:uppercase}
+  .panel-body{padding:18px 18px 20px}
+  .field-label{font-size:8px;letter-spacing:0.24em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
 
-  /* Services — 2 cols, compact */
-  .service-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:20px}
-  .service-btn{border:1.5px solid var(--rule);background:var(--bg);border-radius:3px;padding:10px 8px;cursor:pointer;transition:all 0.14s;text-align:left;font-family:'DM Mono',monospace;display:flex;align-items:center;gap:8px}
+  .service-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px}
+  .service-btn{border:1.5px solid var(--rule);background:var(--bg);border-radius:3px;padding:9px 7px;cursor:pointer;transition:all 0.13s;text-align:left;font-family:'DM Mono',monospace;display:flex;align-items:center;gap:7px}
   .service-btn:hover{border-color:var(--ink)}
   .service-btn.selected{border-color:var(--ink);background:var(--ink);color:var(--bg)}
-  .svc-icon{font-size:16px;flex-shrink:0}
-  .svc-text .svc-name{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;font-weight:500;display:block}
-  .svc-text .svc-code{font-size:8px;letter-spacing:0.08em;color:var(--muted);margin-top:1px;display:block}
+  .svc-icon{font-size:15px;flex-shrink:0}
+  .svc-name{font-size:9px;letter-spacing:0.09em;text-transform:uppercase;font-weight:500;display:block}
+  .svc-code{font-size:7.5px;letter-spacing:0.07em;color:var(--muted);margin-top:1px;display:block}
   .service-btn.selected .svc-code{color:rgba(244,241,234,0.5)}
 
-  /* Counter buttons */
-  .counter-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:20px}
-  .counter-btn{border:2px solid var(--rule);background:var(--bg);border-radius:3px;padding:12px 5px;cursor:pointer;transition:all 0.14s;text-align:center;font-family:'DM Mono',monospace;position:relative}
-  .cb-num{font-family:'Bebas Neue',sans-serif;font-size:24px;line-height:1;display:block}
-  .cb-lbl{font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-top:2px;display:block;transition:color 0.14s}
-  .cb-count{position:absolute;top:4px;right:6px;font-size:8px;color:var(--muted);letter-spacing:0.05em}
+  .counter-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:16px}
+  .counter-btn{border:2px solid var(--rule);background:var(--bg);border-radius:3px;padding:11px 4px;cursor:pointer;transition:all 0.13s;text-align:center;font-family:'DM Mono',monospace;position:relative}
+  .cb-num{font-family:'Bebas Neue',sans-serif;font-size:22px;line-height:1;display:block}
+  .cb-lbl{font-size:7px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin-top:2px;display:block;transition:color 0.13s}
+  .cb-count{position:absolute;top:3px;right:5px;font-size:8px;color:var(--muted)}
   .counter-btn[data-c="1"]:hover,.counter-btn[data-c="1"].selected{border-color:var(--c1)}
   .counter-btn[data-c="2"]:hover,.counter-btn[data-c="2"].selected{border-color:var(--c2)}
   .counter-btn[data-c="3"]:hover,.counter-btn[data-c="3"].selected{border-color:var(--c3)}
@@ -71,90 +69,118 @@
   .counter-btn[data-c="3"].selected{background:var(--c3bg)} .counter-btn[data-c="3"].selected .cb-num{color:var(--c3)} .counter-btn[data-c="3"].selected .cb-lbl{color:var(--c3)}
   .counter-btn[data-c="4"].selected{background:var(--c4bg)} .counter-btn[data-c="4"].selected .cb-num{color:var(--c4)} .counter-btn[data-c="4"].selected .cb-lbl{color:var(--c4)}
 
-  .name-row{margin-bottom:18px}
-  .name-input{width:100%;font-family:'DM Mono',monospace;font-size:12px;padding:10px 12px;background:var(--bg);border:1.5px solid var(--rule);border-radius:3px;color:var(--ink);outline:none;transition:border-color 0.14s}
+  .name-row{margin-bottom:14px}
+  .name-input{width:100%;font-family:'DM Mono',monospace;font-size:12px;padding:9px 11px;background:var(--bg);border:1.5px solid var(--rule);border-radius:3px;color:var(--ink);outline:none;transition:border-color 0.13s}
   .name-input:focus{border-color:var(--ink)}
   .name-input::placeholder{color:var(--muted)}
 
-  .priority-row{display:flex;align-items:center;gap:10px;margin-bottom:22px;flex-wrap:wrap}
-  .toggle-wrap{display:flex;gap:7px}
-  .priority-opt{border:1.5px solid var(--rule);background:var(--bg);border-radius:3px;padding:7px 14px;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;font-family:'DM Mono',monospace;transition:all 0.14s}
+  .priority-row{display:flex;align-items:center;gap:9px;margin-bottom:18px;flex-wrap:wrap}
+  .toggle-wrap{display:flex;gap:6px}
+  .priority-opt{border:1.5px solid var(--rule);background:var(--bg);border-radius:3px;padding:6px 12px;font-size:8px;letter-spacing:0.13em;text-transform:uppercase;cursor:pointer;font-family:'DM Mono',monospace;transition:all 0.13s}
   .priority-opt.selected.normal{border-color:var(--ink);background:var(--ink);color:var(--bg)}
   .priority-opt.selected.priority{border-color:var(--accent);background:var(--accent);color:#fff}
-  .priority-note{font-size:8px;letter-spacing:0.1em;color:var(--muted);text-transform:uppercase}
+  .priority-note{font-size:7.5px;letter-spacing:0.09em;color:var(--muted);text-transform:uppercase}
 
-  /* Payment for Direct Hire */
-  .payment-row{display:none;margin-bottom:18px;background:rgba(176,58,46,0.05);border:1px solid rgba(176,58,46,0.2);border-radius:3px;padding:12px 14px}
-  .payment-row.visible{display:block}
-  .payment-row .field-label{margin-bottom:8px;color:var(--accent)}
-  .payment-opts{display:flex;gap:8px;flex-wrap:wrap}
-  .payment-opt{border:1.5px solid var(--rule);background:var(--bg);border-radius:3px;padding:7px 13px;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;font-family:'DM Mono',monospace;transition:all 0.14s}
-  .payment-opt:hover{border-color:var(--ink)}
-  .payment-opt.selected{border-color:var(--accent);background:var(--accent);color:#fff}
-
-  .issue-btn{width:100%;background:var(--ink);color:var(--bg);border:none;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:21px;letter-spacing:0.12em;padding:16px;cursor:pointer;transition:all 0.14s;display:flex;align-items:center;justify-content:center;gap:8px}
+  .issue-btn{width:100%;background:var(--ink);color:var(--bg);border:none;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:0.12em;padding:15px;cursor:pointer;transition:all 0.13s;display:flex;align-items:center;justify-content:center;gap:8px}
   .issue-btn:hover:not(:disabled){background:var(--accent);transform:translateY(-1px);box-shadow:0 5px 18px rgba(176,58,46,0.22)}
   .issue-btn:disabled{opacity:0.3;cursor:not-allowed;transform:none;box-shadow:none}
-  .reset-btn{width:100%;margin-top:8px;background:transparent;color:var(--muted);border:1.5px dashed var(--rule);border-radius:3px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;padding:10px;cursor:pointer;transition:all 0.14s}
+  .reset-btn{width:100%;margin-top:7px;background:transparent;color:var(--muted);border:1.5px dashed var(--rule);border-radius:3px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;padding:9px;cursor:pointer;transition:all 0.13s}
   .reset-btn:hover{color:var(--accent);border-color:var(--accent);border-style:solid}
 
-  /* Right col */
-  .right-col{display:flex;flex-direction:column;gap:18px}
-  .card{background:var(--paper);border:1px solid var(--rule);border-radius:2px;box-shadow:0 2px 8px var(--shadow);overflow:hidden}
-  .card-head{padding:9px 16px;border-bottom:1px solid var(--rule);font-size:9px;letter-spacing:0.26em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
-  .stats-grid{display:grid;grid-template-columns:1fr 1fr}
-  .stat-cell{padding:14px 16px;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule)}
-  .stat-cell:nth-child(even){border-right:none} .stat-cell:nth-last-child(-n+2){border-bottom:none}
-  .stat-val{font-family:'Bebas Neue',sans-serif;font-size:30px;line-height:1;letter-spacing:0.04em}
-  .stat-lbl{font-size:8px;letter-spacing:0.18em;color:var(--muted);text-transform:uppercase;margin-top:2px}
+  /* ── RIGHT SIDE ── */
+  .right-side{display:flex;flex-direction:column;gap:16px}
 
-  /* Counter summary with drag-drop zones */
-  .cs-row{display:flex;align-items:flex-start;padding:10px 16px;border-bottom:1px solid var(--rule);gap:10px;min-height:52px}
-  .cs-row:last-child{border-bottom:none}
-  .cs-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:5px}
-  .cs-row[data-c="1"] .cs-dot{background:var(--c1)} .cs-row[data-c="2"] .cs-dot{background:var(--c2)}
-  .cs-row[data-c="3"] .cs-dot{background:var(--c3)} .cs-row[data-c="4"] .cs-dot{background:var(--c4)}
-  .cs-name{font-size:10px;letter-spacing:0.12em;text-transform:uppercase;flex-shrink:0;width:64px;margin-top:3px}
-  .cs-drop-zone{flex:1;display:flex;flex-wrap:wrap;gap:5px;min-height:30px;border-radius:3px;transition:background 0.2s,border-color 0.2s;border:1.5px dashed transparent;padding:3px}
-  .cs-drop-zone.drag-over{background:rgba(0,0,0,0.04);border-color:var(--muted)}
-  .cs-row[data-c="1"] .cs-drop-zone.drag-over{background:var(--c1bg);border-color:var(--c1)}
-  .cs-row[data-c="2"] .cs-drop-zone.drag-over{background:var(--c2bg);border-color:var(--c2)}
-  .cs-row[data-c="3"] .cs-drop-zone.drag-over{background:var(--c3bg);border-color:var(--c3)}
-  .cs-row[data-c="4"] .cs-drop-zone.drag-over{background:var(--c4bg);border-color:var(--c4)}
-  .cs-chip{font-family:'Bebas Neue',sans-serif;font-size:13px;padding:2px 7px;border-radius:2px;letter-spacing:0.04em;cursor:grab;animation:popIn 0.2s ease;user-select:none;position:relative;display:inline-flex;align-items:center;gap:3px}
-  .cs-chip:active{cursor:grabbing;opacity:0.7}
-  .cs-chip.dragging{opacity:0.4}
-  .cs-row[data-c="1"] .cs-chip{background:var(--c1bg);color:var(--c1);border:1px solid rgba(230,126,34,0.3)}
-  .cs-row[data-c="2"] .cs-chip{background:var(--c2bg);color:var(--c2);border:1px solid rgba(36,113,163,0.3)}
-  .cs-row[data-c="3"] .cs-chip{background:var(--c3bg);color:var(--c3);border:1px solid rgba(30,132,73,0.3)}
-  .cs-row[data-c="4"] .cs-chip{background:var(--c4bg);color:var(--c4);border:1px solid rgba(125,60,152,0.3)}
-  .cs-empty{font-size:9px;color:var(--muted);letter-spacing:0.08em;align-self:center;padding:2px 4px}
+  /* Stats bar */
+  .stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .stat-card{background:var(--paper);border:1px solid var(--rule);border-radius:2px;box-shadow:0 1px 6px var(--shadow);padding:12px 14px}
+  .stat-val{font-family:'Bebas Neue',sans-serif;font-size:28px;line-height:1;letter-spacing:0.04em}
+  .stat-lbl{font-size:7.5px;letter-spacing:0.18em;color:var(--muted);text-transform:uppercase;margin-top:2px}
 
-  /* Log */
-  .log-list{max-height:200px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--rule) transparent}
-  .log-item{display:flex;align-items:center;padding:8px 16px;border-bottom:1px solid var(--rule);gap:9px;animation:slideDown 0.2s ease}
-  .log-item:last-child{border-bottom:none}
-  @keyframes slideDown{from{opacity:0;transform:translateY(-7px)}to{opacity:1;transform:translateY(0)}}
-  .log-num{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:0.04em;min-width:40px}
-  .log-item[data-c="1"] .log-num{color:var(--c1)} .log-item[data-c="2"] .log-num{color:var(--c2)}
-  .log-item[data-c="3"] .log-num{color:var(--c3)} .log-item[data-c="4"] .log-num{color:var(--c4)}
-  .log-info{flex:1}.log-svc{font-size:9px;letter-spacing:0.08em}.log-cust{font-size:8px;color:var(--muted);margin-top:1px}
-  .log-meta{text-align:right;font-size:8px;color:var(--muted)}
-  .log-prio{font-size:7px;letter-spacing:0.1em;padding:1px 5px;border-radius:2px;background:#fdecea;color:var(--accent);border:1px solid rgba(176,58,46,0.2);text-transform:uppercase;margin-top:1px;display:inline-block}
-  .log-comply{font-size:7px;letter-spacing:0.1em;padding:1px 5px;border-radius:2px;background:#fff8e1;color:#b7800a;border:1px solid rgba(183,128,10,0.25);text-transform:uppercase;margin-top:1px;display:inline-block}
-  .log-empty{padding:20px 16px;font-size:10px;color:var(--muted);letter-spacing:0.08em}
-  .log-clear-btn{font-size:8px;letter-spacing:0.13em;text-transform:uppercase;color:var(--muted);background:none;border:none;cursor:pointer;font-family:'DM Mono',monospace}
-  .log-clear-btn:hover{color:var(--accent)}
+  /* ── CLIENT PILE (unserved + holds, all visible) ── */
+  .pile-card{background:var(--paper);border:1px solid var(--rule);border-radius:2px;box-shadow:0 2px 8px var(--shadow);overflow:hidden}
+  .pile-head{padding:9px 16px;border-bottom:1px solid var(--rule);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  .pile-head-title{font-size:9px;letter-spacing:0.26em;text-transform:uppercase;color:var(--muted)}
+  .pile-head-hint{font-size:8px;color:var(--muted);letter-spacing:0.1em}
+  .pile-filter{display:flex;gap:6px;padding:10px 16px;border-bottom:1px solid var(--rule);flex-wrap:wrap}
+  .pile-filter-btn{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;padding:4px 10px;border:1px solid var(--rule);background:var(--bg);border-radius:20px;cursor:pointer;transition:all 0.13s}
+  .pile-filter-btn:hover{border-color:var(--ink)}
+  .pile-filter-btn.active{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 
-  /* Receipt */
-  #receiptArea{display:none;position:fixed;left:-9999px;top:0}
+  .pile-body{padding:12px 16px;display:flex;flex-direction:column;gap:7px;max-height:420px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--rule) transparent}
+  .client-card{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg);border:1px solid var(--rule);border-radius:3px;cursor:grab;user-select:none;transition:all 0.13s;position:relative;animation:slideDown 0.2s ease}
+  .client-card:hover{border-color:var(--muted);box-shadow:0 2px 8px var(--shadow)}
+  .client-card:active{cursor:grabbing;opacity:0.7}
+  .client-card.dragging{opacity:0.35;transform:scale(0.97)}
+  @keyframes slideDown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+  /* left color bar per counter */
+  .client-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px}
+  .client-card[data-c="1"]::before{background:var(--c1)}
+  .client-card[data-c="2"]::before{background:var(--c2)}
+  .client-card[data-c="3"]::before{background:var(--c3)}
+  .client-card[data-c="4"]::before{background:var(--c4)}
+  .cc-num{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:0.04em;min-width:40px;flex-shrink:0}
+  .client-card[data-c="1"] .cc-num{color:var(--c1)}
+  .client-card[data-c="2"] .cc-num{color:var(--c2)}
+  .client-card[data-c="3"] .cc-num{color:var(--c3)}
+  .client-card[data-c="4"] .cc-num{color:var(--c4)}
+  .cc-body{flex:1;overflow:hidden}
+  .cc-svc{font-size:9px;letter-spacing:0.08em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cc-cust{font-size:8px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cc-badges{display:flex;flex-direction:column;gap:3px;align-items:flex-end;flex-shrink:0}
+  .badge{font-size:7px;letter-spacing:0.1em;padding:1px 5px;border-radius:2px;text-transform:uppercase;white-space:nowrap}
+  .badge-counter{font-family:'DM Mono',monospace}
+  .client-card[data-c="1"] .badge-counter{background:var(--c1bg);color:var(--c1);border:1px solid rgba(230,126,34,0.25)}
+  .client-card[data-c="2"] .badge-counter{background:var(--c2bg);color:var(--c2);border:1px solid rgba(36,113,163,0.25)}
+  .client-card[data-c="3"] .badge-counter{background:var(--c3bg);color:var(--c3);border:1px solid rgba(30,132,73,0.25)}
+  .client-card[data-c="4"] .badge-counter{background:var(--c4bg);color:var(--c4);border:1px solid rgba(125,60,152,0.25)}
+  .badge-priority{background:#fdecea;color:#b03a2e;border:1px solid rgba(176,58,46,0.22)}
+  .badge-comply{background:#fff8e1;color:#9a6f00;border:1px solid rgba(154,111,0,0.22)}
+  .badge-payment{background:#e8f4f8;color:#0e6b8a;border:1px solid rgba(14,107,138,0.22)}
+  .badge-served{background:rgba(30,132,73,0.08);color:var(--green);border:1px solid rgba(30,132,73,0.2)}
+  .cc-time{font-size:7.5px;color:var(--muted);margin-top:2px;letter-spacing:0.06em}
+  .pile-empty{padding:28px 16px;font-size:10px;color:var(--muted);letter-spacing:0.1em;text-align:center}
 
-  /* Flash */
-  .issue-flash{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(18px);background:var(--ink);color:var(--bg);padding:12px 28px;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:0.12em;opacity:0;transition:all 0.3s;pointer-events:none;z-index:999;white-space:nowrap}
-  .issue-flash.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  /* ── COUNTER DROP ROWS ── */
+  .counter-rows{background:var(--paper);border:1px solid var(--rule);border-radius:2px;box-shadow:0 2px 8px var(--shadow);overflow:hidden}
+  .cr-head{padding:9px 16px;border-bottom:1px solid var(--rule);font-size:9px;letter-spacing:0.26em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between}
+  .cr-row{display:flex;align-items:flex-start;padding:10px 16px;border-bottom:1px solid var(--rule);gap:10px;min-height:54px;transition:background 0.15s}
+  .cr-row:last-child{border-bottom:none}
+  .cr-label{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;width:52px}
+  .cr-dot{width:8px;height:8px;border-radius:50%}
+  .cr-row[data-c="1"] .cr-dot{background:var(--c1)}
+  .cr-row[data-c="2"] .cr-dot{background:var(--c2)}
+  .cr-row[data-c="3"] .cr-dot{background:var(--c3)}
+  .cr-row[data-c="4"] .cr-dot{background:var(--c4)}
+  .cr-name{font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted)}
+  .cr-count{font-family:'Bebas Neue',sans-serif;font-size:16px;line-height:1}
+  .cr-row[data-c="1"] .cr-count{color:var(--c1)}
+  .cr-row[data-c="2"] .cr-count{color:var(--c2)}
+  .cr-row[data-c="3"] .cr-count{color:var(--c3)}
+  .cr-row[data-c="4"] .cr-count{color:var(--c4)}
+  .cr-drop{flex:1;display:flex;flex-wrap:wrap;gap:5px;min-height:34px;border:1.5px dashed transparent;border-radius:3px;padding:4px;transition:all 0.15s;align-content:flex-start}
+  .cr-drop.drag-over{border-color:var(--muted);background:rgba(0,0,0,0.03)}
+  .cr-row[data-c="1"] .cr-drop.drag-over{border-color:var(--c1);background:var(--c1bg)}
+  .cr-row[data-c="2"] .cr-drop.drag-over{border-color:var(--c2);background:var(--c2bg)}
+  .cr-row[data-c="3"] .cr-drop.drag-over{border-color:var(--c3);background:var(--c3bg)}
+  .cr-row[data-c="4"] .cr-drop.drag-over{border-color:var(--c4);background:var(--c4bg)}
+  .cr-chip{font-family:'Bebas Neue',sans-serif;font-size:12px;padding:2px 7px;border-radius:2px;letter-spacing:0.04em;cursor:grab;user-select:none;display:inline-flex;align-items:center;gap:3px;animation:popIn 0.18s ease;transition:opacity 0.15s}
+  .cr-chip:active{cursor:grabbing;opacity:0.6}
+  .cr-chip.dragging{opacity:0.3}
+  .cr-row[data-c="1"] .cr-chip{background:var(--c1bg);color:var(--c1);border:1px solid rgba(230,126,34,0.3)}
+  .cr-row[data-c="2"] .cr-chip{background:var(--c2bg);color:var(--c2);border:1px solid rgba(36,113,163,0.3)}
+  .cr-row[data-c="3"] .cr-chip{background:var(--c3bg);color:var(--c3);border:1px solid rgba(30,132,73,0.3)}
+  .cr-row[data-c="4"] .cr-chip{background:var(--c4bg);color:var(--c4);border:1px solid rgba(125,60,152,0.3)}
+  .cr-chip.comply{background:#fff8e1;color:#9a6f00;border:1px solid rgba(154,111,0,0.3)}
+  .cr-chip.payment{background:#e8f4f8;color:#0e6b8a;border:1px solid rgba(14,107,138,0.3)}
+  .cr-empty{font-size:8.5px;color:var(--muted);letter-spacing:0.08em;align-self:center;padding:2px 3px}
+
+  /* Toast */
+  .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(18px);background:var(--ink);color:var(--bg);padding:11px 26px;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.12em;opacity:0;transition:all 0.3s;pointer-events:none;z-index:999;white-space:nowrap}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
   @keyframes popIn{from{transform:scale(0.82);opacity:0}to{transform:scale(1);opacity:1}}
 
+  #receiptArea{display:none;position:fixed;left:-9999px;top:0}
   @media print{
     body>*:not(#receiptArea){display:none!important}
     #receiptArea{display:block!important;position:static!important;left:auto!important;width:80mm;margin:0;padding:0}
@@ -164,16 +190,16 @@
 </style>
 </head>
 <body>
-<div id="receiptArea"><div class="receipt" id="receiptContent"></div></div>
+<div id="receiptArea"><div id="receiptContent"></div></div>
 <div class="app">
   <header>
     <div>
-      <div class="brand-sup">Admin Console · Queue Management</div>
+      <div class="brand-sup">Admin Console · POEA / OWWA Queue</div>
       <div class="brand-title">TICKET<span>DESK</span></div>
     </div>
     <div class="header-right">
       <div class="clock" id="clock">00:00:00</div>
-      <div style="display:flex;align-items:center;gap:9px;margin-top:3px">
+      <div style="display:flex;align-items:center;gap:8px;margin-top:3px">
         <span class="fb-status" id="fbStatus"><span class="fb-dot"></span>Connecting…</span>
         <div class="nav-links">
           <a href="/display" target="_blank" class="nav-link">Display</a>
@@ -183,73 +209,49 @@
     </div>
   </header>
 
-  <div class="main-grid">
-    <!-- LEFT: Issue Form -->
+  <div class="layout">
+    <!-- LEFT: Issue form (sticky) -->
     <div class="issue-panel">
       <div class="panel-head">
         <div class="panel-head-title">Issue New Ticket</div>
-        <div class="panel-head-sub">Receipt prints on issue</div>
+        <div class="panel-head-sub">Prints on issue</div>
       </div>
       <div class="panel-body">
-        <div class="field-label">1 · Select Service</div>
-        <div class="service-grid" id="serviceGrid">
+        <div class="field-label">1 · Service</div>
+        <div class="service-grid">
           <button class="service-btn selected" data-svc="OEC with Appointment" onclick="selectService(this)">
-            <span class="svc-icon">📅</span><div class="svc-text"><span class="svc-name">OEC w/ Appt</span><span class="svc-code">OEC with Appointment</span></div>
+            <span class="svc-icon">📅</span><div><span class="svc-name">OEC w/ Appt</span><span class="svc-code">With Appointment</span></div>
           </button>
           <button class="service-btn" data-svc="OEC without Appointment" onclick="selectService(this)">
-            <span class="svc-icon">📋</span><div class="svc-text"><span class="svc-name">OEC w/o Appt</span><span class="svc-code">OEC without Appointment</span></div>
+            <span class="svc-icon">📋</span><div><span class="svc-name">OEC w/o Appt</span><span class="svc-code">Without Appointment</span></div>
           </button>
           <button class="service-btn" data-svc="Government to Government" onclick="selectService(this)">
-            <span class="svc-icon">🏛️</span><div class="svc-text"><span class="svc-name">Gov to Gov</span><span class="svc-code">Government to Government</span></div>
+            <span class="svc-icon">🏛️</span><div><span class="svc-name">Gov to Gov</span><span class="svc-code">Gov to Gov</span></div>
           </button>
           <button class="service-btn" data-svc="Direct Hire" onclick="selectService(this)">
-            <span class="svc-icon">🤝</span><div class="svc-text"><span class="svc-name">Direct Hire</span><span class="svc-code">Direct Hire</span></div>
+            <span class="svc-icon">🤝</span><div><span class="svc-name">Direct Hire</span><span class="svc-code">Direct Hire</span></div>
           </button>
           <button class="service-btn" data-svc="Agency Hire" onclick="selectService(this)">
-            <span class="svc-icon">🏢</span><div class="svc-text"><span class="svc-name">Agency Hire</span><span class="svc-code">Agency Hire</span></div>
+            <span class="svc-icon">🏢</span><div><span class="svc-name">Agency Hire</span><span class="svc-code">Agency Hire</span></div>
           </button>
           <button class="service-btn" data-svc="OFW Records" onclick="selectService(this)">
-            <span class="svc-icon">🗂️</span><div class="svc-text"><span class="svc-name">OFW Records</span><span class="svc-code">OFW Records</span></div>
+            <span class="svc-icon">🗂️</span><div><span class="svc-name">OFW Records</span><span class="svc-code">OFW Records</span></div>
           </button>
           <button class="service-btn" data-svc="Queries" onclick="selectService(this)">
-            <span class="svc-icon">💬</span><div class="svc-text"><span class="svc-name">Queries</span><span class="svc-code">General Queries</span></div>
-          </button>
-          <button class="service-btn" data-svc="Payment – Direct Hire" onclick="selectService(this)">
-            <span class="svc-icon">💳</span><div class="svc-text"><span class="svc-name">Payment</span><span class="svc-code">Direct Hire Payment</span></div>
+            <span class="svc-icon">💬</span><div><span class="svc-name">Queries</span><span class="svc-code">General Queries</span></div>
           </button>
         </div>
 
-        <!-- Payment sub-options (only shown for Payment) -->
-        <div class="payment-row" id="paymentRow">
-          <div class="field-label">Payment Type</div>
-          <div class="payment-opts">
-            <button class="payment-opt selected" data-pay="POEA Fees" onclick="selectPayment(this)">POEA Fees</button>
-            <button class="payment-opt" data-pay="Placement Fee" onclick="selectPayment(this)">Placement Fee</button>
-            <button class="payment-opt" data-pay="OFW Bank" onclick="selectPayment(this)">OFW Bank</button>
-            <button class="payment-opt" data-pay="Other Payment" onclick="selectPayment(this)">Other</button>
-          </div>
-        </div>
-
-        <div class="field-label">2 · Assign to Counter</div>
-        <div class="counter-grid" id="counterGrid">
-          <button class="counter-btn selected" data-c="1" onclick="selectCounter(this)">
-            <span class="cb-count" id="cbcount-1">0</span><span class="cb-num">1</span><span class="cb-lbl">Counter</span>
-          </button>
-          <button class="counter-btn" data-c="2" onclick="selectCounter(this)">
-            <span class="cb-count" id="cbcount-2">0</span><span class="cb-num">2</span><span class="cb-lbl">Counter</span>
-          </button>
-          <button class="counter-btn" data-c="3" onclick="selectCounter(this)">
-            <span class="cb-count" id="cbcount-3">0</span><span class="cb-num">3</span><span class="cb-lbl">Counter</span>
-          </button>
-          <button class="counter-btn" data-c="4" onclick="selectCounter(this)">
-            <span class="cb-count" id="cbcount-4">0</span><span class="cb-num">4</span><span class="cb-lbl">Counter</span>
-          </button>
+        <div class="field-label">2 · Counter</div>
+        <div class="counter-grid">
+          <button class="counter-btn selected" data-c="1" onclick="selectCounter(this)"><span class="cb-count" id="cbcount-1">0</span><span class="cb-num">1</span><span class="cb-lbl">Counter</span></button>
+          <button class="counter-btn" data-c="2" onclick="selectCounter(this)"><span class="cb-count" id="cbcount-2">0</span><span class="cb-num">2</span><span class="cb-lbl">Counter</span></button>
+          <button class="counter-btn" data-c="3" onclick="selectCounter(this)"><span class="cb-count" id="cbcount-3">0</span><span class="cb-num">3</span><span class="cb-lbl">Counter</span></button>
+          <button class="counter-btn" data-c="4" onclick="selectCounter(this)"><span class="cb-count" id="cbcount-4">0</span><span class="cb-num">4</span><span class="cb-lbl">Counter</span></button>
         </div>
 
         <div class="field-label">3 · Customer Name <span style="color:var(--muted)">(optional)</span></div>
-        <div class="name-row">
-          <input type="text" class="name-input" id="customerName" placeholder="Enter customer name…" maxlength="40" autocomplete="off">
-        </div>
+        <div class="name-row"><input type="text" class="name-input" id="customerName" placeholder="Enter name…" maxlength="40" autocomplete="off"></div>
 
         <div class="field-label">4 · Priority</div>
         <div class="priority-row">
@@ -257,55 +259,60 @@
             <button class="priority-opt selected normal" onclick="selectPriority('normal',this)">Normal</button>
             <button class="priority-opt priority" onclick="selectPriority('priority',this)">⚡ Priority</button>
           </div>
-          <span class="priority-note">Seniors, PWD &amp; urgent</span>
+          <span class="priority-note">Seniors · PWD · Urgent</span>
         </div>
 
-        <button class="issue-btn" id="issueBtn" onclick="issueTicket()">🖨 Issue &amp; Print Ticket</button>
+        <button class="issue-btn" onclick="issueTicket()">🖨 Issue &amp; Print</button>
         <button class="reset-btn" onclick="resetNumbering()">↺ Reset Numbering to 001</button>
       </div>
     </div>
 
-    <!-- RIGHT -->
-    <div class="right-col">
-      <div class="card">
-        <div class="card-head">Today's Summary</div>
-        <div class="stats-grid">
-          <div class="stat-cell"><div class="stat-val" id="stTotal" style="color:var(--accent)">0</div><div class="stat-lbl">Issued</div></div>
-          <div class="stat-cell"><div class="stat-val" id="stWaiting">0</div><div class="stat-lbl">Waiting</div></div>
-          <div class="stat-cell"><div class="stat-val" id="stServed">0</div><div class="stat-lbl">Served</div></div>
-          <div class="stat-cell"><div class="stat-val" id="stComply" style="color:#b7800a">0</div><div class="stat-lbl">Compliance</div></div>
-        </div>
+    <!-- RIGHT SIDE -->
+    <div class="right-side">
+
+      <!-- Stats -->
+      <div class="stats-bar">
+        <div class="stat-card"><div class="stat-val" id="stTotal" style="color:var(--accent)">0</div><div class="stat-lbl">Issued</div></div>
+        <div class="stat-card"><div class="stat-val" id="stWaiting">0</div><div class="stat-lbl">In Queue</div></div>
+        <div class="stat-card"><div class="stat-val" id="stHold" style="color:#9a6f00">0</div><div class="stat-lbl">On Hold</div></div>
+        <div class="stat-card"><div class="stat-val" id="stServed" style="color:var(--green)">0</div><div class="stat-lbl">Served</div></div>
       </div>
 
-      <!-- Counter summary with drag-drop -->
-      <div class="card">
-        <div class="card-head">
+      <!-- Counter assignment rows (drag-drop target) -->
+      <div class="counter-rows">
+        <div class="cr-head">
           <span>Queue by Counter</span>
-          <span style="font-size:8px;color:var(--muted);letter-spacing:0.12em">DRAG TO REASSIGN</span>
+          <span style="font-size:7.5px;color:var(--muted);letter-spacing:0.1em">DRAG CLIENTS TO REASSIGN ↔</span>
         </div>
-        <div id="counterSummaryList"></div>
+        <div id="counterRows"></div>
       </div>
 
-      <!-- Compliance pool (drag from here to re-assign) -->
-      <div class="card">
-        <div class="card-head">
-          <span style="color:#b7800a">⚠ Compliance Hold</span>
-          <span style="font-size:8px;color:var(--muted);letter-spacing:0.12em">DRAG BACK TO COUNTER</span>
+      <!-- ALL CLIENTS PILE -->
+      <div class="pile-card">
+        <div class="pile-head">
+          <span class="pile-head-title">All Clients</span>
+          <span class="pile-head-hint">Drag a client card → drop onto a counter above</span>
         </div>
-        <div id="compliancePool" style="display:flex;flex-wrap:wrap;gap:6px;padding:12px 16px;min-height:44px;border-radius:3px;transition:background 0.2s;border:1.5px dashed transparent" 
-             ondragover="onDragOverPool(event)" ondragleave="onDragLeavePool(event)" ondrop="onDropPool(event)">
-          <span class="cs-empty" id="complyEmpty">No clients on hold</span>
+        <div class="pile-filter">
+          <button class="pile-filter-btn active" data-filter="all" onclick="setFilter(this)">All</button>
+          <button class="pile-filter-btn" data-filter="waiting" onclick="setFilter(this)">Waiting</button>
+          <button class="pile-filter-btn" data-filter="hold" onclick="setFilter(this)">On Hold</button>
+          <button class="pile-filter-btn" data-filter="served" onclick="setFilter(this)">Served</button>
+          <button class="pile-filter-btn" data-filter="1" onclick="setFilter(this)" style="color:var(--c1);border-color:rgba(230,126,34,0.35)">C1</button>
+          <button class="pile-filter-btn" data-filter="2" onclick="setFilter(this)" style="color:var(--c2);border-color:rgba(36,113,163,0.35)">C2</button>
+          <button class="pile-filter-btn" data-filter="3" onclick="setFilter(this)" style="color:var(--c3);border-color:rgba(30,132,73,0.35)">C3</button>
+          <button class="pile-filter-btn" data-filter="4" onclick="setFilter(this)" style="color:var(--c4);border-color:rgba(125,60,152,0.35)">C4</button>
+        </div>
+        <div class="pile-body" id="pileBody">
+          <div class="pile-empty">No clients yet</div>
         </div>
       </div>
 
-      <div class="card">
-        <div class="card-head"><span>Recently Issued</span><button class="log-clear-btn" onclick="clearLog()">Clear</button></div>
-        <div class="log-list" id="logList"><div class="log-empty" id="logEmpty">No tickets issued yet</div></div>
-      </div>
     </div>
   </div>
 </div>
-<div class="issue-flash" id="issueFlash"></div>
+
+<div class="toast" id="toast"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
@@ -326,318 +333,291 @@ const db  = getDatabase(app);
 const stateRef = ref(db,'queueState');
 
 const COUNTER_NAMES = ['Counter 1','Counter 2','Counter 3','Counter 4'];
-const COLOR_NAMES   = ['Orange','Blue','Green','Purple'];
+const C_COLORS = {1:'var(--c1)',2:'var(--c2)',3:'var(--c3)',4:'var(--c4)'};
 
 let selectedService  = 'OEC with Appointment';
 let selectedCounter  = 1;
 let selectedPriority = 'normal';
-let selectedPayment  = 'POEA Fees';
 let log = [];
 let ticketCounter = 0;
-let dragTicketId = null;
+let dragId = null;
+let activeFilter = 'all';
 
-function setFbStatus(s) {
-  const el = document.getElementById('fbStatus');
-  el.className = 'fb-status '+s;
-  el.innerHTML = `<span class="fb-dot"></span>${s==='connected'?'Live':s==='error'?'Offline':'Connecting…'}`;
+// ── FB Status ──
+function setFbStatus(s){
+  const el=document.getElementById('fbStatus');
+  el.className='fb-status '+s;
+  el.innerHTML=`<span class="fb-dot"></span>${s==='connected'?'Live':s==='error'?'Offline':'Connecting…'}`;
 }
 
-function updateClock() {
-  const n = new Date();
-  document.getElementById('clock').textContent =
+// ── Clock ──
+function updateClock(){
+  const n=new Date();
+  document.getElementById('clock').textContent=
     [n.getHours(),n.getMinutes(),n.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':');
 }
 setInterval(updateClock,1000); updateClock();
 
-function saveState(isReset=false) {
+// ── Firebase ──
+function saveState(isReset=false){
   set(stateRef,{
     ticketCounter, log,
-    queues: getQueues(),
-    lastUpdate: Date.now(),
+    lastUpdate:Date.now(),
     resetFlag: isReset ? Date.now() : (window._lastResetFlag||null)
   }).catch(()=>setFbStatus('error'));
 }
 
-function getQueues() {
-  const q={1:[],2:[],3:[],4:[]};
-  log.filter(t=>!t.served&&!t.compliance).forEach(t=>{ if(q[t.counter]) q[t.counter].push(t); });
-  return q;
-}
-
-onValue(stateRef, snap=>{
+onValue(stateRef,snap=>{
   setFbStatus('connected');
-  const data = snap.val();
+  const data=snap.val();
   if(!data) return;
-  window._lastResetFlag = data.resetFlag||null;
-  ticketCounter = data.ticketCounter||0;
-  log = data.log||[];
+  window._lastResetFlag=data.resetFlag||null;
+  ticketCounter=data.ticketCounter||0;
+  log=data.log||[];
   renderAll();
-}, ()=>setFbStatus('error'));
+},()=>setFbStatus('error'));
 
 // ── Selectors ──
-function selectService(btn) {
+function selectService(btn){
   document.querySelectorAll('.service-btn').forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected');
-  selectedService = btn.dataset.svc;
-  document.getElementById('paymentRow').classList.toggle('visible', selectedService==='Payment – Direct Hire');
+  selectedService=btn.dataset.svc;
 }
-window.selectService = selectService;
+window.selectService=selectService;
 
-function selectCounter(btn) {
+function selectCounter(btn){
   document.querySelectorAll('.counter-btn').forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected');
-  selectedCounter = parseInt(btn.dataset.c);
+  selectedCounter=parseInt(btn.dataset.c);
 }
-window.selectCounter = selectCounter;
+window.selectCounter=selectCounter;
 
-function selectPriority(val,btn) {
-  selectedPriority = val;
+function selectPriority(val,btn){
+  selectedPriority=val;
   document.querySelectorAll('.priority-opt').forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected');
 }
-window.selectPriority = selectPriority;
+window.selectPriority=selectPriority;
 
-function selectPayment(btn) {
-  document.querySelectorAll('.payment-opt').forEach(b=>b.classList.remove('selected'));
-  btn.classList.add('selected');
-  selectedPayment = btn.dataset.pay;
+function setFilter(btn){
+  document.querySelectorAll('.pile-filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  activeFilter=btn.dataset.filter;
+  renderPile();
 }
-window.selectPayment = selectPayment;
+window.setFilter=setFilter;
 
-// ── Issue Ticket ──
-function issueTicket() {
+// ── Issue ──
+function issueTicket(){
   ticketCounter++;
-  const now = new Date();
-  const timeStr = [now.getHours(),now.getMinutes(),now.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':');
-  const dateStr = now.toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'});
-  const svc = selectedService==='Payment – Direct Hire'
-    ? `Payment – ${selectedPayment}` : selectedService;
-  const ticket = {
-    id: ticketCounter, counter: selectedCounter,
-    service: svc,
-    customer: document.getElementById('customerName').value.trim()||null,
-    priority: selectedPriority,
-    time: timeStr, date: dateStr,
-    served: false, compliance: false
+  const now=new Date();
+  const timeStr=[now.getHours(),now.getMinutes(),now.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':');
+  const dateStr=now.toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'});
+  const ticket={
+    id:ticketCounter, counter:selectedCounter,
+    service:selectedService,
+    customer:document.getElementById('customerName').value.trim()||null,
+    priority:selectedPriority,
+    time:timeStr, date:dateStr,
+    served:false, compliance:false, paymentHold:false
   };
   log.unshift(ticket);
-  document.getElementById('customerName').value = '';
+  document.getElementById('customerName').value='';
   saveState();
   printReceipt(ticket);
-  showFlash(`#${String(ticket.id).padStart(3,'0')} → Counter ${ticket.counter}`);
+  showToast(`#${String(ticket.id).padStart(3,'0')} → Counter ${ticket.counter}`);
 }
-window.issueTicket = issueTicket;
+window.issueTicket=issueTicket;
 
-// ── Print receipt (compact 58mm-friendly) ──
-function printReceipt(ticket) {
-  const num = String(ticket.id).padStart(3,'0');
-  const barcode = generateBarcode(ticket.id);
-  const priorityLine = ticket.priority==='priority'
-    ? `<div style="text-align:center;font-size:11px;font-weight:900;letter-spacing:0.12em;border:2px solid #000;padding:1mm 3mm;margin:1.5mm auto;display:table;">⚡ PRIORITY</div>` : '';
-  const customerLine = ticket.customer
-    ? `<div style="text-align:center;font-size:11px;font-weight:700;margin-top:1mm;">${ticket.customer.toUpperCase()}</div>` : '';
-  const counterColor = ['#e67e22','#2471a3','#1e8449','#7d3c98'][ticket.counter-1];
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ticket #${num}</title>
+// ── Print ──
+function printReceipt(t){
+  const num=String(t.id).padStart(3,'0');
+  const counterColor=['#e67e22','#2471a3','#1e8449','#7d3c98'][t.counter-1];
+  const barcode=genBarcode(t.id);
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ticket #${num}</title>
   <style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:80mm;background:#fff;color:#000;font-family:'Courier New',Courier,monospace}@page{size:80mm auto;margin:0}body{padding:4mm 3mm}</style>
   </head><body>
-  <div style="text-align:center;font-size:15px;font-weight:900;letter-spacing:0.12em;margin-bottom:0.5mm">QUEUESYS</div>
+  <div style="text-align:center;font-size:14px;font-weight:900;letter-spacing:0.12em">QUEUESYS</div>
   <div style="text-align:center;font-size:8px;color:#555;margin-bottom:2mm">POEA / OWWA Service Queue</div>
   <hr style="border:none;border-top:1px dashed #000;margin:2mm 0">
-  <div style="text-align:center;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:0.5mm">Your Number</div>
-  <div style="text-align:center;font-family:'Courier New';font-size:72pt;font-weight:900;line-height:1;color:#000;letter-spacing:0.04em;margin:1mm 0 2mm">${num}</div>
+  <div style="text-align:center;font-size:9px;letter-spacing:0.14em;text-transform:uppercase">Your Number</div>
+  <div style="text-align:center;font-size:72pt;font-weight:900;line-height:1;color:#000;margin:1mm 0 2mm">${num}</div>
   <hr style="border:none;border-top:1px dashed #000;margin:2mm 0">
-  <div style="text-align:center;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:#555;margin-bottom:0.5mm">Proceed To</div>
-  <div style="text-align:center;font-size:20px;font-weight:900;letter-spacing:0.1em;color:${counterColor};margin-bottom:1mm">COUNTER ${ticket.counter}</div>
-  <div style="text-align:center;font-size:10px;color:#222;margin-bottom:0.5mm">${ticket.service}</div>
-  ${priorityLine}${customerLine}
+  <div style="text-align:center;font-size:8px;text-transform:uppercase;color:#555">Proceed To</div>
+  <div style="text-align:center;font-size:20px;font-weight:900;color:${counterColor};margin:1mm 0">COUNTER ${t.counter}</div>
+  <div style="text-align:center;font-size:10px;color:#222">${t.service}</div>
+  ${t.priority==='priority'?`<div style="text-align:center;font-size:10px;font-weight:900;border:2px solid #000;padding:1mm 3mm;margin:1.5mm auto;display:table">⚡ PRIORITY</div>`:''}
+  ${t.customer?`<div style="text-align:center;font-size:10px;font-weight:700;margin-top:1mm">${t.customer.toUpperCase()}</div>`:''}
   <hr style="border:none;border-top:1px dashed #000;margin:2mm 0">
-  <div style="text-align:center;font-size:8px;color:#555">${ticket.date} · ${ticket.time}</div>
-  <div style="text-align:center;font-size:13px;letter-spacing:0.03em;font-family:'Courier New';color:#000;margin:1.5mm 0 0.5mm;word-break:break-all">${barcode}</div>
-  <div style="text-align:center;font-size:8px;color:#555">ID: ${num}</div>
+  <div style="text-align:center;font-size:8px;color:#555">${t.date} · ${t.time}</div>
+  <div style="text-align:center;font-size:12px;font-family:'Courier New';color:#000;margin:1.5mm 0 0.5mm;word-break:break-all">${barcode}</div>
   <hr style="border:none;border-top:1px dashed #000;margin:2mm 0">
   <div style="text-align:center;font-size:8px;font-style:italic;color:#555;line-height:1.5">Please wait for your number to be called.<br>Thank you for your patience.</div>
   <script>window.onload=function(){window.print();setTimeout(function(){window.close()},800)}<\/script>
   </body></html>`;
-  const popup = window.open('','_blank','width=300,height=560,toolbar=0,menubar=0,location=0');
+  const popup=window.open('','_blank','width=300,height=540,toolbar=0,menubar=0,location=0');
   if(popup){popup.document.write(html);popup.document.close();}
   else{document.getElementById('receiptContent').innerHTML=html;setTimeout(()=>window.print(),150);}
 }
 
-function generateBarcode(id) {
-  const seed=id*2654435761; let bars='|';
-  for(let i=0;i<24;i++) bars+=((seed>>i)&1)?'█':'▌';
-  return bars+'|';
+function genBarcode(id){
+  const s=id*2654435761; let b='|';
+  for(let i=0;i<22;i++) b+=((s>>i)&1)?'█':'▌';
+  return b+'|';
 }
 
-// ── Drag & Drop reassignment ──
-window.startDrag = function(event, ticketId) {
-  dragTicketId = ticketId;
-  event.dataTransfer.effectAllowed = 'move';
-  event.target.classList.add('dragging');
+// ── Drag helpers ──
+window.startCardDrag=function(e,id){
+  dragId=id; e.dataTransfer.effectAllowed='move';
+  e.currentTarget.classList.add('dragging');
+};
+window.endCardDrag=function(e){
+  e.currentTarget.classList.remove('dragging');
+  dragId=null;
+};
+window.startChipDrag=function(e,id){
+  dragId=id; e.dataTransfer.effectAllowed='move';
+  e.currentTarget.classList.add('dragging');
+};
+window.endChipDrag=function(e){
+  e.currentTarget.classList.remove('dragging');
 };
 
-window.endDrag = function(event) {
-  event.target.classList.remove('dragging');
+// Drop onto a counter row
+window.crDragOver=function(e,c){
+  e.preventDefault();
+  e.currentTarget.querySelector('.cr-drop').classList.add('drag-over');
 };
-
-window.onDragOver = function(event, counterNum) {
-  event.preventDefault();
-  event.dataTransfer.dropEffect = 'move';
-  const zone = event.currentTarget.querySelector('.cs-drop-zone');
-  if(zone) zone.classList.add('drag-over');
+window.crDragLeave=function(e){
+  e.currentTarget.querySelector('.cr-drop').classList.remove('drag-over');
 };
-
-window.onDragLeave = function(event) {
-  const zone = event.currentTarget.querySelector('.cs-drop-zone');
-  if(zone) zone.classList.remove('drag-over');
-};
-
-window.onDrop = function(event, counterNum) {
-  event.preventDefault();
-  const zone = event.currentTarget.querySelector('.cs-drop-zone');
-  if(zone) zone.classList.remove('drag-over');
-  if(dragTicketId===null) return;
-  const ticket = log.find(t=>t.id===dragTicketId);
-  if(ticket && !ticket.served) {
-    ticket.counter = counterNum;
-    ticket.compliance = false; // moving to counter clears compliance hold
+window.crDrop=function(e,c){
+  e.preventDefault();
+  e.currentTarget.querySelector('.cr-drop').classList.remove('drag-over');
+  if(dragId===null) return;
+  const t=log.find(x=>x.id===dragId);
+  if(t && !t.served){
+    t.counter=c;
+    t.compliance=false; t.paymentHold=false; // reassigning clears holds
     saveState();
-    showFlash(`#${String(ticket.id).padStart(3,'0')} → Counter ${counterNum}`);
+    showToast(`#${String(t.id).padStart(3,'0')} → Counter ${c}`);
   }
-  dragTicketId = null;
+  dragId=null;
 };
 
-// Compliance pool drop
-window.onDragOverPool = function(event) {
-  event.preventDefault();
-  event.dataTransfer.dropEffect = 'move';
-  event.currentTarget.style.background = 'rgba(183,128,10,0.07)';
-  event.currentTarget.style.borderColor = '#b7800a';
-};
-
-window.onDragLeavePool = function(event) {
-  event.currentTarget.style.background = '';
-  event.currentTarget.style.borderColor = 'transparent';
-};
-
-window.onDropPool = function(event) {
-  event.preventDefault();
-  event.currentTarget.style.background = '';
-  event.currentTarget.style.borderColor = 'transparent';
-  if(dragTicketId===null) return;
-  const ticket = log.find(t=>t.id===dragTicketId);
-  if(ticket && !ticket.served) {
-    ticket.compliance = true;
-    saveState();
-    showFlash(`#${String(ticket.id).padStart(3,'0')} → Compliance Hold`);
-  }
-  dragTicketId = null;
-};
-
-// ── Render ──
-function renderAll() {
-  renderStats(); renderCounterSummary(); renderCompliancePool(); renderLog(); renderCounterCounts();
+// ── Render all ──
+function renderAll(){
+  renderStats();
+  renderCounterRows();
+  renderPile();
+  renderCounterCounts();
 }
 
-function renderStats() {
-  document.getElementById('stTotal').textContent   = log.length;
-  document.getElementById('stWaiting').textContent = log.filter(t=>!t.served&&!t.compliance).length;
-  document.getElementById('stServed').textContent  = log.filter(t=>t.served).length;
-  document.getElementById('stComply').textContent  = log.filter(t=>t.compliance&&!t.served).length;
+function renderStats(){
+  const active=log.filter(t=>!t.served&&!t.compliance&&!t.paymentHold);
+  const hold=log.filter(t=>!t.served&&(t.compliance||t.paymentHold));
+  document.getElementById('stTotal').textContent=log.length;
+  document.getElementById('stWaiting').textContent=active.length;
+  document.getElementById('stHold').textContent=hold.length;
+  document.getElementById('stServed').textContent=log.filter(t=>t.served).length;
 }
 
-function renderCounterSummary() {
-  const list = document.getElementById('counterSummaryList');
-  list.innerHTML='';
+function renderCounterRows(){
+  const el=document.getElementById('counterRows');
+  el.innerHTML='';
   [1,2,3,4].forEach(c=>{
-    const tickets = log.filter(t=>!t.served&&!t.compliance&&t.counter===c);
-    const row = document.createElement('div');
-    row.className='cs-row'; row.dataset.c=c;
-    row.setAttribute('ondragover',`onDragOver(event,${c})`);
-    row.setAttribute('ondragleave','onDragLeave(event)');
-    row.setAttribute('ondrop',`onDrop(event,${c})`);
-    const chipsHtml = tickets.length===0
-      ? '<span class="cs-empty">Empty</span>'
-      : tickets.slice(0,8).map(t=>`
-          <span class="cs-chip" draggable="true"
-            ondragstart="startDrag(event,${t.id})" ondragend="endDrag(event)"
-            title="${t.service}${t.customer?' · '+t.customer:''}">
-            ${String(t.id).padStart(3,'0')}${t.priority==='priority'?'⚡':''}
-          </span>`).join('')
-        +(tickets.length>8?`<span class="cs-empty">+${tickets.length-8}</span>`:'');
+    const tickets=log.filter(t=>!t.served&&t.counter===c);
+    const row=document.createElement('div');
+    row.className='cr-row'; row.dataset.c=c;
+    row.setAttribute('ondragover',`crDragOver(event,${c})`);
+    row.setAttribute('ondragleave','crDragLeave(event)');
+    row.setAttribute('ondrop',`crDrop(event,${c})`);
+    const active=tickets.filter(t=>!t.compliance&&!t.paymentHold);
+    const chipsHtml=tickets.length===0
+      ?'<span class="cr-empty">Empty — drop here</span>'
+      :tickets.slice(0,10).map(t=>{
+          let cls='cr-chip';
+          if(t.compliance) cls+=' comply';
+          else if(t.paymentHold) cls+=' payment';
+          return `<span class="${cls}" draggable="true"
+            ondragstart="startChipDrag(event,${t.id})"
+            ondragend="endChipDrag(event)"
+            title="${t.service}${t.customer?' · '+t.customer:''}${t.compliance?' [comply]':t.paymentHold?' [payment]':''}">
+            ${String(t.id).padStart(3,'0')}${t.priority==='priority'?'⚡':''}${t.compliance?'⏸':t.paymentHold?'💳':''}
+          </span>`;
+        }).join('')+(tickets.length>10?`<span class="cr-empty">+${tickets.length-10}</span>`:'');
     row.innerHTML=`
-      <div class="cs-dot"></div>
-      <div class="cs-name">${COUNTER_NAMES[c-1]}</div>
-      <div class="cs-drop-zone">${chipsHtml}</div>`;
-    list.appendChild(row);
-  });
-}
-
-function renderCompliancePool() {
-  const pool = document.getElementById('compliancePool');
-  const empty = document.getElementById('complyEmpty');
-  const tickets = log.filter(t=>t.compliance&&!t.served);
-  pool.querySelectorAll('.cs-chip').forEach(e=>e.remove());
-  empty.style.display = tickets.length===0 ? 'inline' : 'none';
-  tickets.forEach(t=>{
-    const c = t.counter;
-    const chip = document.createElement('span');
-    chip.className=`cs-chip`; // use a compliance-specific style
-    chip.style.cssText='background:#fff8e1;color:#b7800a;border:1px solid rgba(183,128,10,0.3);font-family:\'Bebas Neue\',sans-serif;font-size:13px;padding:2px 7px;border-radius:2px;cursor:grab;animation:popIn 0.2s ease;display:inline-flex;align-items:center;gap:3px';
-    chip.setAttribute('draggable','true');
-    chip.setAttribute('ondragstart',`startDrag(event,${t.id})`);
-    chip.setAttribute('ondragend','endDrag(event)');
-    chip.title=`C${t.counter} · ${t.service}${t.customer?' · '+t.customer:''}`;
-    chip.textContent=`${String(t.id).padStart(3,'0')}${t.priority==='priority'?'⚡':''}`;
-    pool.insertBefore(chip, empty);
-  });
-}
-
-function renderLog() {
-  const listEl = document.getElementById('logList');
-  document.getElementById('logEmpty').style.display = log.length===0?'block':'none';
-  listEl.querySelectorAll('.log-item').forEach(e=>e.remove());
-  log.slice(0,20).forEach(t=>{
-    const item = document.createElement('div');
-    item.className='log-item'; item.dataset.c=t.counter;
-    const badges = [
-      t.priority==='priority'?'<div class="log-prio">⚡ Priority</div>':'',
-      t.compliance?'<div class="log-comply">⏸ Compliance</div>':'',
-      t.served?'<span style="font-size:8px;color:var(--muted)">[served]</span>':''
-    ].join('');
-    item.innerHTML=`
-      <div class="log-num">${String(t.id).padStart(3,'0')}</div>
-      <div class="log-info">
-        <div class="log-svc">${t.service} · C${t.counter}</div>
-        ${t.customer?`<div class="log-cust">${t.customer}</div>`:''}
-        ${badges}
+      <div class="cr-label">
+        <div class="cr-dot"></div>
+        <div class="cr-name">C${c}</div>
+        <div class="cr-count">${active.length}</div>
       </div>
-      <div class="log-meta">${t.time}</div>`;
-    listEl.appendChild(item);
+      <div class="cr-drop">${chipsHtml}</div>`;
+    el.appendChild(row);
   });
 }
 
-function renderCounterCounts() {
-  const q={1:0,2:0,3:0,4:0};
-  log.filter(t=>!t.served&&!t.compliance).forEach(t=>{if(q[t.counter]!==undefined)q[t.counter]++;});
-  [1,2,3,4].forEach(c=>{const el=document.getElementById(`cbcount-${c}`);if(el)el.textContent=q[c];});
+function renderPile(){
+  const body=document.getElementById('pileBody');
+  body.innerHTML='';
+
+  let filtered=[...log];
+  if(activeFilter==='waiting') filtered=log.filter(t=>!t.served&&!t.compliance&&!t.paymentHold);
+  else if(activeFilter==='hold') filtered=log.filter(t=>!t.served&&(t.compliance||t.paymentHold));
+  else if(activeFilter==='served') filtered=log.filter(t=>t.served);
+  else if(['1','2','3','4'].includes(activeFilter)) filtered=log.filter(t=>t.counter===parseInt(activeFilter));
+
+  if(!filtered.length){body.innerHTML='<div class="pile-empty">No clients</div>';return;}
+
+  filtered.forEach(t=>{
+    const card=document.createElement('div');
+    card.className='client-card'; card.dataset.c=t.counter;
+    if(!t.served){
+      card.setAttribute('draggable','true');
+      card.setAttribute('ondragstart',`startCardDrag(event,${t.id})`);
+      card.setAttribute('ondragend','endCardDrag(event)');
+      card.title='Drag to counter row above to reassign';
+    }
+    const statusBadges=[];
+    statusBadges.push(`<span class="badge badge-counter">C${t.counter}</span>`);
+    if(t.priority==='priority') statusBadges.push(`<span class="badge badge-priority">⚡ Priority</span>`);
+    if(t.compliance) statusBadges.push(`<span class="badge badge-comply">⏸ Comply</span>`);
+    if(t.paymentHold) statusBadges.push(`<span class="badge badge-payment">💳 Payment</span>`);
+    if(t.served) statusBadges.push(`<span class="badge badge-served">✓ Served</span>`);
+    card.innerHTML=`
+      <div class="cc-num">${String(t.id).padStart(3,'0')}</div>
+      <div class="cc-body">
+        <div class="cc-svc">${t.service}</div>
+        ${t.customer?`<div class="cc-cust">${t.customer}</div>`:''}
+        <div class="cc-time">${t.time}</div>
+      </div>
+      <div class="cc-badges">${statusBadges.join('')}</div>`;
+    body.appendChild(card);
+  });
 }
 
-function clearLog() {
-  if(!confirm('Clear all log entries and reset queue?')) return;
+function renderCounterCounts(){
+  [1,2,3,4].forEach(c=>{
+    const el=document.getElementById(`cbcount-${c}`);
+    if(el) el.textContent=log.filter(t=>!t.served&&!t.compliance&&!t.paymentHold&&t.counter===c).length;
+  });
+}
+
+function clearLog(){
+  if(!confirm('Clear all data?')) return;
   log=[]; ticketCounter=0; saveState();
 }
-window.clearLog = clearLog;
+window.clearLog=clearLog;
 
-function resetNumbering() {
-  if(!confirm('Reset ticket numbering to 001?\n\nThis clears all tickets on ALL connected devices.')) return;
+function resetNumbering(){
+  if(!confirm('Reset ticket numbering to 001? This clears all tickets on ALL devices.')) return;
   log=[]; ticketCounter=0; saveState(true);
-  showFlash('✓ Reset — next ticket is 001');
+  showToast('✓ Reset — next ticket is 001');
 }
-window.resetNumbering = resetNumbering;
+window.resetNumbering=resetNumbering;
 
-function showFlash(msg) {
-  const el = document.getElementById('issueFlash');
+function showToast(msg){
+  const el=document.getElementById('toast');
   el.textContent=msg; el.classList.add('show');
   setTimeout(()=>el.classList.remove('show'),2200);
 }
