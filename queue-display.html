@@ -216,6 +216,7 @@ const firebaseConfig = {
   appId: "1:314957208142:web:51f960c760f8682e77811f",
   measurementId: "G-R293DG1RZZ"
 };
+
 const app = initializeApp(firebaseConfig);
 const db  = getDatabase(app);
 const stateRef = ref(db, 'queueState');
