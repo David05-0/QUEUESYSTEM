@@ -339,6 +339,7 @@ onValue(stateRef,snap=>{
     sharedLog=[]; activityLog=[]; lastCallTs=null;
     counterDisplay=[1,2,3,4].map(id=>({id,current:null,service:null,customer:null,priority:null,time:null}));
     if(flashTimer) clearTimeout(flashTimer);
+    if(announceDebounce){ clearTimeout(announceDebounce); announceDebounce=null; }
     announceQueue=[]; isAnnouncing=false;
     document.getElementById('callFlash').classList.remove('show');
     [1,2,3,4].forEach(id=>{const w=document.getElementById(`cpwave-${id}`);if(w)w.classList.remove('active');});
@@ -423,11 +424,19 @@ function nowTime(){
 // Sorted by calledAt so the counter that called first is always announced first.
 let announceQueue = [];
 let isAnnouncing  = false;
+let announceDebounce = null;   // collects burst calls before starting
+const DEBOUNCE_MS  = 1500;     // wait this long after last call before starting
+const COOLDOWN_MS  = 2000;     // quiet gap between consecutive announcements
 
 function triggerCallFlash(ticket){
   announceQueue.push({...ticket, calledAt: ticket.calledAt||Date.now()});
   announceQueue.sort((a,b)=>a.calledAt-b.calledAt);
-  if(!isAnnouncing) processAnnounceQueue();
+  // If already mid-announcement, just queue — the chain will continue on its own
+  if(isAnnouncing) return;
+  // Debounce: reset the timer each time a new call arrives so we collect all
+  // near-simultaneous calls before starting
+  if(announceDebounce) clearTimeout(announceDebounce);
+  announceDebounce=setTimeout(()=>{ announceDebounce=null; processAnnounceQueue(); }, DEBOUNCE_MS);
 }
 
 function processAnnounceQueue(){
@@ -475,8 +484,8 @@ function runAnnouncement(ticket){
       // Speech done — brief pause, then hide flash, then next item
       setTimeout(()=>{
         document.getElementById('callFlash').classList.remove('show');
-        // Gap between announcements: 700ms when more are waiting
-        setTimeout(()=>processAnnounceQueue(), announceQueue.length>0 ? 700 : 0);
+        // Gap between announcements: cooldown gives other counters breathing room
+        setTimeout(()=>processAnnounceQueue(), announceQueue.length>0 ? COOLDOWN_MS : 0);
       }, 400);
     });
   }, 350); // slight delay after chime before voice starts
