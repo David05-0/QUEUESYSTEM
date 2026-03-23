@@ -148,7 +148,7 @@
   .cf-counter-text{font-family:'Bebas Neue',sans-serif;font-size:clamp(18px,3vw,32px);letter-spacing:0.16em}
 
   .cf-service{font-size:clamp(13px,1.8vw,18px);letter-spacing:0.14em;color:var(--muted);margin-top:10px;animation:cfFadeIn 0.5s ease 0.25s both}
-  .cf-customer{font-size:clamp(16px,2.2vw,24px);letter-spacing:0.08em;color:var(--text);margin-top:4px;animation:cfFadeIn 0.5s ease 0.3s both}
+  .cf-customer{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,5.5vw,72px);letter-spacing:0.06em;color:var(--text);margin-top:8px;animation:cfFadeIn 0.5s ease 0.3s both}
   .cf-priority{display:inline-flex;align-items:center;gap:5px;font-size:clamp(12px,1.4vw,15px);letter-spacing:0.14em;text-transform:uppercase;color:var(--priority);border:1px solid rgba(231,76,60,0.4);background:rgba(231,76,60,0.08);padding:5px 14px;border-radius:3px;margin-top:6px;animation:cfFadeIn 0.5s ease 0.32s both}
 
   @keyframes cfZoomIn{from{transform:scale(0.5);opacity:0}to{transform:scale(1);opacity:1}}
@@ -185,6 +185,7 @@
   <div class="cf-goto" id="cfGoto">
     <span class="cf-goto-num" id="cfGotoNum" style="color:var(--gold)">No. 000</span>
     <span class="cf-goto-arrow">→</span>
+    <span style="font-size:0.6em;opacity:0.7;letter-spacing:0.2em">PROCEED TO</span>
     <span id="cfGotoCounter" style="color:var(--gold)">Counter 1</span>
   </div>
   <div class="cf-counter-badge" id="cfCounterBadge">
@@ -342,6 +343,7 @@ onValue(stateRef,snap=>{
     sharedLog=[]; activityLog=[]; lastCallTs=null;
     counterDisplay=[1,2,3,4].map(id=>({id,current:null,service:null,customer:null,priority:null,time:null}));
     if(flashTimer) clearTimeout(flashTimer);
+    flashQueue=[]; isFlashing=false;
     document.getElementById('callFlash').classList.remove('show');
     [1,2,3,4].forEach(id=>{const w=document.getElementById(`cpwave-${id}`);if(w)w.classList.remove('active');});
     renderAll(); return;
@@ -424,7 +426,24 @@ function nowTime(){
   return [n.getHours(),n.getMinutes(),n.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':');
 }
 
+// ── Flash queue: shows one number at a time with a pause between ──
+let flashQueue = [];
+let isFlashing = false;
+
 function triggerCallFlash(ticket){
+  flashQueue.push({...ticket, calledAt: ticket.calledAt||Date.now()});
+  flashQueue.sort((a,b)=>a.calledAt-b.calledAt);
+  if(!isFlashing) processFlashQueue();
+}
+
+function processFlashQueue(){
+  if(!flashQueue.length){ isFlashing=false; return; }
+  isFlashing=true;
+  const ticket=flashQueue.shift();
+  showFlash(ticket);
+}
+
+function showFlash(ticket){
   const color=COLOR_HEX[ticket.counter];
   const num=String(ticket.id).padStart(3,'0');
   const cname=COUNTER_NAMES[ticket.counter-1];
@@ -446,14 +465,17 @@ function triggerCallFlash(ticket){
   document.getElementById('cfCounterBadge').style.background=COLOR_BG[ticket.counter];
   document.getElementById('cfCounterBadge').style.border=`1px solid ${color}44`;
 
-  document.getElementById('cfService').textContent=ticket.service?`Service: ${ticket.service}`:'';
+  document.getElementById('cfService').textContent=ticket.service?`${ticket.service}`:'';
   document.getElementById('cfCustomer').textContent=ticket.customer||'';
   const prioEl=document.getElementById('cfPriority');
   prioEl.style.display=ticket.priority==='priority'?'inline-flex':'none';
 
   document.getElementById('callFlash').classList.add('show');
   if(flashTimer) clearTimeout(flashTimer);
-  flashTimer=setTimeout(()=>document.getElementById('callFlash').classList.remove('show'),4200);
+  flashTimer=setTimeout(()=>{
+    document.getElementById('callFlash').classList.remove('show');
+    setTimeout(()=>processFlashQueue(), flashQueue.length>0 ? 800 : 0);
+  }, 4200);
 
   const numEl=document.getElementById(`cpnum-${ticket.counter}`);
   if(numEl){numEl.classList.remove('pop');void numEl.offsetWidth;numEl.classList.add('pop');setTimeout(()=>numEl.classList.remove('pop'),700);}
@@ -461,7 +483,6 @@ function triggerCallFlash(ticket){
   if(waveEl){waveEl.classList.add('active');setTimeout(()=>waveEl.classList.remove('active'),5500);}
 
   playChime();
-  // Enqueue speech — ranked by calledAt so first caller speaks first
   enqueueSpeech(ticket);
 }
 
@@ -494,7 +515,10 @@ function processSpeechQueue(){
   const ticket=speechQueue.shift();
   // Cancel any lingering utterance before starting next
   window.speechSynthesis && window.speechSynthesis.cancel();
-  setTimeout(()=>doSpeak(ticket, ()=>processSpeechQueue()), 120);
+  setTimeout(()=>doSpeak(ticket, ()=>{
+    // 900ms pause between consecutive announcements
+    setTimeout(()=>processSpeechQueue(), speechQueue.length>0 ? 900 : 0);
+  }), 150);
 }
 
 function doSpeak(ticket, onDone){
