@@ -19,31 +19,31 @@
   html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;overflow:hidden}
   body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:0.4}
 
-  /* ── LOGIN ── */
-  #loginScreen{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);gap:32px}
+  /* ══════════════ LOGIN ══════════════ */
+  #loginScreen{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);gap:28px}
   #loginScreen.hidden{display:none}
   .login-sup{font-size:10px;letter-spacing:0.3em;color:var(--accent);text-transform:uppercase;text-align:center}
   .login-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,7vw,72px);letter-spacing:0.06em;line-height:1;text-align:center}
   .login-title span{color:var(--accent)}
   .login-sub{font-size:9px;letter-spacing:0.2em;color:var(--muted);text-transform:uppercase;text-align:center}
-  .fb-badge{font-size:8px;letter-spacing:0.15em;text-transform:uppercase;padding:3px 11px;border-radius:20px;border:1px solid var(--border);color:var(--muted);display:inline-flex;align-items:center;gap:5px}
+  .fb-badge{font-size:8px;letter-spacing:0.14em;text-transform:uppercase;padding:3px 10px;border-radius:20px;border:1px solid var(--border);color:var(--muted);display:inline-flex;align-items:center;gap:5px}
   .fb-badge.live{color:var(--green);border-color:rgba(61,220,132,0.4);background:rgba(61,220,132,0.07)}
   .fb-dot{width:5px;height:5px;border-radius:50%;background:currentColor}
-  .login-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:min(520px,90vw)}
-  .counter-login-btn{background:var(--panel);border:2px solid var(--border);border-radius:6px;padding:26px 16px;cursor:pointer;transition:all 0.18s;display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;overflow:hidden}
-  .counter-login-btn::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity 0.2s}
-  .counter-login-btn[data-c="1"]{--cc:var(--c1);--ccbg:var(--c1bg);--ccb:var(--c1b)}
-  .counter-login-btn[data-c="2"]{--cc:var(--c2);--ccbg:var(--c2bg);--ccb:var(--c2b)}
-  .counter-login-btn[data-c="3"]{--cc:var(--c3);--ccbg:var(--c3bg);--ccb:var(--c3b)}
-  .counter-login-btn[data-c="4"]{--cc:var(--c4);--ccbg:var(--c4bg);--ccb:var(--c4b)}
-  .counter-login-btn::before{background:var(--ccbg)}
-  .counter-login-btn:hover{border-color:var(--cc);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,0.4),0 0 0 1px var(--ccb)}
-  .counter-login-btn:hover::before{opacity:1}
-  .clb-number{font-family:'Bebas Neue',sans-serif;font-size:60px;line-height:1;letter-spacing:0.04em;color:var(--cc);position:relative;z-index:1}
-  .clb-label{font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);position:relative;z-index:1}
-  .clb-count{font-size:8px;color:var(--cc);opacity:0.8;position:relative;z-index:1;border:1px solid var(--ccb);background:var(--ccbg);padding:2px 8px;border-radius:20px}
+  .login-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px;width:min(500px,90vw)}
+  .login-btn{background:var(--panel);border:2px solid var(--border);border-radius:6px;padding:24px 14px;cursor:pointer;transition:all 0.18s;display:flex;flex-direction:column;align-items:center;gap:7px;position:relative;overflow:hidden}
+  .login-btn::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity 0.2s}
+  .login-btn[data-c="1"]{--cc:var(--c1);--ccbg:var(--c1bg);--ccb:var(--c1b)}
+  .login-btn[data-c="2"]{--cc:var(--c2);--ccbg:var(--c2bg);--ccb:var(--c2b)}
+  .login-btn[data-c="3"]{--cc:var(--c3);--ccbg:var(--c3bg);--ccb:var(--c3b)}
+  .login-btn[data-c="4"]{--cc:var(--c4);--ccbg:var(--c4bg);--ccb:var(--c4b)}
+  .login-btn::before{background:var(--ccbg)}
+  .login-btn:hover{border-color:var(--cc);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,0.4),0 0 0 1px var(--ccb)}
+  .login-btn:hover::before{opacity:1}
+  .lbtn-num{font-family:'Bebas Neue',sans-serif;font-size:58px;line-height:1;letter-spacing:0.04em;color:var(--cc);position:relative;z-index:1}
+  .lbtn-name{font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);position:relative;z-index:1}
+  .lbtn-count{font-size:8px;color:var(--cc);position:relative;z-index:1;border:1px solid var(--ccb);background:var(--ccbg);padding:2px 8px;border-radius:20px}
 
-  /* ── COUNTER VIEW ── */
+  /* ══════════════ COUNTER VIEW ══════════════ */
   #counterView{position:fixed;inset:0;z-index:5;display:none;flex-direction:column}
   #counterView.visible{display:flex}
   #counterView::before{content:'';position:absolute;inset:0;z-index:0;opacity:0;transition:opacity 1s;pointer-events:none}
@@ -52,42 +52,41 @@
   #counterView.c3::before{background:radial-gradient(ellipse at 50% 0%,rgba(30,132,73,0.07) 0%,transparent 65%);opacity:1}
   #counterView.c4::before{background:radial-gradient(ellipse at 50% 0%,rgba(125,60,152,0.07) 0%,transparent 65%);opacity:1}
 
-  .cv-topbar{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;padding:11px 22px;border-bottom:1px solid var(--border);background:rgba(10,10,15,0.85);backdrop-filter:blur(10px);flex-shrink:0}
-  .cv-left{display:flex;align-items:center;gap:11px}
-  .cv-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
-  .cv-name{font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:0.12em}
-  .cv-pill{font-size:7.5px;letter-spacing:0.16em;text-transform:uppercase;padding:3px 8px;border-radius:20px;border:1px solid var(--border);color:var(--muted);transition:all 0.4s}
+  /* Topbar */
+  .cv-topbar{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;padding:11px 20px;border-bottom:1px solid var(--border);background:rgba(10,10,15,0.85);backdrop-filter:blur(10px);flex-shrink:0}
+  .cv-left{display:flex;align-items:center;gap:10px}
+  .cv-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .cv-name{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:0.12em}
+  .cv-pill{font-size:7px;letter-spacing:0.16em;text-transform:uppercase;padding:3px 8px;border-radius:20px;border:1px solid var(--border);color:var(--muted);transition:all 0.4s}
   .cv-pill.serving{color:var(--green);border-color:rgba(61,220,132,0.4);background:rgba(61,220,132,0.07);animation:pillPulse 2s ease infinite}
   .cv-pill.comply{color:var(--amber);border-color:rgba(226,160,0,0.4);background:rgba(226,160,0,0.08)}
   .cv-pill.payment{color:var(--teal);border-color:rgba(14,154,181,0.4);background:rgba(14,154,181,0.08)}
   @keyframes pillPulse{0%,100%{opacity:1}50%{opacity:0.55}}
-  .cv-right{display:flex;align-items:center;gap:12px}
-  .cv-clock{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:0.1em;color:var(--muted)}
-  .cv-logout{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.16em;text-transform:uppercase;background:none;border:1px solid var(--border);color:var(--muted);border-radius:3px;padding:5px 11px;cursor:pointer;transition:all 0.15s}
+  .cv-right{display:flex;align-items:center;gap:11px}
+  .cv-clock{font-family:'Bebas Neue',sans-serif;font-size:25px;letter-spacing:0.1em;color:var(--muted)}
+  .cv-logout{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;background:none;border:1px solid var(--border);color:var(--muted);border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s}
   .cv-logout:hover{color:var(--red);border-color:var(--red)}
 
-  /* body: main + sidebar */
-  .cv-body{position:relative;z-index:1;flex:1;display:grid;grid-template-columns:1fr 290px;overflow:hidden}
+  /* ── 3-pane body: now-serving | sidebar | pool ── */
+  .cv-body{position:relative;z-index:1;flex:1;display:grid;grid-template-columns:1fr 280px 260px;overflow:hidden}
 
-  /* ── MAIN ── */
-  .cv-main{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 32px;border-right:1px solid var(--border);gap:0;overflow:hidden}
+  /* ── LEFT: Now serving ── */
+  .cv-main{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px 28px;border-right:1px solid var(--border);gap:0;overflow:hidden}
   .cv-now-lbl{font-size:10px;letter-spacing:0.32em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
-  .cv-big-num{font-family:'Bebas Neue',sans-serif;font-size:clamp(100px,17vw,190px);line-height:0.88;letter-spacing:0.02em;color:var(--muted);transition:color 0.4s,text-shadow 0.4s;text-align:center}
+  .cv-big-num{font-family:'Bebas Neue',sans-serif;font-size:clamp(100px,16vw,185px);line-height:0.88;letter-spacing:0.02em;color:var(--muted);transition:color 0.4s,text-shadow 0.4s;text-align:center}
   .cv-big-num.pop{animation:bigPop 0.6s cubic-bezier(0.34,1.56,0.64,1)}
   @keyframes bigPop{0%{transform:scale(0.55) translateY(24px);opacity:0}60%{transform:scale(1.06) translateY(-4px);opacity:1}100%{transform:scale(1) translateY(0)}}
   #counterView.c1 .cv-big-num.has-num{color:var(--c1);text-shadow:0 0 80px rgba(230,126,34,0.4)}
   #counterView.c2 .cv-big-num.has-num{color:var(--c2);text-shadow:0 0 80px rgba(36,113,163,0.4)}
   #counterView.c3 .cv-big-num.has-num{color:var(--c3);text-shadow:0 0 80px rgba(30,132,73,0.4)}
   #counterView.c4 .cv-big-num.has-num{color:var(--c4);text-shadow:0 0 80px rgba(125,60,152,0.4)}
-
-  .cv-ticket-info{display:flex;flex-direction:column;align-items:center;gap:3px;margin-top:12px;min-height:46px}
-  .cv-svc{font-size:11px;letter-spacing:0.08em;color:var(--muted)}
-  .cv-cust{font-size:16px;letter-spacing:0.05em;color:var(--text);font-weight:500}
+  .cv-ticket-info{display:flex;flex-direction:column;align-items:center;gap:3px;margin-top:12px;min-height:44px}
+  .cv-svc{font-size:11px;letter-spacing:0.07em;color:var(--muted)}
+  .cv-cust{font-size:15px;letter-spacing:0.05em;color:var(--text);font-weight:500}
   .cv-prio-tag{font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:#e74c3c;border:1px solid rgba(231,76,60,0.4);background:rgba(231,76,60,0.08);padding:3px 8px;border-radius:20px;margin-top:2px}
-
-  .cv-wave{display:flex;align-items:center;gap:7px;height:20px;margin-top:12px;opacity:0;transition:opacity 0.3s}
+  .cv-wave{display:flex;align-items:center;gap:7px;height:18px;margin-top:12px;opacity:0;transition:opacity 0.3s}
   .cv-wave.active{opacity:1}
-  .cv-wave-lbl{font-size:8px;letter-spacing:0.16em;text-transform:uppercase}
+  .cv-wave-lbl{font-size:8px;letter-spacing:0.14em;text-transform:uppercase}
   #counterView.c1 .cv-wave-lbl{color:var(--c1)} #counterView.c2 .cv-wave-lbl{color:var(--c2)}
   #counterView.c3 .cv-wave-lbl{color:var(--c3)} #counterView.c4 .cv-wave-lbl{color:var(--c4)}
   .wave-bars{display:flex;gap:2px;align-items:flex-end}
@@ -96,9 +95,7 @@
   #counterView.c3 .wave-bars span{background:var(--c3)} #counterView.c4 .wave-bars span{background:var(--c4)}
   .wave-bars span:nth-child(1){height:5px}.wave-bars span:nth-child(2){height:12px;animation-delay:0.14s}.wave-bars span:nth-child(3){height:18px;animation-delay:0.26s}.wave-bars span:nth-child(4){height:10px;animation-delay:0.09s}.wave-bars span:nth-child(5){height:7px;animation-delay:0.2s}
   @keyframes barWave{0%,100%{transform:scaleY(0.3)}50%{transform:scaleY(1)}}
-
-  /* Call button */
-  .cv-call-btn{margin-top:28px;font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:0.12em;border:none;border-radius:6px;padding:18px 52px;cursor:pointer;transition:all 0.15s;width:min(380px,100%)}
+  .cv-call-btn{margin-top:24px;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:0.12em;border:none;border-radius:6px;padding:16px 44px;cursor:pointer;transition:all 0.15s;width:min(340px,100%)}
   #counterView.c1 .cv-call-btn{background:var(--c1);color:#fff}
   #counterView.c2 .cv-call-btn{background:var(--c2);color:#fff}
   #counterView.c3 .cv-call-btn{background:var(--c3);color:#fff}
@@ -106,34 +103,33 @@
   .cv-call-btn:hover:not(:disabled){filter:brightness(1.14);transform:translateY(-2px);box-shadow:0 10px 40px rgba(0,0,0,0.5)}
   .cv-call-btn:disabled{opacity:0.2;cursor:not-allowed;transform:none;box-shadow:none;filter:none}
 
-  /* ── SIDEBAR ── */
-  .cv-sidebar{display:flex;flex-direction:column;overflow:hidden;background:rgba(10,10,15,0.3)}
-  .cv-sec{padding:13px 16px;border-bottom:1px solid var(--border)}
-  .cv-sec:last-child{border-bottom:none;flex:1;overflow:hidden;display:flex;flex-direction:column}
+  /* ── MIDDLE: My queue + hold zones ── */
+  .cv-sidebar{display:flex;flex-direction:column;overflow:hidden;background:rgba(10,10,15,0.25);border-right:1px solid var(--border)}
+  .cv-sec{padding:12px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+  .cv-sec.grow{flex:1;overflow:hidden;display:flex;flex-direction:column}
   .cv-sec-title{font-size:7.5px;letter-spacing:0.26em;text-transform:uppercase;color:var(--muted);margin-bottom:9px;display:flex;align-items:center;gap:7px}
   .cv-sec-title::after{content:'';flex:1;height:1px;background:var(--border)}
-  .cv-stats-row{display:grid;grid-template-columns:1fr 1fr;gap:7px}
-  .cv-stat{background:var(--panel);border:1px solid var(--border);border-radius:3px;padding:9px 10px}
+  .cv-stats-row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .cv-stat{background:var(--panel);border:1px solid var(--border);border-radius:3px;padding:8px 10px}
   .cv-stat-val{font-family:'Bebas Neue',sans-serif;font-size:24px;line-height:1;letter-spacing:0.04em}
   .cv-stat-lbl{font-size:7px;letter-spacing:0.16em;color:var(--muted);text-transform:uppercase;margin-top:1px}
 
-  /* ── HOLD ZONES ── */
-  .hold-zones{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:2px}
-  .hold-zone{border:1.5px dashed var(--border);border-radius:3px;padding:7px 8px;min-height:50px;display:flex;flex-direction:column;gap:4px;transition:all 0.2s}
+  /* Hold zones */
+  .hold-zones{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .hold-zone{border:1.5px dashed var(--border);border-radius:3px;padding:7px 8px;min-height:52px;display:flex;flex-direction:column;gap:4px;transition:all 0.2s;cursor:default}
   .hold-zone.drag-over-comply{border-color:var(--amber);background:rgba(226,160,0,0.06)}
   .hold-zone.drag-over-payment{border-color:var(--teal);background:rgba(14,154,181,0.06)}
-  .hz-label{font-size:7px;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:3px;flex-shrink:0}
-  .hz-label.comply-lbl{color:var(--amber)}
-  .hz-label.payment-lbl{color:var(--teal)}
+  .hz-title{font-size:7px;letter-spacing:0.18em;text-transform:uppercase;flex-shrink:0}
+  .hz-title.c{color:var(--amber)} .hz-title.p{color:var(--teal)}
   .hz-chips{display:flex;flex-wrap:wrap;gap:4px}
-  .hz-chip{font-family:'Bebas Neue',sans-serif;font-size:12px;padding:2px 7px;border-radius:2px;cursor:grab;user-select:none;animation:popIn 0.18s ease;transition:opacity 0.15s;display:inline-flex;align-items:center;gap:2px}
+  .hz-chip{font-family:'Bebas Neue',sans-serif;font-size:11px;padding:2px 6px;border-radius:2px;cursor:grab;user-select:none;animation:popIn 0.18s ease;display:inline-flex;align-items:center;gap:2px}
   .hz-chip:active{cursor:grabbing;opacity:0.6}
   .hz-chip.dragging{opacity:0.3}
-  .hz-chip.comply-chip{background:rgba(226,160,0,0.1);color:var(--amber);border:1px solid rgba(226,160,0,0.3)}
-  .hz-chip.payment-chip{background:rgba(14,154,181,0.1);color:var(--teal);border:1px solid rgba(14,154,181,0.3)}
-  .hz-empty{font-size:8px;color:var(--muted);letter-spacing:0.08em}
+  .hz-chip.c-chip{background:rgba(226,160,0,0.1);color:var(--amber);border:1px solid rgba(226,160,0,0.3)}
+  .hz-chip.p-chip{background:rgba(14,154,181,0.1);color:var(--teal);border:1px solid rgba(14,154,181,0.3)}
+  .hz-empty{font-size:8px;color:var(--muted);letter-spacing:0.07em}
 
-  /* ── QUEUE LIST ── */
+  /* Queue list */
   .cv-queue-list{display:flex;flex-direction:column;gap:5px;overflow-y:auto;flex:1;scrollbar-width:thin;scrollbar-color:var(--border) transparent;padding-bottom:6px}
   .cv-q-item{display:flex;align-items:center;padding:8px 10px;background:var(--panel);border:1px solid var(--border);border-radius:3px;gap:8px;animation:slideIn 0.2s ease;cursor:grab;user-select:none;transition:all 0.15s}
   .cv-q-item:hover{border-color:var(--muted)}
@@ -145,27 +141,77 @@
   #counterView.c2 .cv-q-item.next-up{border-left-color:var(--c2)}
   #counterView.c3 .cv-q-item.next-up{border-left-color:var(--c3)}
   #counterView.c4 .cv-q-item.next-up{border-left-color:var(--c4)}
-  .cv-q-num{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:0.04em}
+  .cv-q-num{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:0.04em}
   .cv-q-item.next-up .cv-q-num{color:var(--text)} .cv-q-item:not(.next-up) .cv-q-num{color:var(--muted)}
   .cv-q-info{flex:1;overflow:hidden}
-  .cv-q-svc{font-size:8.5px;letter-spacing:0.06em;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .cv-q-cust{font-size:10px;letter-spacing:0.04em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .cv-q-badge{font-size:7px;letter-spacing:0.1em;text-transform:uppercase;padding:2px 5px;border-radius:20px;flex-shrink:0}
-  .next-badge{border:1px solid;animation:nextGlow 2s ease infinite}
-  #counterView.c1 .next-badge{color:var(--c1);border-color:var(--c1b);background:var(--c1bg)}
-  #counterView.c2 .next-badge{color:var(--c2);border-color:var(--c2b);background:var(--c2bg)}
-  #counterView.c3 .next-badge{color:var(--c3);border-color:var(--c3b);background:var(--c3bg)}
-  #counterView.c4 .next-badge{color:var(--c4);border-color:var(--c4b);background:var(--c4bg)}
+  .cv-q-svc{font-size:8px;letter-spacing:0.06em;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cv-q-cust{font-size:9.5px;letter-spacing:0.04em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cv-q-badges{display:flex;flex-direction:column;gap:3px;align-items:flex-end;flex-shrink:0}
+  .qb{font-size:7px;letter-spacing:0.1em;text-transform:uppercase;padding:2px 5px;border-radius:20px}
+  .qb-next{border:1px solid;animation:nextGlow 2s ease infinite}
+  #counterView.c1 .qb-next{color:var(--c1);border-color:var(--c1b);background:var(--c1bg)}
+  #counterView.c2 .qb-next{color:var(--c2);border-color:var(--c2b);background:var(--c2bg)}
+  #counterView.c3 .qb-next{color:var(--c3);border-color:var(--c3b);background:var(--c3bg)}
+  #counterView.c4 .qb-next{color:var(--c4);border-color:var(--c4b);background:var(--c4bg)}
   @keyframes nextGlow{0%,100%{opacity:1}50%{opacity:0.55}}
-  .prio-badge{color:#e74c3c;border:1px solid rgba(231,76,60,0.3);background:rgba(231,76,60,0.08)}
-  .cv-q-empty{font-size:10px;letter-spacing:0.08em;color:var(--muted);text-align:center;padding:18px 0}
+  .qb-prio{color:#e74c3c;border:1px solid rgba(231,76,60,0.3);background:rgba(231,76,60,0.08)}
+  .cv-q-empty{font-size:9px;letter-spacing:0.08em;color:var(--muted);text-align:center;padding:16px 0}
 
   /* History */
   .hist-chips{display:flex;flex-wrap:wrap;gap:4px}
-  .hist-chip{font-family:'Bebas Neue',sans-serif;font-size:13px;padding:2px 7px;border-radius:2px;background:var(--panel);border:1px solid var(--border);color:var(--muted);text-decoration:line-through;opacity:0.5;animation:popIn 0.2s ease}
+  .hist-chip{font-family:'Bebas Neue',sans-serif;font-size:12px;padding:2px 6px;border-radius:2px;background:var(--panel);border:1px solid var(--border);color:var(--muted);text-decoration:line-through;opacity:0.45;animation:popIn 0.2s ease}
+
+  /* ══════════════ RIGHT PANEL: UNASSIGNED POOL ══════════════ */
+  .cv-pool{display:flex;flex-direction:column;overflow:hidden;background:rgba(10,10,15,0.15)}
+  .pool-topbar{padding:12px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+  .pool-title{font-size:9px;letter-spacing:0.26em;text-transform:uppercase;color:var(--muted);margin-bottom:2px;display:flex;align-items:center;gap:8px}
+  .pool-title-badge{font-family:'Bebas Neue',sans-serif;font-size:18px;line-height:1;letter-spacing:0.06em}
+  #counterView.c1 .pool-title-badge{color:var(--c1)}
+  #counterView.c2 .pool-title-badge{color:var(--c2)}
+  #counterView.c3 .pool-title-badge{color:var(--c3)}
+  #counterView.c4 .pool-title-badge{color:var(--c4)}
+  .pool-hint{font-size:7.5px;color:var(--muted);letter-spacing:0.08em;margin-top:2px}
+
+  .pool-list{display:flex;flex-direction:column;gap:5px;overflow-y:auto;flex:1;padding:10px 12px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+
+  /* Unassigned client card in pool */
+  .pool-item{background:var(--panel);border:1px solid var(--border);border-radius:3px;padding:9px 11px;display:flex;align-items:center;gap:9px;cursor:pointer;transition:all 0.15s;animation:slideIn 0.2s ease;position:relative;overflow:hidden}
+  .pool-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:0;transition:width 0.2s}
+  #counterView.c1 .pool-item:hover::before{width:3px;background:var(--c1)}
+  #counterView.c2 .pool-item:hover::before{width:3px;background:var(--c2)}
+  #counterView.c3 .pool-item:hover::before{width:3px;background:var(--c3)}
+  #counterView.c4 .pool-item:hover::before{width:3px;background:var(--c4)}
+  #counterView.c1 .pool-item:hover{border-color:var(--c1b);background:var(--c1bg)}
+  #counterView.c2 .pool-item:hover{border-color:var(--c2b);background:var(--c2bg)}
+  #counterView.c3 .pool-item:hover{border-color:var(--c3b);background:var(--c3bg)}
+  #counterView.c4 .pool-item:hover{border-color:var(--c4b);background:var(--c4bg)}
+  .pool-item:active{transform:scale(0.98);opacity:0.8}
+  .pi-num{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:0.04em;color:var(--muted);min-width:40px;flex-shrink:0}
+  .pi-info{flex:1;overflow:hidden}
+  .pi-svc{font-size:9px;letter-spacing:0.07em;color:var(--text);opacity:0.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pi-cust{font-size:8.5px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pi-time{font-size:7.5px;color:var(--muted);margin-top:2px}
+  .pi-badges{display:flex;flex-direction:column;gap:3px;flex-shrink:0;align-items:flex-end}
+  .pi-badge{font-size:7px;letter-spacing:0.08em;padding:1px 5px;border-radius:2px;text-transform:uppercase}
+  .pi-badge-prio{color:#e74c3c;border:1px solid rgba(231,76,60,0.3);background:rgba(231,76,60,0.08)}
+  .pi-claim-hint{font-size:7px;letter-spacing:0.08em;color:var(--muted);text-align:right}
+  #counterView.c1 .pool-item:hover .pi-claim-hint{color:var(--c1)}
+  #counterView.c2 .pool-item:hover .pi-claim-hint{color:var(--c2)}
+  #counterView.c3 .pool-item:hover .pi-claim-hint{color:var(--c3)}
+  #counterView.c4 .pool-item:hover .pi-claim-hint{color:var(--c4)}
+  .pool-empty{font-size:10px;color:var(--muted);letter-spacing:0.1em;text-align:center;padding:28px 12px}
+
+  /* Claim confirm flash */
+  .claim-flash{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:0.1em;opacity:0;pointer-events:none;transition:opacity 0.2s}
+  .pool-item.claiming .claim-flash{opacity:1}
+  #counterView.c1 .claim-flash{background:rgba(230,126,34,0.18);color:var(--c1)}
+  #counterView.c2 .claim-flash{background:rgba(36,113,163,0.18);color:var(--c2)}
+  #counterView.c3 .claim-flash{background:rgba(30,132,73,0.18);color:var(--c3)}
+  #counterView.c4 .claim-flash{background:rgba(125,60,152,0.18);color:var(--c4)}
+
   @keyframes popIn{from{transform:scale(0.82);opacity:0}to{transform:scale(1);opacity:1}}
 
-  .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--panel);border:1px solid var(--border);color:var(--text);padding:9px 22px;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:0.1em;opacity:0;transition:all 0.3s;pointer-events:none;z-index:99}
+  .toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--panel);border:1px solid var(--border);color:var(--text);padding:9px 22px;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:0.1em;opacity:0;transition:all 0.3s;pointer-events:none;z-index:99}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
 </head>
@@ -198,12 +244,13 @@
   </div>
 
   <div class="cv-body">
-    <!-- MAIN -->
+
+    <!-- ── NOW SERVING ── -->
     <div class="cv-main">
       <div class="cv-now-lbl">Now Serving</div>
       <div class="cv-big-num" id="cvBigNum">—</div>
       <div class="cv-ticket-info">
-        <div class="cv-svc" id="cvSvc"></div>
+        <div class="cv-svc"  id="cvSvc"></div>
         <div class="cv-cust" id="cvCust"></div>
         <div id="cvPrioTag"></div>
       </div>
@@ -214,63 +261,68 @@
       <button class="cv-call-btn" id="cvCallBtn" onclick="callNext()" disabled>▶ CALL NEXT</button>
     </div>
 
-    <!-- SIDEBAR -->
+    <!-- ── MY QUEUE + HOLDS ── -->
     <div class="cv-sidebar">
 
-      <!-- Stats -->
       <div class="cv-sec">
         <div class="cv-sec-title">Stats</div>
         <div class="cv-stats-row">
-          <div class="cv-stat"><div class="cv-stat-val" id="cvStatWaiting">0</div><div class="cv-stat-lbl">In Queue</div></div>
+          <div class="cv-stat"><div class="cv-stat-val" id="cvStatQueue">0</div><div class="cv-stat-lbl">In Queue</div></div>
           <div class="cv-stat"><div class="cv-stat-val" id="cvStatServed">0</div><div class="cv-stat-lbl">Served</div></div>
         </div>
       </div>
 
-      <!-- Hold zones -->
       <div class="cv-sec">
-        <div class="cv-sec-title">Hold Zones <span style="font-size:6.5px;color:var(--muted);letter-spacing:0.08em">DRAG TICKET HERE · DRAG BACK TO RE-QUEUE</span></div>
+        <div class="cv-sec-title">Hold Zones <span style="font-size:6.5px;color:var(--muted);letter-spacing:0.07em;margin-left:3px">DRAG TICKET HERE → DRAG BACK TO RE-QUEUE</span></div>
         <div class="hold-zones">
-          <!-- Compliance Hold -->
           <div class="hold-zone" id="complyZone"
-            ondragover="onHoldDragOver(event,'comply')"
-            ondragleave="onHoldDragLeave(event,'comply')"
+            ondragover="onHoldOver(event,'comply')"
+            ondragleave="onHoldLeave(event,'comply')"
             ondrop="onHoldDrop(event,'comply')">
-            <div class="hz-label comply-lbl">⏸ Compliance</div>
-            <div class="hz-chips" id="complyChips">
-              <span class="hz-empty" id="complyEmpty">Drop here</span>
-            </div>
+            <div class="hz-title c">⏸ Compliance</div>
+            <div class="hz-chips" id="complyChips"><span class="hz-empty" id="complyEmpty">Drop here</span></div>
           </div>
-          <!-- Payment Hold -->
           <div class="hold-zone" id="paymentZone"
-            ondragover="onHoldDragOver(event,'payment')"
-            ondragleave="onHoldDragLeave(event,'payment')"
+            ondragover="onHoldOver(event,'payment')"
+            ondragleave="onHoldLeave(event,'payment')"
             ondrop="onHoldDrop(event,'payment')">
-            <div class="hz-label payment-lbl">💳 Payment</div>
-            <div class="hz-chips" id="paymentChips">
-              <span class="hz-empty" id="paymentEmpty">Drop here</span>
-            </div>
+            <div class="hz-title p">💳 Payment</div>
+            <div class="hz-chips" id="paymentChips"><span class="hz-empty" id="paymentEmpty">Drop here</span></div>
           </div>
         </div>
       </div>
 
-      <!-- History -->
       <div class="cv-sec">
         <div class="cv-sec-title">Called</div>
-        <div class="hist-chips" id="cvHistChips"><span style="font-size:10px;color:var(--muted)">None yet</span></div>
+        <div class="hist-chips" id="cvHist"><span style="font-size:9px;color:var(--muted)">None yet</span></div>
       </div>
 
-      <!-- Queue list (draggable to hold zones) -->
-      <div class="cv-sec">
-        <div class="cv-sec-title">My Queue <span style="font-size:6.5px;color:var(--muted);letter-spacing:0.07em">DRAG → HOLD ZONE</span></div>
+      <div class="cv-sec grow">
+        <div class="cv-sec-title">My Queue <span style="font-size:6.5px;color:var(--muted);letter-spacing:0.06em;margin-left:3px">DRAG → HOLD</span></div>
         <div class="cv-queue-list" id="cvQueueList"
-          ondragover="onQueueDragOver(event)"
-          ondragleave="onQueueDragLeave(event)"
+          ondragover="onQueueOver(event)"
+          ondragleave="onQueueLeave(event)"
           ondrop="onQueueDrop(event)">
-          <div class="cv-q-empty">No tickets assigned</div>
+          <div class="cv-q-empty">No tickets yet — claim from pool →</div>
         </div>
       </div>
 
     </div>
+
+    <!-- ── UNASSIGNED POOL ── -->
+    <div class="cv-pool">
+      <div class="pool-topbar">
+        <div class="pool-title">
+          Unassigned Pool
+          <span class="pool-title-badge" id="poolBadge">0</span>
+        </div>
+        <div class="pool-hint">Click a client to add to your queue</div>
+      </div>
+      <div class="pool-list" id="poolList">
+        <div class="pool-empty" id="poolEmpty">No clients waiting</div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -314,9 +366,9 @@ function updateClock(){
 setInterval(updateClock,1000); updateClock();
 
 // ── Firebase ──
-onValue(stateRef,snap=>{
+onValue(stateRef, snap=>{
   document.getElementById('fbBadge').className='fb-badge live';
-  document.getElementById('fbBadge').innerHTML='<span class="fb-dot"></span>Firebase Connected';
+  document.getElementById('fbBadge').innerHTML='<span class="fb-dot"></span>Connected';
   const data=snap.val()||{};
   const newReset=data.resetFlag||null;
   if(newReset&&newReset!==lastResetFlag){
@@ -335,21 +387,27 @@ onValue(stateRef,snap=>{
   document.getElementById('fbBadge').innerHTML='<span class="fb-dot"></span>Offline';
 });
 
-function saveSharedState(){
-  set(stateRef,{ticketCounter:sharedTicketCounter,log:sharedLog,lastUpdate:Date.now(),resetFlag:lastResetFlag});
+function saveShared(){
+  set(stateRef,{
+    ticketCounter:sharedTicketCounter,
+    log:sharedLog,
+    lastUpdate:Date.now(),
+    resetFlag:lastResetFlag
+  });
 }
 
-// "active queue" = not served AND not on any hold, assigned to me
-function getMyQueue(){
+// ── Helpers ──
+function myQueue(){
   return sharedLog
     .filter(t=>!t.served&&!t.compliance&&!t.paymentHold&&t.counter===activeCounter)
     .sort((a,b)=>a.priority===b.priority?a.id-b.id:a.priority==='priority'?-1:1);
 }
-function getMyComply(){
-  return sharedLog.filter(t=>t.compliance&&!t.served&&t.counter===activeCounter);
-}
-function getMyPayment(){
-  return sharedLog.filter(t=>t.paymentHold&&!t.served&&t.counter===activeCounter);
+function myComply(){  return sharedLog.filter(t=>t.compliance&&!t.served&&t.counter===activeCounter); }
+function myPayment(){ return sharedLog.filter(t=>t.paymentHold&&!t.served&&t.counter===activeCounter); }
+function unassigned(){
+  return sharedLog
+    .filter(t=>!t.served&&t.counter===0)
+    .sort((a,b)=>a.priority===b.priority?a.id-b.id:a.priority==='priority'?-1:1);
 }
 
 // ── Login ──
@@ -358,20 +416,24 @@ function buildLogin(){
   grid.innerHTML='';
   [1,2,3,4].forEach(id=>{
     const q=sharedLog.filter(t=>!t.served&&!t.compliance&&!t.paymentHold&&t.counter===id).length;
+    const u=sharedLog.filter(t=>!t.served&&t.counter===0).length;
     const btn=document.createElement('button');
-    btn.className='counter-login-btn'; btn.dataset.c=id;
-    btn.innerHTML=`<div class="clb-number" style="color:${COLOR_HEX[id]}">${id}</div>
-      <div class="clb-label">${COUNTER_NAMES[id-1]}</div>
-      <div class="clb-count" style="color:${COLOR_HEX[id]};border-color:${COLOR_HEX[id]}44;background:${COLOR_HEX[id]}12">${q} in queue</div>`;
+    btn.className='login-btn'; btn.dataset.c=id;
+    btn.innerHTML=`
+      <div class="lbtn-num" style="color:${COLOR_HEX[id]}">${id}</div>
+      <div class="lbtn-name">${COUNTER_NAMES[id-1]}</div>
+      <div class="lbtn-count" id="lq-${id}" style="color:${COLOR_HEX[id]};border-color:${COLOR_HEX[id]}44;background:${COLOR_HEX[id]}12">${q} in queue · ${u} unassigned</div>`;
     btn.onclick=()=>login(id);
     grid.appendChild(btn);
   });
 }
 
 function refreshLoginCounts(){
+  const u=sharedLog.filter(t=>!t.served&&t.counter===0).length;
   [1,2,3,4].forEach(id=>{
     const el=document.getElementById(`lq-${id}`);
-    if(el) el.textContent=`${sharedLog.filter(t=>!t.served&&!t.compliance&&!t.paymentHold&&t.counter===id).length} in queue`;
+    const q=sharedLog.filter(t=>!t.served&&!t.compliance&&!t.paymentHold&&t.counter===id).length;
+    if(el) el.textContent=`${q} in queue · ${u} unassigned`;
   });
 }
 
@@ -406,21 +468,25 @@ function clearDisplay(){
   document.getElementById('cvWave').classList.remove('active');
 }
 
+// ── Claim a client from the unassigned pool ──
+function claimClient(ticketId){
+  const ticket=sharedLog.find(t=>t.id===ticketId);
+  if(!ticket||ticket.counter!==0||ticket.served) return;
+  ticket.counter=activeCounter;
+  saveShared();
+  showToast(`#${String(ticket.id).padStart(3,'0')} → My Queue`);
+  renderView();
+}
+window.claimClient=claimClient;
+
 // ── Call next ──
-// A ticket is "callable" if it's in queue (not served, not on hold).
-// Dragging a held ticket back to queue marks it unserved + clears holds,
-// so the counter can call it exactly once more.
 function callNext(){
-  const q=getMyQueue();
+  const q=myQueue();
   if(!q.length) return;
   const ticket=q[0];
   const entry=sharedLog.find(t=>t.id===ticket.id);
-  if(entry){
-    entry.served=true;
-    entry.compliance=false;
-    entry.paymentHold=false;
-  }
-  saveSharedState();
+  if(entry){ entry.served=true; entry.compliance=false; entry.paymentHold=false; }
+  saveShared();
   myHistory.unshift(ticket.id);
   if(myHistory.length>6) myHistory.pop();
   myServed++;
@@ -429,7 +495,6 @@ function callNext(){
   numEl.textContent=String(ticket.id).padStart(3,'0');
   numEl.className='cv-big-num has-num pop';
   setTimeout(()=>numEl.classList.remove('pop'),700);
-
   document.getElementById('cvSvc').textContent=ticket.service||'';
   document.getElementById('cvCust').textContent=ticket.customer||'';
   document.getElementById('cvPrioTag').innerHTML=ticket.priority==='priority'
@@ -447,90 +512,63 @@ window.startQDrag=function(e,id){
   dragId=id; e.dataTransfer.effectAllowed='move';
   e.currentTarget.classList.add('dragging');
 };
-window.endQDrag=function(e){
-  e.currentTarget.classList.remove('dragging');
-};
+window.endQDrag=function(e){ e.currentTarget.classList.remove('dragging'); };
 
-// ── Drag: hold chip → queue drop zone ──
 window.startHoldDrag=function(e,id){
   dragId=id; e.dataTransfer.effectAllowed='move';
   e.currentTarget.classList.add('dragging');
 };
-window.endHoldDrag=function(e){
-  e.currentTarget.classList.remove('dragging');
-};
+window.endHoldDrag=function(e){ e.currentTarget.classList.remove('dragging'); };
 
-// Drop onto a hold zone (from queue list OR from the other hold zone)
-window.onHoldDragOver=function(e,type){
+window.onHoldOver=function(e,type){
   e.preventDefault();
-  document.getElementById(type==='comply'?'complyZone':'paymentZone')
-    .classList.add(`drag-over-${type}`);
+  document.getElementById(type==='comply'?'complyZone':'paymentZone').classList.add(`drag-over-${type}`);
 };
-window.onHoldDragLeave=function(e,type){
-  document.getElementById(type==='comply'?'complyZone':'paymentZone')
-    .classList.remove(`drag-over-${type}`);
+window.onHoldLeave=function(e,type){
+  document.getElementById(type==='comply'?'complyZone':'paymentZone').classList.remove(`drag-over-${type}`);
 };
 window.onHoldDrop=function(e,type){
   e.preventDefault();
-  document.getElementById(type==='comply'?'complyZone':'paymentZone')
-    .classList.remove(`drag-over-${type}`);
+  document.getElementById(type==='comply'?'complyZone':'paymentZone').classList.remove(`drag-over-${type}`);
   if(dragId===null) return;
-  const ticket=sharedLog.find(t=>t.id===dragId);
-  if(!ticket) return;
-  // Works whether ticket is currently in queue OR already served
-  ticket.compliance  = (type==='comply');
-  ticket.paymentHold = (type==='payment');
-  // If it was served, un-serve it so it can be called again
-  if(ticket.served) ticket.served=false;
-  saveSharedState();
-  const label=type==='comply'?'Compliance Hold':'Payment Hold';
-  showToast(`#${String(ticket.id).padStart(3,'0')} → ${label}`);
-  updatePill(ticket);
-  renderView();
-  dragId=null;
+  const t=sharedLog.find(x=>x.id===dragId);
+  if(!t) { dragId=null; return; }
+  // Works for in-queue items AND for already-served items (re-holds)
+  t.compliance  =(type==='comply');
+  t.paymentHold =(type==='payment');
+  if(t.served) t.served=false; // un-serve so it can be called again
+  t.counter=activeCounter;     // keep it on this counter
+  saveShared();
+  showToast(`#${String(t.id).padStart(3,'0')} → ${type==='comply'?'Compliance':'Payment'} Hold`);
+  renderView(); dragId=null;
 };
 
-// Drop back onto queue list (from hold chip)
-window.onQueueDragOver=function(e){
-  e.preventDefault();
-  e.currentTarget.style.outline='1px dashed var(--muted)';
-};
-window.onQueueDragLeave=function(e){
-  e.currentTarget.style.outline='';
-};
+// Drop hold chip back to queue
+window.onQueueOver=function(e){ e.preventDefault(); e.currentTarget.style.outline='1px dashed var(--muted)'; };
+window.onQueueLeave=function(e){ e.currentTarget.style.outline=''; };
 window.onQueueDrop=function(e){
-  e.preventDefault();
-  e.currentTarget.style.outline='';
+  e.preventDefault(); e.currentTarget.style.outline='';
   if(dragId===null) return;
-  const ticket=sharedLog.find(t=>t.id===dragId);
-  if(!ticket) return;
-  // Return to queue: clear all holds and un-serve
-  ticket.compliance=false;
-  ticket.paymentHold=false;
-  ticket.served=false;
-  saveSharedState();
-  showToast(`#${String(ticket.id).padStart(3,'0')} → Back in queue`);
+  const t=sharedLog.find(x=>x.id===dragId);
+  if(!t){ dragId=null; return; }
+  t.compliance=false; t.paymentHold=false; t.served=false;
+  t.counter=activeCounter;
+  saveShared();
+  showToast(`#${String(t.id).padStart(3,'0')} → Back in queue`);
   document.getElementById('cvPill').textContent='Idle';
   document.getElementById('cvPill').className='cv-pill';
-  renderView();
-  dragId=null;
+  renderView(); dragId=null;
 };
-
-// update topbar pill based on current ticket state
-function updatePill(ticket){
-  const pill=document.getElementById('cvPill');
-  if(ticket.compliance){ pill.textContent='Compliance'; pill.className='cv-pill comply'; }
-  else if(ticket.paymentHold){ pill.textContent='Payment'; pill.className='cv-pill payment'; }
-}
 
 // ── Render ──
 function renderView(){
   if(!activeCounter) return;
-  const q=getMyQueue();
-  const comply=getMyComply();
-  const payment=getMyPayment();
+  const q=myQueue();
+  const comply=myComply();
+  const payment=myPayment();
+  const pool=unassigned();
 
-  document.getElementById('cvStatWaiting').textContent=q.length;
+  document.getElementById('cvStatQueue').textContent=q.length;
   document.getElementById('cvStatServed').textContent=myServed;
 
   // Call button
@@ -543,38 +581,76 @@ function renderView(){
   // Queue list
   const listEl=document.getElementById('cvQueueList');
   listEl.innerHTML='';
-  if(!q.length){ listEl.innerHTML='<div class="cv-q-empty">No tickets in queue</div>'; }
-  else q.forEach((t,i)=>{
-    const item=document.createElement('div');
-    item.className='cv-q-item'+(i===0?' next-up':'');
-    item.setAttribute('draggable','true');
-    item.setAttribute('ondragstart',`startQDrag(event,${t.id})`);
-    item.setAttribute('ondragend','endQDrag(event)');
-    item.title='Drag to Compliance or Payment Hold';
-    const badges=[];
-    if(i===0) badges.push(`<span class="cv-q-badge next-badge">Next</span>`);
-    if(t.priority==='priority') badges.push(`<span class="cv-q-badge prio-badge">⚡</span>`);
-    item.innerHTML=`<div class="cv-q-num">${String(t.id).padStart(3,'0')}</div>
-      <div class="cv-q-info">
-        <div class="cv-q-svc">${t.service||''}</div>
-        ${t.customer?`<div class="cv-q-cust">${t.customer}</div>`:''}
-      </div>
-      <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end">${badges.join('')}</div>`;
-    listEl.appendChild(item);
-  });
+  if(!q.length){
+    listEl.innerHTML='<div class="cv-q-empty">No tickets — claim from pool →</div>';
+  } else {
+    q.forEach((t,i)=>{
+      const item=document.createElement('div');
+      item.className='cv-q-item'+(i===0?' next-up':'');
+      item.setAttribute('draggable','true');
+      item.setAttribute('ondragstart',`startQDrag(event,${t.id})`);
+      item.setAttribute('ondragend','endQDrag(event)');
+      item.title='Drag → Compliance or Payment Hold';
+      const badges=[];
+      if(i===0) badges.push(`<span class="qb qb-next">Next</span>`);
+      if(t.priority==='priority') badges.push(`<span class="qb qb-prio">⚡</span>`);
+      item.innerHTML=`
+        <div class="cv-q-num">${String(t.id).padStart(3,'0')}</div>
+        <div class="cv-q-info">
+          <div class="cv-q-svc">${t.service||''}</div>
+          ${t.customer?`<div class="cv-q-cust">${t.customer}</div>`:''}
+        </div>
+        <div class="cv-q-badges">${badges.join('')}</div>`;
+      listEl.appendChild(item);
+    });
+  }
 
-  // Compliance hold chips
-  renderHoldZone('comply',comply,'complyChips','complyEmpty','comply-chip');
-  renderHoldZone('payment',payment,'paymentChips','paymentEmpty','payment-chip');
+  // Hold zones
+  renderHold('comply', comply, 'complyChips', 'complyEmpty','c-chip');
+  renderHold('payment',payment,'paymentChips','paymentEmpty','p-chip');
 
   // History
-  const histEl=document.getElementById('cvHistChips');
+  const histEl=document.getElementById('cvHist');
   histEl.innerHTML=myHistory.length===0
-    ?'<span style="font-size:10px;color:var(--muted)">None yet</span>'
+    ?'<span style="font-size:9px;color:var(--muted)">None yet</span>'
     :myHistory.map(n=>`<span class="hist-chip">${String(n).padStart(3,'0')}</span>`).join('');
+
+  // Unassigned pool
+  const poolList=document.getElementById('poolList');
+  const poolEmpty=document.getElementById('poolEmpty');
+  document.getElementById('poolBadge').textContent=pool.length;
+  poolList.querySelectorAll('.pool-item').forEach(e=>e.remove());
+  if(!pool.length){
+    poolEmpty.style.display='block';
+  } else {
+    poolEmpty.style.display='none';
+    pool.forEach(t=>{
+      const item=document.createElement('div');
+      item.className='pool-item';
+      item.onclick=()=>claimWithFlash(item,t.id);
+      item.innerHTML=`
+        <div class="pi-num">${String(t.id).padStart(3,'0')}</div>
+        <div class="pi-info">
+          <div class="pi-svc">${t.service}</div>
+          ${t.customer?`<div class="pi-cust">${t.customer}</div>`:''}
+          <div class="pi-time">${t.time}</div>
+        </div>
+        <div class="pi-badges">
+          ${t.priority==='priority'?'<span class="pi-badge pi-badge-prio">⚡</span>':''}
+          <span class="pi-claim-hint">Tap to claim</span>
+        </div>
+        <div class="claim-flash">✓ Added</div>`;
+      poolList.insertBefore(item, poolEmpty);
+    });
+  }
 }
 
-function renderHoldZone(type,tickets,chipsId,emptyId,chipClass){
+function claimWithFlash(el, ticketId){
+  el.classList.add('claiming');
+  setTimeout(()=>{ el.classList.remove('claiming'); claimClient(ticketId); }, 320);
+}
+
+function renderHold(type, tickets, chipsId, emptyId, chipClass){
   const chipsEl=document.getElementById(chipsId);
   const emptyEl=document.getElementById(emptyId);
   chipsEl.querySelectorAll('.hz-chip').forEach(e=>e.remove());
@@ -586,9 +662,9 @@ function renderHoldZone(type,tickets,chipsId,emptyId,chipClass){
     chip.setAttribute('draggable','true');
     chip.setAttribute('ondragstart',`startHoldDrag(event,${t.id})`);
     chip.setAttribute('ondragend','endHoldDrag(event)');
-    chip.title=`${t.service}${t.customer?' · '+t.customer:''} — drag back to queue to re-call once`;
+    chip.title=`${t.service}${t.customer?' · '+t.customer:''} — drag back to queue to re-call`;
     chip.textContent=`${String(t.id).padStart(3,'0')}${t.priority==='priority'?'⚡':''}`;
-    chipsEl.insertBefore(chip,emptyEl);
+    chipsEl.insertBefore(chip, emptyEl);
   });
 }
 
