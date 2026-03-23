@@ -524,19 +524,74 @@ function claimClient(ticketId){
 window.claimClient=claimClient;
 
 // ── Call next ──
-// Does NOT mark as served — just sets activeTicketId and shows the action panel
+// Does NOT mark as served — just sets activeTicketId, shows action panel, and speaks
 function callNext(){
   const q=myQueue();
   if(!q.length) return;
   const ticket=q[0];
   activeTicketId=ticket.id;
 
-  // Update display
   updateNowServing(ticket);
   renderView();
   showToast(`Calling #${String(ticket.id).padStart(3,'0')}`);
+  speak(ticket);
 }
 window.callNext=callNext;
+
+// ── Speech announcement ──
+function speak(ticket){
+  if(!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+
+  // Show wave indicator
+  const waveEl=document.getElementById('cvWave');
+  waveEl.classList.add('active');
+
+  const cname=COUNTER_NAMES[activeCounter-1];
+  const num=ticket.id;
+  let text=`Now serving number ${num} at ${cname}.`;
+  if(ticket.customer) text+=` ${ticket.customer},`;
+  text+=` Number ${num}, please proceed to ${cname}.`;
+  if(ticket.priority==='priority') text=`Priority customer. `+text;
+
+  setTimeout(()=>{
+    const voices=window.speechSynthesis.getVoices();
+    const preferred=
+      voices.find(v=>v.lang==='en-US'&&v.name.includes('Google'))||
+      voices.find(v=>v.lang==='en-US'&&!v.localService)||
+      voices.find(v=>v.lang.startsWith('en')&&!v.localService)||
+      voices.find(v=>v.lang.startsWith('en'))||
+      (voices.length>0?voices[0]:null);
+
+    const u=new SpeechSynthesisUtterance(text);
+    u.rate=0.85; u.pitch=1.0; u.volume=1; u.lang='en-US';
+    if(preferred) u.voice=preferred;
+    u.onend=()=>waveEl.classList.remove('active');
+    u.onerror=()=>waveEl.classList.remove('active');
+
+    // Watchdog: if speech doesn't start within 2s, retry once
+    let started=false;
+    u.onstart=()=>{ started=true; };
+    window.speechSynthesis.speak(u);
+    setTimeout(()=>{
+      if(!started){
+        window.speechSynthesis.cancel();
+        setTimeout(()=>{
+          const r=new SpeechSynthesisUtterance(text);
+          r.rate=0.85; r.volume=1; r.lang='en-US';
+          r.onend=()=>waveEl.classList.remove('active');
+          window.speechSynthesis.speak(r);
+        },300);
+      }
+    },2000);
+  },150);
+}
+
+// Preload voices on page load
+if(window.speechSynthesis){
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices();
+}
 
 function updateNowServing(ticket){
   const numEl=document.getElementById('cvBigNum');
