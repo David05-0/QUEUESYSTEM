@@ -355,6 +355,21 @@ onValue(stateRef,snap=>{
   const lc=data.lastCall||null;
   if(lc && lc.ts && lc.ts!==lastCallTs){
     const cd=counterDisplay[lc.counter-1];
+
+    // If this counter was already announcing a different number, cancel it
+    if(cd.current!==null && cd.current!==lc.ticketId){
+      // Remove old number from speech queue
+      speechQueue=speechQueue.filter(q=>q.counter!==lc.counter);
+      // If currently speaking for this counter, cancel and restart
+      if(isSpeaking){
+        window.speechSynthesis && window.speechSynthesis.cancel();
+        isSpeaking=false;
+      }
+      // Hide call flash if it was showing the old number for this counter
+      if(flashTimer) clearTimeout(flashTimer);
+      document.getElementById('callFlash').classList.remove('show');
+    }
+
     cd.current=lc.ticketId; cd.service=lc.service; cd.customer=lc.customer;
     cd.priority=lc.priority; cd.time=nowTime(); cd.calledAt=lc.ts;
     activityLog.unshift({
@@ -477,7 +492,9 @@ function processSpeechQueue(){
   if(!speechQueue.length){ isSpeaking=false; return; }
   isSpeaking=true;
   const ticket=speechQueue.shift();
-  doSpeak(ticket, ()=>processSpeechQueue());
+  // Cancel any lingering utterance before starting next
+  window.speechSynthesis && window.speechSynthesis.cancel();
+  setTimeout(()=>doSpeak(ticket, ()=>processSpeechQueue()), 120);
 }
 
 function doSpeak(ticket, onDone){
