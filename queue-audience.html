@@ -624,6 +624,24 @@ function renderActivityFeed(){
 function renderAll(){renderCounters();renderStats();renderLastCalled();renderActivityFeed();}
 
 buildCounters(); renderAll();
+
+// ── Auto-reset at midnight ──
+function scheduleAutoReset(){
+  const now = new Date();
+  const midnight = new Date(now);
+  midnight.setHours(24,0,5,0);
+  const ms = midnight - now;
+  setTimeout(()=>{
+    sharedLog=[]; activityLog=[]; lastCallTs=null; speechQueue=[]; isSpeaking=false;
+    counterDisplay=[1,2,3,4].map(id=>({id,current:null,service:null,customer:null,priority:null,time:null,calledAt:0}));
+    if(flashTimer) clearTimeout(flashTimer);
+    document.getElementById('callFlash').classList.remove('show');
+    window._prevLog=[];
+    renderAll();
+    scheduleAutoReset();
+  }, ms);
+}
+scheduleAutoReset();
 if(window.speechSynthesis){
   window.speechSynthesis.getVoices();
   window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices();
