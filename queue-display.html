@@ -518,7 +518,7 @@ function buildLogin(){
     const btn=document.createElement('button');
     btn.className='login-btn'; btn.dataset.c=id;
     btn.innerHTML=`
-      <div class="lbtn-num" style="color:${COLOR_HEX[id]}">${id}</div>
+      <div class="lbtn-num" style="color:${COLOR_HEX[id]}">${id + 1}</div>
       <div class="lbtn-name">${COUNTER_NAMES[id-1]}</div>
       <div class="lbtn-count" id="lq-${id}" style="color:${COLOR_HEX[id]};border-color:${COLOR_HEX[id]}44;background:${COLOR_HEX[id]}12">${q} in queue · ${u} unassigned</div>`;
     btn.onclick=()=>login(id);
