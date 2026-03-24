@@ -465,24 +465,22 @@ function pushCall(ticket){
     ts:       Date.now()
   };
   window._lastCall = callEntry;
-  // First remove any stale entry from this counter (counter calling again replaces old)
   const callQRef = ref(db,'callQueue');
-  get(callQRef).then(snap=>{
-    const data = snap.val();
-    if(data){
-      // Remove old entries from same counter
-      Object.entries(data).forEach(([key, entry])=>{
-        if(entry.counter === activeCounter){
-          remove(ref(db,'callQueue/'+key)).catch(()=>{});
-        }
-      });
-    }
-    // Push new entry with unique key
-    push(callQRef, callEntry).catch(()=>{});
-  }).catch(()=>{
-    // If get fails, just push anyway
-    push(callQRef, callEntry).catch(()=>{});
-  });
+  // Push new entry FIRST so audience never misses it, then clean up stale entries
+  push(callQRef, callEntry).then(newRef=>{
+    const newKey = newRef.key;
+    // Now remove old entries from same counter (but not the one we just pushed)
+    get(callQRef).then(snap=>{
+      const data = snap.val();
+      if(data){
+        Object.entries(data).forEach(([key, entry])=>{
+          if(entry.counter === activeCounter && key !== newKey){
+            remove(ref(db,'callQueue/'+key)).catch(()=>{});
+          }
+        });
+      }
+    }).catch(()=>{});
+  }).catch(()=>{});
   saveShared();
 }
 
