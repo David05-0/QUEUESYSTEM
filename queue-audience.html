@@ -57,7 +57,7 @@
   .cp-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
   .counter-panel[data-c="1"] .cp-dot{background:var(--c1)}.counter-panel[data-c="2"] .cp-dot{background:var(--c2)}
   .counter-panel[data-c="3"] .cp-dot{background:var(--c3)}.counter-panel[data-c="4"] .cp-dot{background:var(--c4)}
-  .cp-name{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:0.18em;color:var(--muted)}
+  .cp-name{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:0.18em;color:#ffffff}
   .cp-status-pill{margin-left:auto;font-size:8px;letter-spacing:0.16em;text-transform:uppercase;padding:3px 10px;border-radius:20px;border:1px solid var(--border);color:var(--muted);transition:all 0.4s}
   .cp-status-pill.serving{color:#3ddc84;border-color:rgba(61,220,132,0.4);background:rgba(61,220,132,0.07);animation:pillPulse 2s ease infinite}
   @keyframes pillPulse{0%,100%{opacity:1}50%{opacity:0.6}}
@@ -550,8 +550,11 @@ function doSpeak(ticket, onDone){
   const cname=COUNTER_NAMES[cnum-1];
   // Format: "James, please proceed to DMW Desk 1 for OEC with Appointment."
   // Without name: "Number 001, please proceed to DMW Desk 1 for OEC with Appointment."
-  const spokenName  = ticket.nickname || ticket.customer || null;
-  const subjectPart = spokenName ? `${spokenName}` : `Number ${num}`;
+  // Convert name to Title Case so TTS reads it as a word, not spelled-out letters
+  function toTitleCase(str){ return str.toLowerCase().replace(/\b\w/g,c=>c.toUpperCase()); }
+  const rawName = ticket.nickname || ticket.customer || null;
+  const spokenName = rawName ? toTitleCase(rawName.trim()) : null;
+  const subjectPart = spokenName ? spokenName : `Number ${num}`;
   const svcPart     = ticket.service  ? ` for ${ticket.service}` : '';
   const announcement = ticket.priority==='priority'
     ? `Priority customer. ${subjectPart}, please proceed to ${cname}${svcPart}.`
