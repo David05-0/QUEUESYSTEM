@@ -380,9 +380,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getDatabase, ref, set, push, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
 
 const firebaseConfig = {
   apiKey:"AIzaSyD1jlmo6pdJhqwjbRDMby9cTBHzazRejcE",
@@ -394,10 +394,10 @@ const firebaseConfig = {
   appId:"1:314957208142:web:51f960c760f8682e77811f"
 };
 
-const app = initializeApp(firebaseConfig);
-const db  = getDatabase(app);
-const stateRef  = ref(db,'queueState');
-const savesRef  = ref(db,'eodSaves');
+firebase.initializeApp(firebaseConfig);
+const db       = firebase.database();
+const stateRef = db.ref('queueState');
+const savesRef = db.ref('eodSaves');
 
 // Track EOD saves made this browser session for display in modal
 let sessionSaves = [];
@@ -418,8 +418,7 @@ function setFbStatus(s){
 }
 
 // Use Firebase .info/connected to immediately reflect true connection state
-const connectedRef = ref(db,'.info/connected');
-onValue(connectedRef, snap=>{
+db.ref('.info/connected').on('value', snap=>{
   if(snap.val()===true) setFbStatus('connected');
   else setFbStatus('error');
 });
@@ -434,14 +433,14 @@ setInterval(updateClock,1000); updateClock();
 
 // ── Firebase ──
 function saveState(isReset=false){
-  set(stateRef,{
+  stateRef.set({
     ticketCounter, log,
     lastUpdate: Date.now(),
     resetFlag: isReset ? Date.now() : (window._lastResetFlag||null)
   }).catch(()=>setFbStatus('error'));
 }
 
-onValue(stateRef, snap=>{
+stateRef.on('value', snap=>{
   setFbStatus('connected');
   const data = snap.val();
   if(!data){
@@ -498,32 +497,6 @@ function issueTicket(){
   showToast(`#${String(ticket.id).padStart(3,'0')} → Pool`);
 }
 window.issueTicket = issueTicket;
-
-    @page{size:3in 5in;margin:0}
-    html,body{width:3in;height:5in;background:#fff;color:#000;font-family:'Courier New',Courier,monospace;overflow:hidden}
-    body{padding:2mm 3mm;display:flex;flex-direction:column;justify-content:space-between}
-    .num-lbl{text-align:center;font-size:7px;letter-spacing:0.22em;text-transform:uppercase;color:#555}
-    .num-big{text-align:center;font-size:80pt;font-weight:900;line-height:0.88;color:#000}
-    .svc-label{font-size:7px;letter-spacing:0.2em;text-transform:uppercase;color:#555}
-    .svc-val{font-size:11px;font-weight:700;color:#222;margin-top:0.5mm;line-height:1.2}
-    .prio-box{display:inline-block;font-size:8.5px;font-weight:900;border:2px solid #000;padding:0.3mm 2mm;margin-top:1mm}
-    .cust-val{font-size:11px;font-weight:700;margin-top:1mm}
-    .datetime{font-size:7px;color:#555;margin-top:0.5mm}
-  </style>
-  </head><body>
-  <div class="num-lbl">Your Number</div>
-  <div class="num-big">${num}</div>
-  <div class="svc-val">${t.service}</div>
-  ${t.priority==='priority'?'<div class="prio-box">⚡ PRIORITY CUSTOMER</div>':''}
-  ${t.customer?`<div class="cust-val">${t.customer.toUpperCase()}</div>`:''}
-  <div class="datetime">${t.date} · ${t.time}</div>
-  <script>window.onload=function(){window.print();setTimeout(function(){window.close()},800)}<\/script>
-  </body></html>`;
-  // popup sized to approx 3in×5in at 96dpi = 288×480px
-  const popup = window.open('','_blank','width=288,height=480,toolbar=0,menubar=0,location=0');
-  if(popup){ popup.document.write(html); popup.document.close(); }
-}
-
 
 // ── Render ──
 function renderAll(){
@@ -708,7 +681,7 @@ function doSaveEod(){
   };
 
   // Push snapshot to eodSaves (appends, never overwrites)
-  push(savesRef, snapshot)
+  savesRef.push(snapshot)
     .then(()=>{
       sessionSaves.unshift({label, issued:snapshot.totalIssued, served:snapshot.totalServed});
       renderSessionSaves();
