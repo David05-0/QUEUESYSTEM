@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Queue — Counter Display</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0f;--panel:#111118;--border:#1c1c2e;--text:#eeeef6;
+    --muted:#46465e;--green:#3ddc84;--red:#ff5f5f;--accent:#f0c040;
+    --amber:#e2a000;--teal:#0e9ab5;
+    --c1:#e67e22;--c1bg:rgba(230,126,34,0.08);--c1b:rgba(230,126,34,0.35);
+    --c2:#2471a3;--c2bg:rgba(36,113,163,0.08);--c2b:rgba(36,113,163,0.35);
+    --c3:#1e8449;--c3bg:rgba(30,132,73,0.08);--c3b:rgba(30,132,73,0.35);
+    --c4:#7d3c98;--c4bg:rgba(125,60,152,0.08);--c4b:rgba(125,60,152,0.35);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;overflow:hidden}
+  body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:0.4}
+
+  /* ══ LOGIN ══ */
+  #loginScreen{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);gap:28px}
+  #loginScreen.hidden{display:none}
+  .login-sup{font-size:10px;letter-spacing:0.3em;color:var(--accent);text-transform:uppercase;text-align:center}
+  .login-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,7vw,72px);letter-spacing:0.06em;line-height:1;text-align:center}
+  .login-title span{color:var(--accent)}
+  .login-sub{font-size:9px;letter-spacing:0.2em;color:var(--muted);text-transform:uppercase;text-align:center}
+  .fb-badge{font-size:8px;letter-spacing:0.14em;text-transform:uppercase;padding:3px 10px;border-radius:20px;border:1px solid var(--border);color:var(--muted);display:inline-flex;align-items:center;gap:5px}
+  .fb-badge.live{color:var(--green);border-color:rgba(61,220,132,0.4);background:rgba(61,220,132,0.07)}
+  .fb-dot{width:5px;height:5px;border-radius:50%;background:currentColor}
+  .login-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px;width:min(500px,90vw)}
+  .login-btn{background:var(--panel);border:2px solid var(--border);border-radius:6px;padding:24px 14px;cursor:pointer;transition:all 0.18s;display:flex;flex-direction:column;align-items:center;gap:7px;position:relative;overflow:hidden}
+  .login-btn::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity 0.2s}
+  .login-btn[data-c="1"]{--cc:var(--c1);--ccbg:var(--c1bg);--ccb:var(--c1b)}
+  .login-btn[data-c="2"]{--cc:var(--c2);--ccbg:var(--c2bg);--ccb:var(--c2b)}
+  .login-btn[data-c="3"]{--cc:var(--c3);--ccbg:var(--c3bg);--ccb:var(--c3b)}
+  .login-btn[data-c="4"]{--cc:var(--c4);--ccbg:var(--c4bg);--ccb:var(--c4b)}
+  .login-btn::before{background:var(--ccbg)}
+  .login-btn:hover{border-color:var(--cc);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,0.4),0 0 0 1px var(--ccb)}
+  .login-btn:hover::before{opacity:1}
+  .lbtn-num{font-family:'Bebas Neue',sans-serif;font-size:58px;line-height:1;color:var(--cc);position:relative;z-index:1}
+  .lbtn-name{font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);position:relative;z-index:1}
+  .lbtn-count{font-size:8px;color:var(--cc);position:relative;z-index:1;border:1px solid var(--ccb);background:var(--ccbg);padding:2px 8px;border-radius:20px}
+
+  /* ══ COUNTER VIEW ══ */
+  #counterView{position:fixed;inset:0;z-index:5;display:none;flex-direction:column}
+  #counterView.visible{display:flex}
+  #counterView::before{content:'';position:absolute;inset:0;z-index:0;opacity:0;transition:opacity 1s;pointer-events:none}
+  #counterView.c1::before{background:radial-gradient(ellipse at 50% 0%,rgba(230,126,34,0.07) 0%,transparent 65%);opacity:1}
+  #counterView.c2::before{background:radial-gradient(ellipse at 50% 0%,rgba(36,113,163,0.07) 0%,transparent 65%);opacity:1}
+  #counterView.c3::before{background:radial-gradient(ellipse at 50% 0%,rgba(30,132,73,0.07) 0%,transparent 65%);opacity:1}
+  #counterView.c4::before{background:radial-gradient(ellipse at 50% 0%,rgba(125,60,152,0.07) 0%,transparent 65%);opacity:1}
+
+  /* Topbar */
+  .cv-topbar{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;padding:10px 20px;border-bottom:1px solid var(--border);background:rgba(10,10,15,0.88);backdrop-filter:blur(10px);flex-shrink:0}
+  .cv-left{display:flex;align-items:center;gap:10px}
+  .cv-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .cv-name{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:0.12em}
+  .cv-pill{font-size:7px;letter-spacing:0.16em;text-transform:uppercase;padding:3px 8px;border-radius:20px;border:1px solid var(--border);color:var(--muted);transition:all 0.4s}
+  .cv-pill.serving{color:var(--green);border-color:rgba(61,220,132,0.4);background:rgba(61,220,132,0.07);animation:pillPulse 2s ease infinite}
+  .cv-pill.comply{color:var(--amber);border-color:rgba(226,160,0,0.4);background:rgba(226,160,0,0.08)}
+  .cv-pill.payment{color:var(--teal);border-color:rgba(14,154,181,0.4);background:rgba(14,154,181,0.08)}
+  @keyframes pillPulse{0%,100%{opacity:1}50%{opacity:0.55}}
+  .cv-right{display:flex;align-items:center;gap:11px}
+  .cv-clock{font-family:'Bebas Neue',sans-serif;font-size:25px;letter-spacing:0.1em;color:var(--muted)}
+  .cv-logout{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;background:none;border:1px solid var(--border);color:var(--muted);border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s}
+  .cv-logout:hover{color:var(--red);border-color:var(--red)}
+
+  /* 3-pane body */
+  .cv-body{position:relative;z-index:1;flex:1;display:grid;grid-template-columns:1fr 290px 255px;overflow:hidden}
+
+  /* ══ PANE 1: NOW SERVING ══ */
+  .cv-main{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px 28px;border-right:1px solid var(--border);gap:0;overflow:hidden}
+  .cv-now-lbl{font-size:10px;letter-spacing:0.32em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+
+  /* Big number */
+  .cv-big-num{font-family:'Bebas Neue',sans-serif;font-size:clamp(96px,15vw,180px);line-height:0.88;letter-spacing:0.02em;color:var(--muted);transition:color 0.4s,text-shadow 0.4s;text-align:center;position:relative}
+  .cv-big-num.pop{animation:bigPop 0.55s cubic-bezier(0.34,1.56,0.64,1)}
+  @keyframes bigPop{0%{transform:scale(0.55) translateY(24px);opacity:0}60%{transform:scale(1.05) translateY(-4px);opacity:1}100%{transform:scale(1) translateY(0)}}
+  #counterView.c1 .cv-big-num.active{color:var(--c1);text-shadow:0 0 80px rgba(230,126,34,0.4)}
+  #counterView.c2 .cv-big-num.active{color:var(--c2);text-shadow:0 0 80px rgba(36,113,163,0.4)}
+  #counterView.c3 .cv-big-num.active{color:var(--c3);text-shadow:0 0 80px rgba(30,132,73,0.4)}
+  #counterView.c4 .cv-big-num.active{color:var(--c4);text-shadow:0 0 80px rgba(125,60,152,0.4)}
+
+  /* Ticket info */
+  .cv-ticket-info{display:flex;flex-direction:column;align-items:center;gap:3px;margin-top:10px;min-height:42px}
+  .cv-svc{font-size:11px;letter-spacing:0.07em;color:var(--muted)}
+  .cv-cust{font-size:15px;letter-spacing:0.05em;color:var(--text);font-weight:500}
+  .cv-prio-tag{font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:#e74c3c;border:1px solid rgba(231,76,60,0.4);background:rgba(231,76,60,0.08);padding:3px 8px;border-radius:20px;margin-top:2px}
+
+  /* Wave */
+  .cv-wave{display:flex;align-items:center;gap:7px;height:18px;margin-top:10px;opacity:0;transition:opacity 0.3s}
+  .cv-wave.active{opacity:1}
+  .cv-wave-lbl{font-size:8px;letter-spacing:0.14em;text-transform:uppercase}
+  #counterView.c1 .cv-wave-lbl{color:var(--c1)} #counterView.c2 .cv-wave-lbl{color:var(--c2)}
+  #counterView.c3 .cv-wave-lbl{color:var(--c3)} #counterView.c4 .cv-wave-lbl{color:var(--c4)}
+  .wave-bars{display:flex;gap:2px;align-items:flex-end}
+  .wave-bars span{display:block;width:3px;border-radius:1px;animation:barWave 0.9s ease infinite}
+  #counterView.c1 .wave-bars span{background:var(--c1)} #counterView.c2 .wave-bars span{background:var(--c2)}
+  #counterView.c3 .wave-bars span{background:var(--c3)} #counterView.c4 .wave-bars span{background:var(--c4)}
+  .wave-bars span:nth-child(1){height:5px}.wave-bars span:nth-child(2){height:12px;animation-delay:0.14s}
+  .wave-bars span:nth-child(3){height:18px;animation-delay:0.26s}.wave-bars span:nth-child(4){height:10px;animation-delay:0.09s}
+  .wave-bars span:nth-child(5){height:7px;animation-delay:0.2s}
+  @keyframes barWave{0%,100%{transform:scaleY(0.3)}50%{transform:scaleY(1)}}
+
+  /* ── CALL button ── */
+  .cv-call-btn{margin-top:22px;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:0.12em;border:none;border-radius:6px;padding:15px 40px;cursor:pointer;transition:all 0.15s;width:min(320px,100%)}
+  #counterView.c1 .cv-call-btn{background:var(--c1);color:#fff}
+  #counterView.c2 .cv-call-btn{background:var(--c2);color:#fff}
+  #counterView.c3 .cv-call-btn{background:var(--c3);color:#fff}
+  #counterView.c4 .cv-call-btn{background:var(--c4);color:#fff}
+  .cv-call-btn:hover:not(:disabled){filter:brightness(1.14);transform:translateY(-2px);box-shadow:0 10px 40px rgba(0,0,0,0.5)}
+  .cv-call-btn:disabled{opacity:0.2;cursor:not-allowed;transform:none;box-shadow:none;filter:none}
+
+  /* ── ACTION PANEL (shown while a ticket is being served) ── */
+  .cv-action-panel{display:none;flex-direction:column;gap:8px;margin-top:16px;width:min(320px,100%);animation:fadeIn 0.25s ease}
+  .cv-action-panel.visible{display:flex}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  .cv-action-lbl{font-size:8px;letter-spacing:0.22em;text-transform:uppercase;color:var(--muted);text-align:center}
+  .cv-action-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .cv-hold-btn{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;border:none;border-radius:4px;padding:11px 8px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:5px}
+  .cv-hold-btn.comply-btn{background:rgba(226,160,0,0.12);color:var(--amber);border:1px solid rgba(226,160,0,0.3)}
+  .cv-hold-btn.comply-btn:hover{background:rgba(226,160,0,0.2);border-color:var(--amber)}
+  .cv-hold-btn.payment-btn{background:rgba(14,154,181,0.1);color:var(--teal);border:1px solid rgba(14,154,181,0.3)}
+  .cv-hold-btn.payment-btn:hover{background:rgba(14,154,181,0.2);border-color:var(--teal)}
+  .cv-done-btn{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:0.12em;border:none;border-radius:4px;padding:13px;cursor:pointer;transition:all 0.15s;background:rgba(61,220,132,0.12);color:var(--green);border:1px solid rgba(61,220,132,0.3)}
+  .cv-done-btn:hover{background:rgba(61,220,132,0.22);border-color:var(--green);transform:translateY(-1px)}
+
+  /* ══ PANE 2: QUEUE + HOLDS ══ */
+  .cv-sidebar{display:flex;flex-direction:column;overflow:hidden;background:rgba(10,10,15,0.25);border-right:1px solid var(--border)}
+  .cv-sec{padding:11px 13px;border-bottom:1px solid var(--border);flex-shrink:0}
+  .cv-sec.grow{flex:1;overflow:hidden;display:flex;flex-direction:column}
+  .cv-sec-title{font-size:7.5px;letter-spacing:0.26em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:7px}
+  .cv-sec-title::after{content:'';flex:1;height:1px;background:var(--border)}
+  .cv-stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+  .cv-stat{background:var(--panel);border:1px solid var(--border);border-radius:3px;padding:8px 10px}
+  .cv-stat-val{font-family:'Bebas Neue',sans-serif;font-size:22px;line-height:1;letter-spacing:0.04em}
+  .cv-stat-lbl{font-size:7px;letter-spacing:0.14em;color:var(--muted);text-transform:uppercase;margin-top:1px}
+
+  /* Hold zones */
+  .hold-zones{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .hold-zone{border:1.5px dashed var(--border);border-radius:3px;padding:7px 8px;min-height:50px;display:flex;flex-direction:column;gap:4px;transition:all 0.2s}
+  .hold-zone.drag-over-comply{border-color:var(--amber);background:rgba(226,160,0,0.06)}
+  .hold-zone.drag-over-payment{border-color:var(--teal);background:rgba(14,154,181,0.06)}
+  .hz-title{font-size:7px;letter-spacing:0.18em;text-transform:uppercase;flex-shrink:0}
+  .hz-title.c{color:var(--amber)} .hz-title.p{color:var(--teal)}
+  .hz-chips{display:flex;flex-wrap:wrap;gap:4px}
+  .hz-chip{font-family:'Bebas Neue',sans-serif;font-size:11px;padding:2px 7px;border-radius:2px;cursor:grab;user-select:none;animation:popIn 0.18s ease;display:inline-flex;align-items:center;gap:2px;transition:opacity 0.15s}
+  .hz-chip:active{cursor:grabbing;opacity:0.6}
+  .hz-chip.dragging{opacity:0.3}
+  .hz-chip.c-chip{background:rgba(226,160,0,0.1);color:var(--amber);border:1px solid rgba(226,160,0,0.3)}
+  .hz-chip.p-chip{background:rgba(14,154,181,0.1);color:var(--teal);border:1px solid rgba(14,154,181,0.3)}
+  .hz-empty{font-size:8px;color:var(--muted);letter-spacing:0.07em}
+
+  /* Queue list */
+  .cv-queue-list{display:flex;flex-direction:column;gap:5px;overflow-y:auto;flex:1;scrollbar-width:thin;scrollbar-color:var(--border) transparent;padding-bottom:6px}
+  .cv-q-item{display:flex;align-items:center;padding:8px 10px;background:var(--panel);border:1px solid var(--border);border-radius:3px;gap:8px;animation:slideIn 0.2s ease;cursor:grab;user-select:none;transition:all 0.15s}
+  .cv-q-item:hover{border-color:var(--muted)}
+  .cv-q-item:active{cursor:grabbing;opacity:0.6}
+  .cv-q-item.dragging{opacity:0.35}
+  /* "next-up" = first in sorted queue */
+  .cv-q-item.next-up{border-left:2px solid}
+  /* "calling" = currently being served (highlighted differently) */
+  .cv-q-item.calling{border-left:2px solid;border-style:solid}
+  #counterView.c1 .cv-q-item.next-up,.cv-q-item.calling-c1{border-left-color:var(--c1)}
+  #counterView.c2 .cv-q-item.next-up,.cv-q-item.calling-c2{border-left-color:var(--c2)}
+  #counterView.c3 .cv-q-item.next-up,.cv-q-item.calling-c3{border-left-color:var(--c3)}
+  #counterView.c4 .cv-q-item.next-up,.cv-q-item.calling-c4{border-left-color:var(--c4)}
+  #counterView.c1 .cv-q-item.calling{border-color:var(--c1);background:var(--c1bg)}
+  #counterView.c2 .cv-q-item.calling{border-color:var(--c2);background:var(--c2bg)}
+  #counterView.c3 .cv-q-item.calling{border-color:var(--c3);background:var(--c3bg)}
+  #counterView.c4 .cv-q-item.calling{border-color:var(--c4);background:var(--c4bg)}
+  @keyframes slideIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+  .cv-q-num{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:0.04em}
+  .cv-q-item.next-up .cv-q-num,.cv-q-item.calling .cv-q-num{color:var(--text)}
+  .cv-q-item:not(.next-up):not(.calling) .cv-q-num{color:var(--muted)}
+  .cv-q-info{flex:1;overflow:hidden}
+  .cv-q-svc{font-size:8px;letter-spacing:0.06em;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cv-q-cust{font-size:9.5px;letter-spacing:0.04em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cv-q-badges{display:flex;flex-direction:column;gap:3px;align-items:flex-end;flex-shrink:0}
+  .qb{font-size:7px;letter-spacing:0.1em;text-transform:uppercase;padding:2px 5px;border-radius:20px}
+  .qb-next{border:1px solid;animation:nextGlow 2s ease infinite}
+  .qb-calling{border:1px solid;animation:callingGlow 1s ease infinite}
+  #counterView.c1 .qb-next,.qb-calling-c1{color:var(--c1);border-color:var(--c1b);background:var(--c1bg)}
+  #counterView.c2 .qb-next,.qb-calling-c2{color:var(--c2);border-color:var(--c2b);background:var(--c2bg)}
+  #counterView.c3 .qb-next,.qb-calling-c3{color:var(--c3);border-color:var(--c3b);background:var(--c3bg)}
+  #counterView.c4 .qb-next,.qb-calling-c4{color:var(--c4);border-color:var(--c4b);background:var(--c4bg)}
+  @keyframes nextGlow{0%,100%{opacity:1}50%{opacity:0.55}}
+  @keyframes callingGlow{0%,100%{opacity:1}50%{opacity:0.4}}
+  .qb-prio{color:#e74c3c;border:1px solid rgba(231,76,60,0.3);background:rgba(231,76,60,0.08)}
+  .cv-q-empty{font-size:9px;letter-spacing:0.08em;color:var(--muted);text-align:center;padding:16px 0}
+
+  /* History */
+  .hist-chips{display:flex;flex-wrap:wrap;gap:4px}
+  .hist-chip{font-family:'Bebas Neue',sans-serif;font-size:12px;padding:2px 6px;border-radius:2px;background:var(--panel);border:1px solid var(--border);color:var(--muted);text-decoration:line-through;opacity:0.45;animation:popIn 0.2s ease}
+
+  /* ══ PANE 3: UNASSIGNED POOL ══ */
+  .cv-pool{display:flex;flex-direction:column;overflow:hidden;background:rgba(10,10,15,0.12)}
+  .pool-topbar{padding:11px 13px;border-bottom:1px solid var(--border);flex-shrink:0}
+  .pool-title{font-size:9px;letter-spacing:0.26em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px;margin-bottom:2px}
+  .pool-badge{font-family:'Bebas Neue',sans-serif;font-size:18px;line-height:1;letter-spacing:0.06em}
+  #counterView.c1 .pool-badge{color:var(--c1)}
+  #counterView.c2 .pool-badge{color:var(--c2)}
+  #counterView.c3 .pool-badge{color:var(--c3)}
+  #counterView.c4 .pool-badge{color:var(--c4)}
+  .pool-hint{font-size:7.5px;color:var(--muted);letter-spacing:0.08em}
+  .pool-list{display:flex;flex-direction:column;gap:5px;overflow-y:auto;flex:1;padding:10px 12px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+  .pool-item{background:var(--panel);border:1px solid var(--border);border-radius:3px;padding:9px 11px;display:flex;align-items:center;gap:9px;cursor:pointer;transition:all 0.15s;animation:slideIn 0.2s ease;position:relative;overflow:hidden}
+  .pool-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:0;transition:width 0.2s}
+  #counterView.c1 .pool-item:hover::before{width:3px;background:var(--c1)}
+  #counterView.c2 .pool-item:hover::before{width:3px;background:var(--c2)}
+  #counterView.c3 .pool-item:hover::before{width:3px;background:var(--c3)}
+  #counterView.c4 .pool-item:hover::before{width:3px;background:var(--c4)}
+  #counterView.c1 .pool-item:hover{border-color:var(--c1b);background:var(--c1bg)}
+  #counterView.c2 .pool-item:hover{border-color:var(--c2b);background:var(--c2bg)}
+  #counterView.c3 .pool-item:hover{border-color:var(--c3b);background:var(--c3bg)}
+  #counterView.c4 .pool-item:hover{border-color:var(--c4b);background:var(--c4bg)}
+  .pool-item:active{transform:scale(0.98);opacity:0.8}
+  .pi-num{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:0.04em;color:var(--muted);min-width:40px;flex-shrink:0}
+  .pi-info{flex:1;overflow:hidden}
+  .pi-svc{font-size:9px;letter-spacing:0.07em;color:var(--text);opacity:0.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pi-cust{font-size:8.5px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pi-time{font-size:7.5px;color:var(--muted);margin-top:2px}
+  .pi-badges{display:flex;flex-direction:column;gap:3px;flex-shrink:0;align-items:flex-end}
+  .pi-badge{font-size:7px;letter-spacing:0.08em;padding:1px 5px;border-radius:2px;text-transform:uppercase}
+  .pi-badge-prio{color:#e74c3c;border:1px solid rgba(231,76,60,0.3);background:rgba(231,76,60,0.08)}
+  .pi-hint{font-size:7px;letter-spacing:0.08em;color:var(--muted)}
+  #counterView.c1 .pool-item:hover .pi-hint{color:var(--c1)}
+  #counterView.c2 .pool-item:hover .pi-hint{color:var(--c2)}
+  #counterView.c3 .pool-item:hover .pi-hint{color:var(--c3)}
+  #counterView.c4 .pool-item:hover .pi-hint{color:var(--c4)}
+  .pool-empty{font-size:10px;color:var(--muted);letter-spacing:0.1em;text-align:center;padding:28px 12px}
+  .claim-flash{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:0.1em;opacity:0;pointer-events:none;transition:opacity 0.2s}
+  .pool-item.claiming .claim-flash{opacity:1}
+  #counterView.c1 .claim-flash{background:rgba(230,126,34,0.18);color:var(--c1)}
+  #counterView.c2 .claim-flash{background:rgba(36,113,163,0.18);color:var(--c2)}
+  #counterView.c3 .claim-flash{background:rgba(30,132,73,0.18);color:var(--c3)}
+  #counterView.c4 .claim-flash{background:rgba(125,60,152,0.18);color:var(--c4)}
+
+  /* Served log */
+  .served-list{display:flex;flex-direction:column;gap:4px;max-height:130px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+  .served-item{display:flex;align-items:center;gap:8px;padding:5px 8px;background:var(--panel);border:1px solid var(--border);border-left:2px solid var(--green);border-radius:3px;animation:slideIn 0.2s ease}
+  .served-num{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:0.04em;color:var(--green);min-width:34px;flex-shrink:0}
+  .served-info{flex:1;overflow:hidden}
+  .served-svc{font-size:7.5px;letter-spacing:0.07em;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .served-cust{font-size:9px;letter-spacing:0.04em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .served-time{font-size:7px;color:var(--muted);flex-shrink:0}
+
+  @keyframes popIn{from{transform:scale(0.82);opacity:0}to{transform:scale(1);opacity:1}}
+
+  .toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--panel);border:1px solid var(--border);color:var(--text);padding:9px 22px;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:0.1em;opacity:0;transition:all 0.3s;pointer-events:none;z-index:99}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div>
+    <div class="login-sup">Counter Staff Login</div>
+    <div class="login-title">QUEUE<span>SYS</span></div>
+    <div class="login-sub">Select your counter</div>
+  </div>
+  <div><span class="fb-badge" id="fbBadge"><span class="fb-dot"></span>Connecting…</span></div>
+  <div class="login-grid" id="loginGrid"></div>
+</div>
+
+<!-- COUNTER VIEW -->
+<div id="counterView">
+  <div class="cv-topbar">
+    <div class="cv-left">
+      <div class="cv-dot" id="cvDot"></div>
+      <div class="cv-name" id="cvName">Counter 1</div>
+      <div class="cv-pill" id="cvPill">Idle</div>
+    </div>
+    <div class="cv-right">
+      <span class="fb-badge live" id="cvFbBadge"><span class="fb-dot"></span>Live</span>
+      <div class="cv-clock" id="cvClock">00:00:00</div>
+      <button class="cv-logout" onclick="logout()">← Change</button>
+    </div>
+  </div>
+
+  <div class="cv-body">
+
+    <!-- PANE 1: NOW SERVING -->
+    <div class="cv-main">
+      <div class="cv-now-lbl">Now Serving</div>
+      <div class="cv-big-num" id="cvBigNum">—</div>
+      <div class="cv-ticket-info">
+        <div class="cv-svc"  id="cvSvc"></div>
+        <div class="cv-cust" id="cvCust"></div>
+        <div id="cvPrioTag"></div>
+      </div>
+      <div class="cv-wave" id="cvWave">
+        <div class="wave-bars"><span></span><span></span><span></span><span></span><span></span></div>
+        <div class="cv-wave-lbl">Announcing</div>
+      </div>
+
+      <!-- Call next button (shown when idle / no active ticket) -->
+      <button class="cv-call-btn" id="cvCallBtn" onclick="callNext()" disabled>▶ CALL NEXT</button>
+
+      <!-- Action panel (shown while a ticket is actively being served) -->
+      <div class="cv-action-panel" id="cvActionPanel">
+        <div class="cv-action-lbl">What's next for this client?</div>
+        <div class="cv-action-btns">
+          <button class="cv-hold-btn comply-btn" onclick="sendToHold('comply')">⏸ Compliance</button>
+          <button class="cv-hold-btn payment-btn" onclick="sendToHold('payment')">💳 Payment</button>
+        </div>
+        <button class="cv-done-btn" onclick="markDone()">✓ DONE — MARK SERVED</button>
+      </div>
+    </div>
+
+    <!-- PANE 2: MY QUEUE + HOLD ZONES -->
+    <div class="cv-sidebar">
+
+      <div class="cv-sec">
+        <div class="cv-sec-title">Stats</div>
+        <div class="cv-stats-row">
+          <div class="cv-stat"><div class="cv-stat-val" id="cvStatQueue">0</div><div class="cv-stat-lbl">In Queue</div></div>
+          <div class="cv-stat"><div class="cv-stat-val" id="cvStatHold">0</div><div class="cv-stat-lbl">On Hold</div></div>
+          <div class="cv-stat"><div class="cv-stat-val" id="cvStatServed">0</div><div class="cv-stat-lbl">Served</div></div>
+        </div>
+      </div>
+
+      <!-- Hold zones — drag queue items here OR drag hold chips back -->
+      <div class="cv-sec">
+        <div class="cv-sec-title">Hold Zones <span style="font-size:6px;color:var(--muted);letter-spacing:0.06em;margin-left:3px">DRAG HERE · DRAG CHIP BACK TO RE-QUEUE</span></div>
+        <div class="hold-zones">
+          <div class="hold-zone" id="complyZone"
+            ondragover="onHoldOver(event,'comply')"
+            ondragleave="onHoldLeave(event,'comply')"
+            ondrop="onHoldDrop(event,'comply')">
+            <div class="hz-title c">⏸ Compliance</div>
+            <div class="hz-chips" id="complyChips"><span class="hz-empty" id="complyEmpty">Drop here</span></div>
+          </div>
+          <div class="hold-zone" id="paymentZone"
+            ondragover="onHoldOver(event,'payment')"
+            ondragleave="onHoldLeave(event,'payment')"
+            ondrop="onHoldDrop(event,'payment')">
+            <div class="hz-title p">💳 Payment</div>
+            <div class="hz-chips" id="paymentChips"><span class="hz-empty" id="paymentEmpty">Drop here</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cv-sec">
+        <div class="cv-sec-title">Called</div>
+        <div class="hist-chips" id="cvHist"><span style="font-size:9px;color:var(--muted)">None yet</span></div>
+      </div>
+
+      <div class="cv-sec">
+        <div class="cv-sec-title">Served Today</div>
+        <div class="served-list" id="cvServedLog">
+          <span style="font-size:9px;color:var(--muted)">None yet</span>
+        </div>
+      </div>
+
+      <div class="cv-sec grow">
+        <div class="cv-sec-title">My Queue <span style="font-size:6.5px;color:var(--muted);letter-spacing:0.06em;margin-left:3px">DRAG → HOLD ZONE</span></div>
+        <div class="cv-queue-list" id="cvQueueList"
+          ondragover="onQueueOver(event)"
+          ondragleave="onQueueLeave(event)"
+          ondrop="onQueueDrop(event)">
+          <div class="cv-q-empty">No tickets — claim from pool →</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- PANE 3: UNASSIGNED POOL -->
+    <div class="cv-pool">
+      <div class="pool-topbar">
+        <div class="pool-title">
+          Unassigned Pool
+          <span class="pool-badge" id="poolBadge">0</span>
+        </div>
+        <div class="pool-hint">Tap a client to add to your queue</div>
+      </div>
+      <div class="pool-list" id="poolList">
+        <div class="pool-empty" id="poolEmpty">No clients waiting</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey:"AIzaSyD1jlmo6pdJhqwjbRDMby9cTBHzazRejcE",
+  authDomain:"queuesystem-fe374.firebaseapp.com",
+  databaseURL:"https://queuesystem-fe374-default-rtdb.firebaseio.com",
+  projectId:"queuesystem-fe374",
+  storageBucket:"queuesystem-fe374.firebasestorage.app",
+  messagingSenderId:"314957208142",
+  appId:"1:314957208142:web:51f960c760f8682e77811f"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+const stateRef = ref(db,'queueState');
+
+const COUNTER_NAMES = ['Counter 1','Counter 2','Counter 3','Counter 4'];
+const COLOR_HEX = {1:'#e67e22',2:'#2471a3',3:'#1e8449',4:'#7d3c98'};
+
+let activeCounter = null;
+let sharedLog = [];
+let sharedTicketCounter = 0;
+// activeTicketId: the ticket currently displayed in "Now Serving" — NOT yet marked served
+let activeTicketId = null;
+let myHistory  = [];
+let myServed   = 0;
+let lastResetFlag = null;
+let dragId = null;
+let myServedLog = []; // local list of clients marked done this session
+
+// ── Clock ──
+function updateClock(){
+  const n=new Date();
+  document.getElementById('cvClock').textContent=
+    [n.getHours(),n.getMinutes(),n.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':');
+}
+setInterval(updateClock,1000); updateClock();
+
+// ── Firebase ──
+onValue(stateRef,snap=>{
+  document.getElementById('fbBadge').className='fb-badge live';
+  document.getElementById('fbBadge').innerHTML='<span class="fb-dot"></span>Connected';
+  const data=snap.val()||{};
+  const newReset=data.resetFlag||null;
+  if(newReset&&newReset!==lastResetFlag){
+    lastResetFlag=newReset;
+    sharedLog=[]; sharedTicketCounter=0; myHistory=[]; myServed=0; activeTicketId=null; myServedLog=[];
+    clearDisplay(); showToast('↺ Queue reset by admin');
+  } else {
+    sharedLog=data.log||[];
+    sharedTicketCounter=data.ticketCounter||0;
+  }
+  lastResetFlag=newReset;
+  refreshLoginCounts();
+  if(activeCounter) renderView();
+},()=>{
+  document.getElementById('fbBadge').className='fb-badge';
+  document.getElementById('fbBadge').innerHTML='<span class="fb-dot"></span>Offline';
+});
+
+function saveShared(){
+  set(stateRef,{ticketCounter:sharedTicketCounter,log:sharedLog,lastUpdate:Date.now(),resetFlag:lastResetFlag,lastCall:window._lastCall||null});
+}
+
+// ── Queue helpers ──
+// "queue" = assigned to me, not served, not on hold, not currently being called
+function myQueue(){
+  return sharedLog
+    .filter(t=>!t.served&&!t.compliance&&!t.paymentHold&&t.counter===activeCounter&&t.id!==activeTicketId)
+    .sort((a,b)=>a.priority===b.priority?a.id-b.id:a.priority==='priority'?-1:1);
+}
+function myComply(){  return sharedLog.filter(t=>t.compliance&&!t.served&&t.counter===activeCounter); }
+function myPayment(){ return sharedLog.filter(t=>t.paymentHold&&!t.served&&t.counter===activeCounter); }
+function unassigned(){
+  return sharedLog
+    .filter(t=>!t.served&&t.counter===0)
+    .sort((a,b)=>a.priority===b.priority?a.id-b.id:a.priority==='priority'?-1:1);
+}
+function activeTicket(){ return sharedLog.find(t=>t.id===activeTicketId)||null; }
+
+// ── Login ──
+function nowTime(){
+  const n=new Date();
+  return [n.getHours(),n.getMinutes(),n.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':');
+}
+
+function buildLogin(){
+  const grid=document.getElementById('loginGrid');
+  grid.innerHTML='';
+  [1,2,3,4].forEach(id=>{
+    const q=sharedLog.filter(t=>!t.served&&!t.compliance&&!t.paymentHold&&t.counter===id).length;
+    const u=sharedLog.filter(t=>!t.served&&t.counter===0).length;
+    const btn=document.createElement('button');
+    btn.className='login-btn'; btn.dataset.c=id;
+    btn.innerHTML=`
+      <div class="lbtn-num" style="color:${COLOR_HEX[id]}">${id}</div>
+      <div class="lbtn-name">${COUNTER_NAMES[id-1]}</div>
+      <div class="lbtn-count" id="lq-${id}" style="color:${COLOR_HEX[id]};border-color:${COLOR_HEX[id]}44;background:${COLOR_HEX[id]}12">${q} in queue · ${u} unassigned</div>`;
+    btn.onclick=()=>login(id);
+    grid.appendChild(btn);
+  });
+}
+
+function refreshLoginCounts(){
+  const u=sharedLog.filter(t=>!t.served&&t.counter===0).length;
+  [1,2,3,4].forEach(id=>{
+    const el=document.getElementById(`lq-${id}`);
+    const q=sharedLog.filter(t=>!t.served&&!t.compliance&&!t.paymentHold&&t.counter===id).length;
+    if(el) el.textContent=`${q} in queue · ${u} unassigned`;
+  });
+}
+
+function login(id){
+  activeCounter=id; myHistory=[]; myServed=0; activeTicketId=null; myServedLog=[];
+  const view=document.getElementById('counterView');
+  view.className=`visible c${id}`;
+  document.getElementById('cvName').textContent=COUNTER_NAMES[id-1];
+  document.getElementById('cvDot').style.background=COLOR_HEX[id];
+  document.getElementById('loginScreen').classList.add('hidden');
+  clearDisplay();
+  renderView();
+}
+
+function logout(){
+  activeCounter=null; activeTicketId=null;
+  document.getElementById('counterView').classList.remove('visible');
+  document.getElementById('loginScreen').classList.remove('hidden');
+  window.speechSynthesis&&window.speechSynthesis.cancel();
+  buildLogin();
+}
+window.logout=logout;
+
+function clearDisplay(){
+  document.getElementById('cvBigNum').textContent='—';
+  document.getElementById('cvBigNum').className='cv-big-num';
+  document.getElementById('cvSvc').textContent='';
+  document.getElementById('cvCust').textContent='';
+  document.getElementById('cvPrioTag').innerHTML='';
+  document.getElementById('cvPill').textContent='Idle';
+  document.getElementById('cvPill').className='cv-pill';
+  document.getElementById('cvWave').classList.remove('active');
+  document.getElementById('cvCallBtn').style.display='';
+  document.getElementById('cvActionPanel').classList.remove('visible');
+}
+
+// ── Claim client from pool ──
+function claimClient(ticketId){
+  const t=sharedLog.find(x=>x.id===ticketId);
+  if(!t||t.counter!==0||t.served) return;
+  t.counter=activeCounter;
+  saveShared();
+  showToast(`#${String(t.id).padStart(3,'0')} → My Queue`);
+  renderView();
+}
+window.claimClient=claimClient;
+
+// ── Call next ──
+// Does NOT mark as served — just sets activeTicketId, shows action panel, and speaks
+function callNext(){
+  const q=myQueue();
+  if(!q.length) return;
+  const ticket=q[0];
+
+  // If a previous ticket was being served, stop its announcement first
+  if(activeTicketId!==null && window.speechSynthesis){
+    window.speechSynthesis.cancel();
+  }
+
+  activeTicketId=ticket.id;
+
+  // Push lastCall to Firebase — overwrites previous call for this counter
+  // Audience detects new ts → cancels old speech → plays new announcement
+  window._lastCall={
+    ticketId: ticket.id,
+    counter:  activeCounter,
+    service:  ticket.service||'',
+    customer: ticket.customer||null,
+    priority: ticket.priority||'normal',
+    ts:       Date.now()
+  };
+  saveShared();
+
+  updateNowServing(ticket);
+  renderView();
+  showToast(`Calling #${String(ticket.id).padStart(3,'0')}`);
+  speak(ticket);
+}
+window.callNext=callNext;
+
+// ── Speech announcement ──
+function speak(ticket){
+  if(!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+
+  // Show wave indicator
+  const waveEl=document.getElementById('cvWave');
+  waveEl.classList.add('active');
+
+  const cname=COUNTER_NAMES[activeCounter-1];
+  const num=ticket.id;
+  let text=`Now serving number ${num} at ${cname}.`;
+  if(ticket.customer) text+=` ${ticket.customer},`;
+  text+=` Number ${num}, please proceed to ${cname}.`;
+  if(ticket.priority==='priority') text=`Priority customer. `+text;
+
+  setTimeout(()=>{
+    const voices=window.speechSynthesis.getVoices();
+    const preferred=
+      voices.find(v=>v.lang==='en-US'&&v.name.includes('Google'))||
+      voices.find(v=>v.lang==='en-US'&&!v.localService)||
+      voices.find(v=>v.lang.startsWith('en')&&!v.localService)||
+      voices.find(v=>v.lang.startsWith('en'))||
+      (voices.length>0?voices[0]:null);
+
+    const u=new SpeechSynthesisUtterance(text);
+    u.rate=0.85; u.pitch=1.0; u.volume=1; u.lang='en-US';
+    if(preferred) u.voice=preferred;
+    u.onend=()=>waveEl.classList.remove('active');
+    u.onerror=()=>waveEl.classList.remove('active');
+
+    // Watchdog: if speech doesn't start within 2s, retry once
+    let started=false;
+    u.onstart=()=>{ started=true; };
+    window.speechSynthesis.speak(u);
+    setTimeout(()=>{
+      if(!started){
+        window.speechSynthesis.cancel();
+        setTimeout(()=>{
+          const r=new SpeechSynthesisUtterance(text);
+          r.rate=0.85; r.volume=1; r.lang='en-US';
+          r.onend=()=>waveEl.classList.remove('active');
+          window.speechSynthesis.speak(r);
+        },300);
+      }
+    },2000);
+  },150);
+}
+
+// Preload voices on page load
+if(window.speechSynthesis){
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices();
+}
+
+function updateNowServing(ticket){
+  const numEl=document.getElementById('cvBigNum');
+  numEl.textContent=String(ticket.id).padStart(3,'0');
+  numEl.className='cv-big-num active pop';
+  setTimeout(()=>numEl.classList.remove('pop'),700);
+
+  document.getElementById('cvSvc').textContent=ticket.service||'';
+  document.getElementById('cvCust').textContent=ticket.customer||'';
+  document.getElementById('cvPrioTag').innerHTML=ticket.priority==='priority'
+    ?'<div class="cv-prio-tag">⚡ Priority</div>':'';
+  document.getElementById('cvPill').textContent='Serving';
+  document.getElementById('cvPill').className='cv-pill serving';
+
+  // Hide call btn, show action panel
+  document.getElementById('cvCallBtn').style.display='none';
+  document.getElementById('cvActionPanel').classList.add('visible');
+}
+
+// ── Send active ticket to a hold ──
+function sendToHold(type){
+  if(activeTicketId===null) return;
+  const t=sharedLog.find(x=>x.id===activeTicketId);
+  if(!t) return;
+  t.compliance  =(type==='comply');
+  t.paymentHold =(type==='payment');
+  // Clear lastCall so audience removes this number from display
+  if(window._lastCall && window._lastCall.ticketId===activeTicketId){
+    window._lastCall=null;
+  }
+  saveShared();
+  const label=type==='comply'?'Compliance Hold':'Payment Hold';
+  showToast(`#${String(t.id).padStart(3,'0')} → ${label}`);
+  activeTicketId=null;
+  clearDisplay();
+  document.getElementById('cvPill').textContent=type==='comply'?'Compliance':'Payment';
+  document.getElementById('cvPill').className=`cv-pill ${type}`;
+  renderView();
+}
+window.sendToHold=sendToHold;
+
+// ── Mark active ticket as Done / Served ──
+// Once served it stays served — cannot be re-called
+function markDone(){
+  if(activeTicketId===null) return;
+  const t=sharedLog.find(x=>x.id===activeTicketId);
+  if(!t) return;
+  t.served=true;
+  t.compliance=false;
+  t.paymentHold=false;
+  // Track in local served log for display
+  myServedLog.unshift({ id:t.id, service:t.service||'', customer:t.customer||null, time: nowTime() });
+  saveShared();
+  myHistory.unshift(t.id);
+  if(myHistory.length>6) myHistory.pop();
+  myServed++;
+  showToast(`#${String(t.id).padStart(3,'0')} ✓ Served`);
+  activeTicketId=null;
+  clearDisplay();
+  renderView();
+}
+window.markDone=markDone;
+
+// ── Drag: queue item → hold zone ──
+window.startQDrag=function(e,id){
+  dragId=id; e.dataTransfer.effectAllowed='move';
+  e.currentTarget.classList.add('dragging');
+};
+window.endQDrag=function(e){ e.currentTarget.classList.remove('dragging'); };
+window.startHoldDrag=function(e,id){
+  dragId=id; e.dataTransfer.effectAllowed='move';
+  e.currentTarget.classList.add('dragging');
+};
+window.endHoldDrag=function(e){ e.currentTarget.classList.remove('dragging'); };
+
+window.onHoldOver=function(e,type){
+  e.preventDefault();
+  document.getElementById(type==='comply'?'complyZone':'paymentZone').classList.add(`drag-over-${type}`);
+};
+window.onHoldLeave=function(e,type){
+  document.getElementById(type==='comply'?'complyZone':'paymentZone').classList.remove(`drag-over-${type}`);
+};
+window.onHoldDrop=function(e,type){
+  e.preventDefault();
+  document.getElementById(type==='comply'?'complyZone':'paymentZone').classList.remove(`drag-over-${type}`);
+  if(dragId===null) return;
+  const t=sharedLog.find(x=>x.id===dragId);
+  if(!t){ dragId=null; return; }
+  t.compliance =(type==='comply');
+  t.paymentHold=(type==='payment');
+  // If this is the active ticket, clear it from audience too
+  if(t.id===activeTicketId){
+    activeTicketId=null; clearDisplay();
+    if(window._lastCall && window._lastCall.ticketId===t.id) window._lastCall=null;
+  }
+  t.counter=activeCounter;
+  saveShared();
+  showToast(`#${String(t.id).padStart(3,'0')} → ${type==='comply'?'Compliance':'Payment'} Hold`);
+  renderView(); dragId=null;
+};
+
+// Drop hold chip → queue (un-hold, re-queue)
+window.onQueueOver=function(e){ e.preventDefault(); e.currentTarget.style.outline='1px dashed var(--muted)'; };
+window.onQueueLeave=function(e){ e.currentTarget.style.outline=''; };
+window.onQueueDrop=function(e){
+  e.preventDefault(); e.currentTarget.style.outline='';
+  if(dragId===null) return;
+  const t=sharedLog.find(x=>x.id===dragId);
+  if(!t){ dragId=null; return; }
+  // Clear all hold flags — ticket re-enters the queue
+  t.compliance=false; t.paymentHold=false;
+  // Un-serve if it was somehow served (safety net)
+  t.served=false;
+  t.counter=activeCounter;
+  saveShared();
+  showToast(`#${String(t.id).padStart(3,'0')} → Back in queue`);
+  renderView(); dragId=null;
+};
+
+// ── Render ──
+function renderView(){
+  if(!activeCounter) return;
+
+  const q      = myQueue();
+  const comply = myComply();
+  const payment= myPayment();
+  const pool   = unassigned();
+  const active = activeTicket();
+
+  // Stats
+  document.getElementById('cvStatQueue').textContent  = q.length + (active?1:0);
+  document.getElementById('cvStatHold').textContent   = comply.length+payment.length;
+  document.getElementById('cvStatServed').textContent = myServed;
+
+  // If we have an activeTicket, keep action panel visible and big number showing
+  if(active){
+    // just re-render info in case something changed
+    document.getElementById('cvBigNum').textContent=String(active.id).padStart(3,'0');
+    document.getElementById('cvBigNum').className='cv-big-num active';
+    document.getElementById('cvSvc').textContent=active.service||'';
+    document.getElementById('cvCust').textContent=active.customer||'';
+    document.getElementById('cvPrioTag').innerHTML=active.priority==='priority'
+      ?'<div class="cv-prio-tag">⚡ Priority</div>':'';
+    document.getElementById('cvCallBtn').style.display='none';
+    document.getElementById('cvActionPanel').classList.add('visible');
+    document.getElementById('cvPill').textContent='Serving';
+    document.getElementById('cvPill').className='cv-pill serving';
+  } else {
+    // No active ticket — show call button
+    const btn=document.getElementById('cvCallBtn');
+    btn.style.display='';
+    document.getElementById('cvActionPanel').classList.remove('visible');
+    btn.disabled=q.length===0;
+    btn.textContent=q.length>0
+      ?`▶ CALL #${String(q[0].id).padStart(3,'0')}${q[0].priority==='priority'?' ⚡':''}`
+      :'▶ CALL NEXT';
+    if(q.length===0&&comply.length===0&&payment.length===0){
+      document.getElementById('cvPill').textContent='Idle';
+      document.getElementById('cvPill').className='cv-pill';
+    }
+  }
+
+  // Queue list — show all in-queue tickets; currently active one shown highlighted
+  const listEl=document.getElementById('cvQueueList');
+  listEl.innerHTML='';
+  // Build display list: active ticket first (if any), then rest of queue
+  const displayItems=[];
+  if(active) displayItems.push({...active, _isActive:true});
+  q.forEach((t,i)=>displayItems.push({...t, _isNext:i===0&&!active}));
+
+  if(!displayItems.length){
+    listEl.innerHTML='<div class="cv-q-empty">No tickets — claim from pool →</div>';
+  } else {
+    displayItems.forEach(t=>{
+      const item=document.createElement('div');
+      const cls=['cv-q-item'];
+      if(t._isActive) cls.push('calling');
+      else if(t._isNext) cls.push('next-up');
+      item.className=cls.join(' ');
+      item.setAttribute('draggable','true');
+      item.setAttribute('ondragstart',`startQDrag(event,${t.id})`);
+      item.setAttribute('ondragend','endQDrag(event)');
+      item.title=t._isActive?'Currently serving — drag to hold':'Drag → hold zone';
+
+      const badges=[];
+      if(t._isActive)      badges.push(`<span class="qb qb-calling">Serving</span>`);
+      else if(t._isNext)   badges.push(`<span class="qb qb-next">Next</span>`);
+      if(t.priority==='priority') badges.push(`<span class="qb qb-prio">⚡</span>`);
+
+      item.innerHTML=`
+        <div class="cv-q-num">${String(t.id).padStart(3,'0')}</div>
+        <div class="cv-q-info">
+          <div class="cv-q-svc">${t.service||''}</div>
+          ${t.customer?`<div class="cv-q-cust">${t.customer}</div>`:''}
+        </div>
+        <div class="cv-q-badges">${badges.join('')}</div>`;
+      listEl.appendChild(item);
+    });
+  }
+
+  // Hold zones
+  renderHoldZone(comply, 'complyChips','complyEmpty','c-chip');
+  renderHoldZone(payment,'paymentChips','paymentEmpty','p-chip');
+
+  // History (called numbers)
+  const histEl=document.getElementById('cvHist');
+  histEl.innerHTML=myHistory.length===0
+    ?'<span style="font-size:9px;color:var(--muted)">None yet</span>'
+    :myHistory.map(n=>`<span class="hist-chip">${String(n).padStart(3,'0')}</span>`).join('');
+
+  // Served log
+  const servedEl=document.getElementById('cvServedLog');
+  if(!myServedLog.length){
+    servedEl.innerHTML='<span style="font-size:9px;color:var(--muted)">None yet</span>';
+  } else {
+    servedEl.innerHTML=myServedLog.map(s=>`
+      <div class="served-item">
+        <div class="served-num">${String(s.id).padStart(3,'0')}</div>
+        <div class="served-info">
+          <div class="served-svc">${s.service}</div>
+          ${s.customer?`<div class="served-cust">${s.customer}</div>`:''}
+        </div>
+        <div class="served-time">${s.time}</div>
+      </div>`).join('');
+  }
+
+  // Pool
+  const poolList=document.getElementById('poolList');
+  const poolEmpty=document.getElementById('poolEmpty');
+  document.getElementById('poolBadge').textContent=pool.length;
+  poolList.querySelectorAll('.pool-item').forEach(e=>e.remove());
+  if(!pool.length){
+    poolEmpty.style.display='block';
+  } else {
+    poolEmpty.style.display='none';
+    pool.forEach(t=>{
+      const item=document.createElement('div');
+      item.className='pool-item';
+      item.onclick=()=>claimWithFlash(item,t.id);
+      item.innerHTML=`
+        <div class="pi-num">${String(t.id).padStart(3,'0')}</div>
+        <div class="pi-info">
+          <div class="pi-svc">${t.service}</div>
+          ${t.customer?`<div class="pi-cust">${t.customer}</div>`:''}
+          <div class="pi-time">${t.time}</div>
+        </div>
+        <div class="pi-badges">
+          ${t.priority==='priority'?'<span class="pi-badge pi-badge-prio">⚡</span>':''}
+          <span class="pi-hint">Tap to claim</span>
+        </div>
+        <div class="claim-flash">✓ Added</div>`;
+      poolList.insertBefore(item, poolEmpty);
+    });
+  }
+}
+
+function claimWithFlash(el, id){
+  el.classList.add('claiming');
+  setTimeout(()=>{ el.classList.remove('claiming'); claimClient(id); }, 300);
+}
+
+function renderHoldZone(tickets, chipsId, emptyId, chipCls){
+  const wrap=document.getElementById(chipsId);
+  const empty=document.getElementById(emptyId);
+  wrap.querySelectorAll('.hz-chip').forEach(e=>e.remove());
+  if(!tickets.length){ empty.style.display='inline'; return; }
+  empty.style.display='none';
+  tickets.forEach(t=>{
+    const chip=document.createElement('span');
+    chip.className=`hz-chip ${chipCls}`;
+    chip.setAttribute('draggable','true');
+    chip.setAttribute('ondragstart',`startHoldDrag(event,${t.id})`);
+    chip.setAttribute('ondragend','endHoldDrag(event)');
+    chip.title=`${t.service}${t.customer?' · '+t.customer:''} — drag back to queue to re-call`;
+    chip.textContent=`${String(t.id).padStart(3,'0')}${t.priority==='priority'?'⚡':''}`;
+    wrap.insertBefore(chip,empty);
+  });
+}
+
+function showToast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2000);
+}
+
+buildLogin();
+</script>
+</body>
+</html>
