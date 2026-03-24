@@ -597,6 +597,38 @@ function renderActivityFeed(){
 
 function renderAll(){renderCounters();renderStats();renderLastCalled();renderActivityFeed();}
 
+function buildCounters(){
+  const area = document.getElementById('countersArea');
+  area.innerHTML = '';
+  [1,2,3,4].forEach(id=>{
+    area.innerHTML += `
+    <div class="counter-panel" data-c="${id}">
+      <div class="counter-accent-bar"></div>
+      <div class="cp-label">
+        <div class="cp-dot"></div>
+        <div class="cp-name">Counter ${id}</div>
+        <div class="cp-status-pill" id="cpstatus-${id}">Idle</div>
+      </div>
+      <div class="cp-number-wrap">
+        <div class="cp-number" id="cpnum-${id}">—</div>
+        <div class="cp-info-col">
+          <div class="cp-now-lbl">Now Serving</div>
+          <div class="cp-service-tag" id="cpsvc-${id}"></div>
+          <div class="cp-customer" id="cpcust-${id}"></div>
+        </div>
+      </div>
+      <div class="cp-queue-row" id="cpqueue-${id}">
+        <span class="cp-queue-lbl">Next:</span>
+        <span style="font-size:9px;color:var(--muted)">—</span>
+      </div>
+      <div class="cp-wave" id="cpwave-${id}">
+        <div class="wave-bars"><span></span><span></span><span></span><span></span><span></span></div>
+        <div class="cp-wave-label">Calling</div>
+      </div>
+    </div>`;
+  });
+}
+
 buildCounters(); renderAll();
 
 // ── Auto-reset at midnight ──
