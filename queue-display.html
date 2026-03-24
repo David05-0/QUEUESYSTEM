@@ -389,7 +389,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+import { getDatabase, ref, set, get, push, remove, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
 const firebaseConfig = {
   apiKey:"AIzaSyD1jlmo6pdJhqwjbRDMby9cTBHzazRejcE",
@@ -453,8 +453,8 @@ function saveShared(){
   set(stateRef,{ticketCounter:sharedTicketCounter,log:sharedLog,lastUpdate:Date.now(),resetFlag:lastResetFlag,lastCall:window._lastCall||null});
 }
 
-// Push a new call entry into the Firebase callQueue list
-// Audience processes this queue in order, one announcement at a time
+// Push a new call entry into the Firebase callQueue using push() for unique keys
+// Audience listens to callQueue and processes each entry in ts order
 function pushCall(ticket){
   const callEntry = {
     ticketId: ticket.id,
@@ -465,16 +465,24 @@ function pushCall(ticket){
     ts:       Date.now()
   };
   window._lastCall = callEntry;
-  // Append to callQueue; remove any previous entry from same counter first
+  // First remove any stale entry from this counter (counter calling again replaces old)
   const callQRef = ref(db,'callQueue');
   get(callQRef).then(snap=>{
-    const existing = snap.val() ? Object.values(snap.val()) : [];
-    const filtered = existing.filter(e=>e.counter!==activeCounter);
-    filtered.push(callEntry);
-    // Sort by ts so audience processes in call order
-    filtered.sort((a,b)=>a.ts-b.ts);
-    set(callQRef, filtered.reduce((o,e,i)=>{o[i]=e;return o},{}));
-  }).catch(()=>{});
+    const data = snap.val();
+    if(data){
+      // Remove old entries from same counter
+      Object.entries(data).forEach(([key, entry])=>{
+        if(entry.counter === activeCounter){
+          remove(ref(db,'callQueue/'+key)).catch(()=>{});
+        }
+      });
+    }
+    // Push new entry with unique key
+    push(callQRef, callEntry).catch(()=>{});
+  }).catch(()=>{
+    // If get fails, just push anyway
+    push(callQRef, callEntry).catch(()=>{});
+  });
   saveShared();
 }
 
@@ -516,13 +524,17 @@ function scheduleAutoReset(){
 }
 scheduleAutoReset();
 
-// Remove a specific ticket from the Firebase callQueue (called on hold/cancel)
+// Remove a specific ticket from the Firebase callQueue by key
 function removeFromCallQueue(ticketId){
   const callQRef = ref(db,'callQueue');
   get(callQRef).then(snap=>{
-    if(!snap.val()) return;
-    const filtered = Object.values(snap.val()).filter(e=>e.ticketId!==ticketId);
-    set(callQRef, filtered.length ? filtered.reduce((o,e,i)=>{o[i]=e;return o},{}) : null);
+    const data = snap.val();
+    if(!data) return;
+    Object.entries(data).forEach(([key, entry])=>{
+      if(entry.ticketId===ticketId){
+        remove(ref(db,'callQueue/'+key)).catch(()=>{});
+      }
+    });
   }).catch(()=>{});
 }
 
