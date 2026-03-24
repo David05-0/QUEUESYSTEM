@@ -500,32 +500,64 @@ function issueTicket(){
 }
 window.issueTicket = issueTicket;
 
-// ── Print — no counter printed (unassigned) ──
+// ── Print — 7in × 5in paper ──
 function printReceipt(t){
   const num = String(t.id).padStart(3,'0');
   const barcode = genBarcode(t.id);
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ticket #${num}</title>
-  <style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:80mm;background:#fff;color:#000;font-family:'Courier New',Courier,monospace}@page{size:80mm auto;margin:0}body{padding:4mm 3mm}</style>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    @page{size:7in 5in;margin:0}
+    html,body{width:7in;height:5in;background:#fff;color:#000;font-family:'Courier New',Courier,monospace;overflow:hidden}
+    body{padding:6mm 8mm;display:flex;flex-direction:column;justify-content:space-between}
+    .top{display:flex;align-items:flex-start;justify-content:space-between;gap:8mm}
+    .left{flex:1}
+    .right{flex-shrink:0;text-align:center;border-left:2px dashed #000;padding-left:7mm;min-width:44mm}
+    .brand{font-size:18px;font-weight:900;letter-spacing:0.12em}
+    .brand-sub{font-size:8px;color:#555;margin-top:1mm;letter-spacing:0.05em}
+    .svc-label{font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:#555;margin-top:5mm}
+    .svc-val{font-size:14px;font-weight:700;margin-top:1.5mm;line-height:1.2}
+    .prio-box{display:inline-block;font-size:11px;font-weight:900;border:2px solid #000;padding:1mm 4mm;margin-top:3mm}
+    .cust-val{font-size:13px;font-weight:700;margin-top:3mm}
+    .num-lbl{font-size:9px;letter-spacing:0.22em;text-transform:uppercase;color:#555;margin-bottom:1mm}
+    .num-big{font-size:100pt;font-weight:900;line-height:0.9;color:#000;letter-spacing:-0.02em}
+    hr{border:none;border-top:1px dashed #000;margin:3mm 0}
+    .bottom{display:flex;align-items:center;justify-content:space-between;gap:6mm}
+    .footer-note{font-size:8px;color:#555;line-height:1.7;flex:1}
+    .barcode-wrap{text-align:center;flex-shrink:0}
+    .barcode{font-size:11px;font-family:'Courier New';color:#000;letter-spacing:0.05em;word-break:break-all}
+    .barcode-id{font-size:7px;color:#555;margin-top:0.5mm}
+    .datetime{font-size:8px;color:#555;margin-top:1mm}
+  </style>
   </head><body>
-  <div style="text-align:center;font-size:14px;font-weight:900;letter-spacing:0.12em">QUEUESYS</div>
-  <div style="text-align:center;font-size:8px;color:#555;margin-bottom:2mm">POEA / OWWA Service Queue</div>
-  <hr style="border:none;border-top:1px dashed #000;margin:2mm 0">
-  <div style="text-align:center;font-size:9px;letter-spacing:0.14em;text-transform:uppercase">Your Number</div>
-  <div style="text-align:center;font-size:72pt;font-weight:900;line-height:1;color:#000;margin:1mm 0 2mm">${num}</div>
-  <hr style="border:none;border-top:1px dashed #000;margin:2mm 0">
-  <div style="text-align:center;font-size:10px;color:#222;margin-bottom:1mm">${t.service}</div>
-  ${t.priority==='priority'?`<div style="text-align:center;font-size:10px;font-weight:900;border:2px solid #000;padding:1mm 3mm;margin:1.5mm auto;display:table">⚡ PRIORITY</div>`:''}
-  ${t.customer?`<div style="text-align:center;font-size:10px;font-weight:700;margin-top:1mm">${t.customer.toUpperCase()}</div>`:''}
-  <hr style="border:none;border-top:1px dashed #000;margin:2mm 0">
-  <div style="text-align:center;font-size:8px;color:#555">Please wait — a counter will call your number.</div>
-  <div style="text-align:center;font-size:8px;color:#555;margin-top:1mm">${t.date} · ${t.time}</div>
-  <div style="text-align:center;font-size:12px;font-family:'Courier New';color:#000;margin:1.5mm 0 0.5mm;word-break:break-all">${barcode}</div>
-  <div style="text-align:center;font-size:8px;color:#555">ID: ${num}</div>
-  <hr style="border:none;border-top:1px dashed #000;margin:2mm 0">
-  <div style="text-align:center;font-size:8px;font-style:italic;color:#555;line-height:1.6">Thank you for your patience.</div>
+  <div class="top">
+    <div class="left">
+      <div class="brand">QUEUESYS</div>
+      <div class="brand-sub">POEA / OWWA Service Queue</div>
+      <hr style="margin:4mm 0">
+      <div class="svc-label">Service</div>
+      <div class="svc-val">${t.service}</div>
+      ${t.priority==='priority'?'<div class="prio-box">⚡ PRIORITY CUSTOMER</div>':''}
+      ${t.customer?`<div class="cust-val">${t.customer.toUpperCase()}</div>`:''}
+      <div class="datetime">${t.date} · ${t.time}</div>
+    </div>
+    <div class="right">
+      <div class="num-lbl">Your Number</div>
+      <div class="num-big">${num}</div>
+    </div>
+  </div>
+  <hr>
+  <div class="bottom">
+    <div class="footer-note">Please keep this ticket safe.<br>Wait for your number to be called.<br>Proceed immediately to your assigned counter.</div>
+    <div class="barcode-wrap">
+      <div class="barcode">${barcode}</div>
+      <div class="barcode-id">ID: ${num}</div>
+    </div>
+  </div>
   <script>window.onload=function(){window.print();setTimeout(function(){window.close()},800)}<\/script>
   </body></html>`;
-  const popup = window.open('','_blank','width=300,height=520,toolbar=0,menubar=0,location=0');
+  // popup sized to approx 7in×5in at 96dpi = 672×480px
+  const popup = window.open('','_blank','width=672,height=480,toolbar=0,menubar=0,location=0');
   if(popup){ popup.document.write(html); popup.document.close(); }
   else{ document.getElementById('receiptContent').innerHTML=html; setTimeout(()=>window.print(),150); }
 }
