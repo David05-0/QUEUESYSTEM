@@ -534,10 +534,12 @@ function doSpeak(ticket, onDone){
   if(!audioUnlocked||!window.speechSynthesis){ if(onDone) onDone(); return; }
   const cnum=ticket.counter;
   const num=ticket.id;
-  // "Number 1, please proceed to DMW Desk 4. Number 1, DMW Desk 4."
   const cname=COUNTER_NAMES[cnum-1];
-  const line1=`Number ${num}, proceed to ${cname}.`;
-  const line2=`Number ${num}, ${cname}.`;
+  // Build announcement: number, optional name, service, counter — repeated once
+  const namePart  = ticket.customer ? `${ticket.customer}, ` : '';
+  const svcPart   = ticket.service  ? `for ${ticket.service}. ` : '';
+  const line1 = `Number ${num}, ${namePart}${svcPart}please proceed to ${cname}.`;
+  const line2 = `Number ${num}, ${cname}.`;
   const full = ticket.priority==='priority'
     ? `Priority customer. ${line1} ${line2}`
     : `${line1} ${line2}`;
