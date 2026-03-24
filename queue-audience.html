@@ -266,6 +266,36 @@ let lastResetFlag= null;
 let flashTimer   = null;
 let audioUnlocked= false;
 let audioCtx     = null;
+
+// ── Tap to Start — must be called from user gesture to unlock audio ──
+window.startDisplay = function(){
+  audioUnlocked = true;
+  document.getElementById('startOverlay').classList.add('hidden');
+
+  // Unlock Web Audio API (required by browsers/TVs before sound can play)
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const buf = audioCtx.createBuffer(1, 1, 22050);
+    const src = audioCtx.createBufferSource();
+    src.buffer = buf;
+    src.connect(audioCtx.destination);
+    src.start(0);
+  } catch(e){ console.warn('AudioContext:', e); }
+
+  // Warm up SpeechSynthesis with a silent utterance
+  if(window.speechSynthesis){
+    window.speechSynthesis.cancel();
+    const warmup = new SpeechSynthesisUtterance(' ');
+    warmup.volume = 0.01;
+    window.speechSynthesis.speak(warmup);
+    // Preload voices
+    window.speechSynthesis.getVoices();
+    window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+  }
+
+  // Process anything already in the queue
+  if(!isAnnouncing && announceQueue.length) processAnnounceQueue();
+};
 let counterDisplay = [1,2,3,4].map(id=>({
   id, current:null, service:null, customer:null, priority:null, time:null
 }));
