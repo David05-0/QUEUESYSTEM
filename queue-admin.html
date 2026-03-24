@@ -138,6 +138,21 @@
   .tag-payment{background:#e8f4f8;color:var(--teal);border:1px solid rgba(14,107,138,0.22)}
   .tag-served{background:rgba(30,132,73,0.08);color:var(--green);border:1px solid rgba(30,132,73,0.2)}
 
+  /* ── Service counts ── */
+  .svc-counts-card{background:var(--paper);border:1px solid var(--rule);border-radius:2px;box-shadow:0 2px 8px var(--shadow);overflow:hidden}
+  .svc-counts-head{background:var(--ink);color:var(--bg);padding:10px 18px;display:flex;align-items:center;justify-content:space-between}
+  .svc-counts-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.1em}
+  .svc-counts-sub{font-size:8px;color:rgba(244,241,234,0.45);letter-spacing:0.14em;text-transform:uppercase}
+  .svc-counts-grid{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--rule)}
+  .svc-count-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--rule);border-right:1px solid var(--rule)}
+  .svc-count-row:nth-child(even){border-right:none}
+  .svc-count-row:nth-last-child(-n+2){border-bottom:none}
+  .svc-count-icon{font-size:16px;flex-shrink:0}
+  .svc-count-info{flex:1;overflow:hidden}
+  .svc-count-name{font-size:9px;letter-spacing:0.08em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .svc-count-sub{font-size:7.5px;color:var(--muted);margin-top:1px}
+  .svc-count-num{font-family:'Bebas Neue',sans-serif;font-size:28px;line-height:1;letter-spacing:0.04em;color:var(--accent);flex-shrink:0;min-width:32px;text-align:right}
+
   /* Toast */
   .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(18px);background:var(--ink);color:var(--bg);padding:11px 26px;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.12em;opacity:0;transition:all 0.3s;pointer-events:none;z-index:999;white-space:nowrap}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -274,6 +289,15 @@
         </div>
       </div>
 
+      <!-- Service counts breakdown -->
+      <div class="svc-counts-card">
+        <div class="svc-counts-head">
+          <div class="svc-counts-title">Service Breakdown</div>
+          <div class="svc-counts-sub">Today's tally</div>
+        </div>
+        <div class="svc-counts-grid" id="svcCountsGrid"></div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -321,13 +345,31 @@ function updateClock(){
 }
 setInterval(updateClock,1000); updateClock();
 
+// ── Auto-reset at midnight ──
+function scheduleAutoReset(){
+  const now = new Date();
+  const midnight = new Date(now);
+  midnight.setHours(24,0,5,0); // 12:00:05 AM next day (5s buffer)
+  const msUntilMidnight = midnight - now;
+  setTimeout(()=>{
+    log=[]; ticketCounter=0;
+    saveState(true);
+    showToast('✓ Auto-reset — new day');
+    scheduleAutoReset(); // reschedule for following midnight
+  }, msUntilMidnight);
+}
+scheduleAutoReset();
+
 // ── Firebase ──
 function saveState(isReset=false){
-  set(stateRef,{
+  const payload = {
     ticketCounter, log,
     lastUpdate: Date.now(),
     resetFlag: isReset ? Date.now() : (window._lastResetFlag||null)
-  }).catch(()=>setFbStatus('error'));
+  };
+  // On reset, explicitly null lastCall so audience clears its display
+  if(isReset) payload.lastCall = null;
+  set(stateRef, payload).catch(()=>setFbStatus('error'));
 }
 
 onValue(stateRef, snap=>{
@@ -423,9 +465,39 @@ function genBarcode(id){
 }
 
 // ── Render ──
+const SERVICES = [
+  {svc:'OEC with Appointment',    icon:'📅', short:'OEC w/ Appt'},
+  {svc:'OEC without Appointment', icon:'📋', short:'OEC w/o Appt'},
+  {svc:'Government to Government',icon:'🏛️', short:'Gov to Gov'},
+  {svc:'Direct Hire',             icon:'🤝', short:'Direct Hire'},
+  {svc:'Agency Hire',             icon:'🏢', short:'Agency Hire'},
+  {svc:'OFW Records',             icon:'🗂️', short:'OFW Records'},
+  {svc:'Queries',                 icon:'💬', short:'Queries'},
+];
+
 function renderAll(){
   renderStats();
   renderPool();
+  renderServiceCounts();
+}
+
+function renderServiceCounts(){
+  const grid = document.getElementById('svcCountsGrid');
+  grid.innerHTML = '';
+  SERVICES.forEach(s => {
+    const total  = log.filter(t=>t.service===s.svc).length;
+    const served = log.filter(t=>t.service===s.svc&&t.served).length;
+    const row = document.createElement('div');
+    row.className = 'svc-count-row';
+    row.innerHTML = `
+      <div class="svc-count-icon">${s.icon}</div>
+      <div class="svc-count-info">
+        <div class="svc-count-name">${s.short}</div>
+        <div class="svc-count-sub">${served} served</div>
+      </div>
+      <div class="svc-count-num">${total}</div>`;
+    grid.appendChild(row);
+  });
 }
 
 function renderStats(){
