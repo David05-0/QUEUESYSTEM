@@ -408,16 +408,18 @@ const stateRef = ref(db,'queueState');
 const COUNTER_NAMES = ['DMW Desk 1','DMW Desk 2','DMW Desk 3','DMW Desk 4'];
 const COLOR_HEX = {1:'#e67e22',2:'#2471a3',3:'#1e8449',4:'#7d3c98'};
 
-let activeCounter = null;
 let sharedLog = [];
 let sharedTicketCounter = 0;
-// activeTicketId: the ticket currently displayed in "Now Serving" — NOT yet marked served
-let activeTicketId = null;
 let myHistory  = [];
 let myServed   = 0;
-let lastResetFlag = null;
+// undefined = page just loaded; first Firebase snapshot silently adopts resetFlag — no reset triggered
+let lastResetFlag = undefined;
 let dragId = null;
-let myServedLog = []; // local list of clients marked done this session
+let myServedLog = [];
+
+// ── Session resume: restore counter + active ticket if tab was closed accidentally ──
+let activeCounter  = sessionStorage.getItem('ssCounter')  ? parseInt(sessionStorage.getItem('ssCounter'))  : null;
+let activeTicketId = sessionStorage.getItem('ssTicketId') ? parseInt(sessionStorage.getItem('ssTicketId')) : null;
 
 // ── Clock ──
 function updateClock(){
@@ -428,22 +430,54 @@ function updateClock(){
 setInterval(updateClock,1000); updateClock();
 
 // ── Firebase ──
+let _fbFirstLoad = true;
 onValue(stateRef,snap=>{
   document.getElementById('fbBadge').className='fb-badge live';
   document.getElementById('fbBadge').innerHTML='<span class="fb-dot"></span>Connected';
   const data=snap.val()||{};
   const newReset=data.resetFlag||null;
-  if(newReset&&newReset!==lastResetFlag){
+
+  if(_fbFirstLoad){
+    // First snapshot on page load — silently adopt resetFlag, NEVER auto-reset
+    _fbFirstLoad=false;
     lastResetFlag=newReset;
-    sharedLog=[]; sharedTicketCounter=0; myHistory=[]; myServed=0; activeTicketId=null; myServedLog=[];
-    clearDisplay(); showToast('↺ Queue reset by admin');
+    sharedLog=data.log||[];
+    sharedTicketCounter=data.ticketCounter||0;
+    // If session was restored (tab closed accidentally), resume the counter view
+    if(activeCounter){
+      const view=document.getElementById('counterView');
+      view.className=`visible c${activeCounter}`;
+      document.getElementById('cvName').textContent=COUNTER_NAMES[activeCounter-1];
+      document.getElementById('cvDot').style.background=COLOR_HEX[activeCounter];
+      document.getElementById('loginScreen').classList.add('hidden');
+      renderView();
+    } else {
+      refreshLoginCounts();
+      buildLogin();
+    }
+    return;
+  }
+
+  // Subsequent snapshots — only reset if resetFlag genuinely changed
+  if(newReset && newReset!==lastResetFlag){
+    lastResetFlag=newReset;
+    sharedLog=[]; sharedTicketCounter=0; myHistory=[]; myServed=0;
+    activeTicketId=null; myServedLog=[];
+    sessionStorage.removeItem('ssCounter');
+    sessionStorage.removeItem('ssTicketId');
+    // If logged in, kick back to login screen
+    if(activeCounter){ activeCounter=null; clearDisplay(); }
+    document.getElementById('counterView').classList.remove('visible');
+    document.getElementById('loginScreen').classList.remove('hidden');
+    buildLogin();
+    showToast('↺ Queue reset by admin');
   } else {
     sharedLog=data.log||[];
     sharedTicketCounter=data.ticketCounter||0;
+    lastResetFlag=newReset;
+    refreshLoginCounts();
+    if(activeCounter) renderView();
   }
-  lastResetFlag=newReset;
-  refreshLoginCounts();
-  if(activeCounter) renderView();
 },()=>{
   document.getElementById('fbBadge').className='fb-badge';
   document.getElementById('fbBadge').innerHTML='<span class="fb-dot"></span>Offline';
@@ -503,6 +537,8 @@ function refreshLoginCounts(){
 
 function login(id){
   activeCounter=id; myHistory=[]; myServed=0; activeTicketId=null; myServedLog=[];
+  sessionStorage.setItem('ssCounter', id);
+  sessionStorage.removeItem('ssTicketId');
   const view=document.getElementById('counterView');
   view.className=`visible c${id}`;
   document.getElementById('cvName').textContent=COUNTER_NAMES[id-1];
@@ -514,6 +550,8 @@ function login(id){
 
 function logout(){
   activeCounter=null; activeTicketId=null;
+  sessionStorage.removeItem('ssCounter');
+  sessionStorage.removeItem('ssTicketId');
   document.getElementById('counterView').classList.remove('visible');
   document.getElementById('loginScreen').classList.remove('hidden');
   window.speechSynthesis&&window.speechSynthesis.cancel();
@@ -558,6 +596,7 @@ function callNext(){
   }
 
   activeTicketId=ticket.id;
+  sessionStorage.setItem('ssTicketId', ticket.id);
 
   // Push lastCall to Firebase — overwrites previous call for this counter
   // Audience detects new ts → cancels old speech → plays new announcement
@@ -666,6 +705,7 @@ function sendToHold(type){
   const label=type==='comply'?'Compliance Hold':'Payment Hold';
   showToast(`#${String(t.id).padStart(3,'0')} → ${label}`);
   activeTicketId=null;
+  sessionStorage.removeItem('ssTicketId');
   clearDisplay();
   document.getElementById('cvPill').textContent=type==='comply'?'Compliance':'Payment';
   document.getElementById('cvPill').className=`cv-pill ${type}`;
@@ -694,6 +734,7 @@ function markDone(){
   myServed++;
   showToast(`#${String(t.id).padStart(3,'0')} ✓ Served`);
   activeTicketId=null;
+  sessionStorage.removeItem('ssTicketId');
   clearDisplay();
   renderView();
 }
