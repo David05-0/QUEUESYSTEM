@@ -354,22 +354,16 @@ onValue(stateRef, snap=>{
 // ── Listen to callQueue — each entry triggers one announcement ──
 onValue(callQRef, snap=>{
   const data=snap.val();
-  if(!data){
-    // callQueue empty — nothing to announce
-    return;
-  }
+  if(!data) return; // callQueue empty — nothing to announce
 
-  const entries = Object.entries(data); // [[key, entry], ...]
-  // Sort by ts ascending so first-called is announced first
+  const entries = Object.entries(data);
   entries.sort((a,b)=>a[1].ts - b[1].ts);
 
-  // Add newly seen entries to our local announce queue
   let added=false;
   entries.forEach(([key,entry])=>{
     if(!seenCallKeys.has(key)){
       seenCallKeys.add(key);
-      entry._fbKey=key; // remember key so we can remove it after announcing
-      // Update counter display immediately (show number even before speech)
+      entry._fbKey=key;
       const cd=counterDisplay[entry.counter-1];
       if(cd){
         cd.current=entry.ticketId; cd.service=entry.service;
@@ -383,9 +377,7 @@ onValue(callQRef, snap=>{
     }
   });
 
-  // Sort queue by ts so order is always call-time-based
   announceQueue.sort((a,b)=>a.ts-b.ts);
-
   if(added) renderAll();
   if(!isAnnouncing && announceQueue.length) processAnnounceQueue();
 });
@@ -394,21 +386,13 @@ onValue(callQRef, snap=>{
 // Waits for audio to be unlocked (user tapped Start) before speaking
 function processAnnounceQueue(){
   if(!announceQueue.length){ isAnnouncing=false; return; }
-  // If audio not yet unlocked, hold — startDisplay() will re-trigger this
   if(!audioUnlocked){ isAnnouncing=false; return; }
   isAnnouncing=true;
   const entry=announceQueue.shift();
 
-  // Update counter panel immediately
   renderAll();
 
-  // Flash + announce
   showFlashFor(entry, ()=>{
-    // Remove from Firebase so other screens don't re-announce
-    if(entry._fbKey){
-      remove(ref(db,'callQueue/'+entry._fbKey)).catch(()=>{});
-    }
-    seenCallKeys.delete(entry._fbKey);
     setTimeout(()=>{
       isAnnouncing=false;
       processAnnounceQueue();
