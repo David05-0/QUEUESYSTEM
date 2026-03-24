@@ -405,7 +405,7 @@ const app = initializeApp(firebaseConfig);
 const db  = getDatabase(app);
 const stateRef = ref(db,'queueState');
 
-const COUNTER_NAMES = ['Counter 1','Counter 2','Counter 3','Counter 4'];
+const COUNTER_NAMES = ['DMW Desk 1','DMW Desk 2','DMW Desk 3','DMW Desk 4'];
 const COLOR_HEX = {1:'#e67e22',2:'#2471a3',3:'#1e8449',4:'#7d3c98'};
 
 let activeCounter = null;
@@ -682,6 +682,10 @@ function markDone(){
   t.served=true;
   t.compliance=false;
   t.paymentHold=false;
+  // Clear lastCall so audience removes this number from display
+  if(window._lastCall && window._lastCall.ticketId===activeTicketId){
+    window._lastCall=null;
+  }
   // Track in local served log for display
   myServedLog.unshift({ id:t.id, service:t.service||'', customer:t.customer||null, time: nowTime() });
   saveShared();
