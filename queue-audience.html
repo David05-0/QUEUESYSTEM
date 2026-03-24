@@ -148,7 +148,8 @@
   .cf-counter-text{font-family:'Bebas Neue',sans-serif;font-size:clamp(18px,3vw,32px);letter-spacing:0.16em}
 
   .cf-service{font-size:clamp(13px,1.8vw,18px);letter-spacing:0.14em;color:var(--muted);margin-top:10px;animation:cfFadeIn 0.5s ease 0.25s both}
-  .cf-customer{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,5.5vw,72px);letter-spacing:0.06em;color:var(--text);margin-top:8px;animation:cfFadeIn 0.5s ease 0.3s both}
+  .cf-customer{font-family:'Bebas Neue',sans-serif;font-size:clamp(42px,6.5vw,90px);letter-spacing:0.06em;color:#fff;margin-top:8px;animation:cfFadeIn 0.5s ease 0.3s both}
+  .cf-fullname{font-family:'Bebas Neue',sans-serif;font-size:clamp(52px,8vw,110px);letter-spacing:0.04em;color:var(--gold);margin-top:4px;animation:cfFadeIn 0.5s ease 0.35s both;text-align:center}
   .cf-priority{display:inline-flex;align-items:center;gap:5px;font-size:clamp(12px,1.4vw,15px);letter-spacing:0.14em;text-transform:uppercase;color:var(--priority);border:1px solid rgba(231,76,60,0.4);background:rgba(231,76,60,0.08);padding:5px 14px;border-radius:3px;margin-top:6px;animation:cfFadeIn 0.5s ease 0.32s both}
 
   @keyframes cfZoomIn{from{transform:scale(0.5);opacity:0}to{transform:scale(1);opacity:1}}
@@ -194,6 +195,7 @@
   </div>
   <div class="cf-service" id="cfService"></div>
   <div class="cf-customer" id="cfCustomer"></div>
+  <div class="cf-fullname" id="cfFullname" style="display:none"></div>
   <div class="cf-priority" id="cfPriority" style="display:none">⚡ PRIORITY CUSTOMER</div>
 </div>
 
@@ -346,7 +348,7 @@ onValue(stateRef,snap=>{
     if(lc && lc.ts){
       const cd=counterDisplay[lc.counter-1];
       cd.current=lc.ticketId; cd.service=lc.service; cd.customer=lc.customer;
-      cd.priority=lc.priority; cd.calledAt=lc.ts; cd.time='';
+      cd.nickname=lc.nickname||null; cd.priority=lc.priority; cd.calledAt=lc.ts; cd.time='';
       lastCallTs=lc.ts;
     }
     renderAll(); return;
@@ -384,7 +386,7 @@ onValue(stateRef,snap=>{
     }
 
     cd.current=lc.ticketId; cd.service=lc.service; cd.customer=lc.customer;
-    cd.priority=lc.priority; cd.time=nowTime(); cd.calledAt=lc.ts;
+    cd.nickname=lc.nickname||null; cd.priority=lc.priority; cd.time=nowTime(); cd.calledAt=lc.ts;
     activityLog.unshift({
       num:lc.ticketId, counter:lc.counter, service:lc.service,
       customer:lc.customer, priority:lc.priority, time:nowTime()
@@ -393,7 +395,8 @@ onValue(stateRef,snap=>{
     // Flash + enqueue speech ranked by call time
     triggerCallFlash({
       id:lc.ticketId, counter:lc.counter, service:lc.service,
-      customer:lc.customer, priority:lc.priority, calledAt:lc.ts
+      customer:lc.customer, nickname:lc.nickname||null,
+      priority:lc.priority, calledAt:lc.ts
     });
   }
 
@@ -488,7 +491,17 @@ function runAnnouncement(ticket){
   document.getElementById('cfCounterBadge').style.background=COLOR_BG[ticket.counter];
   document.getElementById('cfCounterBadge').style.border=`1px solid ${color}44`;
   document.getElementById('cfService').textContent=ticket.service||'';
-  document.getElementById('cfCustomer').textContent=ticket.customer||'';
+  // Show nickname in cfCustomer, full name (First + Last) in cfFullname
+  const hasNickname = ticket.nickname && ticket.nickname.trim();
+  const hasFullname = ticket.customer && ticket.customer.trim();
+  document.getElementById('cfCustomer').textContent = hasNickname ? ticket.nickname : (hasFullname ? ticket.customer : '');
+  const fullnameEl = document.getElementById('cfFullname');
+  if(hasFullname && hasNickname){
+    fullnameEl.textContent = ticket.customer;
+    fullnameEl.style.display = 'block';
+  } else {
+    fullnameEl.style.display = 'none';
+  }
   document.getElementById('cfPriority').style.display=ticket.priority==='priority'?'inline-flex':'none';
 
   // ── Show flash ──
@@ -537,7 +550,8 @@ function doSpeak(ticket, onDone){
   const cname=COUNTER_NAMES[cnum-1];
   // Format: "James, please proceed to DMW Desk 1 for OEC with Appointment."
   // Without name: "Number 001, please proceed to DMW Desk 1 for OEC with Appointment."
-  const subjectPart = ticket.customer ? `${ticket.customer}` : `Number ${num}`;
+  const spokenName  = ticket.nickname || ticket.customer || null;
+  const subjectPart = spokenName ? `${spokenName}` : `Number ${num}`;
   const svcPart     = ticket.service  ? ` for ${ticket.service}` : '';
   const announcement = ticket.priority==='priority'
     ? `Priority customer. ${subjectPart}, please proceed to ${cname}${svcPart}.`
