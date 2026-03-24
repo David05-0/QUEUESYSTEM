@@ -354,16 +354,22 @@ onValue(stateRef, snap=>{
 // ── Listen to callQueue — each entry triggers one announcement ──
 onValue(callQRef, snap=>{
   const data=snap.val();
-  if(!data) return; // callQueue empty — nothing to announce
+  if(!data){
+    // callQueue empty — nothing to announce
+    return;
+  }
 
-  const entries = Object.entries(data);
+  const entries = Object.entries(data); // [[key, entry], ...]
+  // Sort by ts ascending so first-called is announced first
   entries.sort((a,b)=>a[1].ts - b[1].ts);
 
+  // Add newly seen entries to our local announce queue
   let added=false;
   entries.forEach(([key,entry])=>{
     if(!seenCallKeys.has(key)){
       seenCallKeys.add(key);
-      entry._fbKey=key;
+      entry._fbKey=key; // remember key so we can remove it after announcing
+      // Update counter display immediately (show number even before speech)
       const cd=counterDisplay[entry.counter-1];
       if(cd){
         cd.current=entry.ticketId; cd.service=entry.service;
@@ -377,7 +383,9 @@ onValue(callQRef, snap=>{
     }
   });
 
+  // Sort queue by ts so order is always call-time-based
   announceQueue.sort((a,b)=>a.ts-b.ts);
+
   if(added) renderAll();
   if(!isAnnouncing && announceQueue.length) processAnnounceQueue();
 });
@@ -386,13 +394,21 @@ onValue(callQRef, snap=>{
 // Waits for audio to be unlocked (user tapped Start) before speaking
 function processAnnounceQueue(){
   if(!announceQueue.length){ isAnnouncing=false; return; }
+  // If audio not yet unlocked, hold — startDisplay() will re-trigger this
   if(!audioUnlocked){ isAnnouncing=false; return; }
   isAnnouncing=true;
   const entry=announceQueue.shift();
 
+  // Update counter panel immediately
   renderAll();
 
+  // Flash + announce
   showFlashFor(entry, ()=>{
+    // Remove from Firebase so other screens don't re-announce
+    if(entry._fbKey){
+      remove(ref(db,'callQueue/'+entry._fbKey)).catch(()=>{});
+    }
+    seenCallKeys.delete(entry._fbKey);
     setTimeout(()=>{
       isAnnouncing=false;
       processAnnounceQueue();
@@ -580,38 +596,6 @@ function renderActivityFeed(){
 }
 
 function renderAll(){renderCounters();renderStats();renderLastCalled();renderActivityFeed();}
-
-function buildCounters(){
-  const area = document.getElementById('countersArea');
-  area.innerHTML = '';
-  [1,2,3,4].forEach(id=>{
-    area.innerHTML += `
-    <div class="counter-panel" data-c="${id}">
-      <div class="counter-accent-bar"></div>
-      <div class="cp-label">
-        <div class="cp-dot"></div>
-        <div class="cp-name">Counter ${id}</div>
-        <div class="cp-status-pill" id="cpstatus-${id}">Idle</div>
-      </div>
-      <div class="cp-number-wrap">
-        <div class="cp-number" id="cpnum-${id}">—</div>
-        <div class="cp-info-col">
-          <div class="cp-now-lbl">Now Serving</div>
-          <div class="cp-service-tag" id="cpsvc-${id}"></div>
-          <div class="cp-customer" id="cpcust-${id}"></div>
-        </div>
-      </div>
-      <div class="cp-queue-row" id="cpqueue-${id}">
-        <span class="cp-queue-lbl">Next:</span>
-        <span style="font-size:9px;color:var(--muted)">—</span>
-      </div>
-      <div class="cp-wave" id="cpwave-${id}">
-        <div class="wave-bars"><span></span><span></span><span></span><span></span><span></span></div>
-        <div class="cp-wave-label">Calling</div>
-      </div>
-    </div>`;
-  });
-}
 
 buildCounters(); renderAll();
 
