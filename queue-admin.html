@@ -202,19 +202,9 @@
   /* Toast */
   .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(18px);background:var(--ink);color:var(--bg);padding:11px 26px;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.12em;opacity:0;transition:all 0.3s;pointer-events:none;z-index:999;white-space:nowrap}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-
-  #receiptArea{display:none;position:fixed;left:-9999px;top:0}
-  @media print{
-    body>*:not(#receiptArea){display:none!important}
-    #receiptArea{display:block!important;position:static!important;left:auto!important;width:80mm;margin:0;padding:0}
-    *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
-    body{background:#fff!important}
-  }
 </style>
 </head>
 <body>
-<div id="receiptArea"><div id="receiptContent"></div></div>
-
 <div class="app">
   <header>
     <div>
@@ -282,7 +272,7 @@
           <span class="prio-note">Seniors · PWD · Urgent</span>
         </div>
 
-        <button class="issue-btn" onclick="issueTicket()">🖨 Issue &amp; Print Ticket</button>
+        <button class="issue-btn" onclick="issueTicket()">✚ Issue Ticket</button>
         <button class="reset-btn" onclick="resetNumbering()">↺ Reset Numbering to 001</button>
         <button class="eod-btn" onclick="openEodModal()">💾 Save &amp; End of Day</button>
       </div>
@@ -495,17 +485,10 @@ function issueTicket(){
   log.unshift(ticket);
   document.getElementById('customerName').value = '';
   saveState();
-  printReceipt(ticket);
   showToast(`#${String(ticket.id).padStart(3,'0')} → Pool`);
 }
 window.issueTicket = issueTicket;
 
-// ── Print — 3in × 5in portrait ──
-function printReceipt(t){
-  const num = String(t.id).padStart(3,'0');
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ticket #${num}</title>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
     @page{size:3in 5in;margin:0}
     html,body{width:3in;height:5in;background:#fff;color:#000;font-family:'Courier New',Courier,monospace;overflow:hidden}
     body{padding:2mm 3mm;display:flex;flex-direction:column;justify-content:space-between}
@@ -529,14 +512,8 @@ function printReceipt(t){
   // popup sized to approx 3in×5in at 96dpi = 288×480px
   const popup = window.open('','_blank','width=288,height=480,toolbar=0,menubar=0,location=0');
   if(popup){ popup.document.write(html); popup.document.close(); }
-  else{ document.getElementById('receiptContent').innerHTML=html; setTimeout(()=>window.print(),150); }
 }
 
-function genBarcode(id){
-  const s=id*2654435761; let b='|';
-  for(let i=0;i<22;i++) b+=((s>>i)&1)?'█':'▌';
-  return b+'|';
-}
 
 // ── Render ──
 function renderAll(){
