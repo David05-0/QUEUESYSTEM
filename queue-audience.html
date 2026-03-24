@@ -261,7 +261,8 @@ const COLOR_BG  = {1:'rgba(230,126,34,0.1)',2:'rgba(36,113,163,0.1)',3:'rgba(30,
 
 let sharedLog = [];
 let activityLog = [];
-let lastResetFlag = null;
+// undefined = page just loaded; first Firebase snapshot silently adopts resetFlag — no reset triggered
+let lastResetFlag = undefined;
 let lastCallTs = null;
 let flashTimer = null;
 let audioUnlocked = false;
@@ -329,12 +330,30 @@ function getQueues(){
   return q;
 }
 
+let _fbFirstLoad = true;
 onValue(stateRef,snap=>{
   document.getElementById('fbLiveIndicator').style.opacity='1';
   const data=snap.val()||{};
   const newReset=data.resetFlag||null;
 
-  if(newReset&&newReset!==lastResetFlag){
+  if(_fbFirstLoad){
+    // First snapshot on page load — silently adopt resetFlag & restore display from Firebase data
+    _fbFirstLoad=false;
+    lastResetFlag=newReset;
+    sharedLog=data.log||[];
+    // Restore counterDisplay from lastCall if available
+    const lc=data.lastCall||null;
+    if(lc && lc.ts){
+      const cd=counterDisplay[lc.counter-1];
+      cd.current=lc.ticketId; cd.service=lc.service; cd.customer=lc.customer;
+      cd.priority=lc.priority; cd.calledAt=lc.ts; cd.time='';
+      lastCallTs=lc.ts;
+    }
+    renderAll(); return;
+  }
+
+  // Subsequent snapshots — only reset if resetFlag genuinely changed
+  if(newReset && newReset!==lastResetFlag){
     lastResetFlag=newReset;
     sharedLog=[]; activityLog=[]; lastCallTs=null;
     counterDisplay=[1,2,3,4].map(id=>({id,current:null,service:null,customer:null,priority:null,time:null,calledAt:0}));
