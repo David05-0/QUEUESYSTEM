@@ -475,6 +475,22 @@ function nowTime(){
   return [n.getHours(),n.getMinutes(),n.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':');
 }
 
+// ── Auto-reset at midnight ──
+function scheduleAutoReset(){
+  const now = new Date();
+  const midnight = new Date(now);
+  midnight.setHours(24,0,5,0);
+  const ms = midnight - now;
+  setTimeout(()=>{
+    sharedLog=[]; sharedTicketCounter=0; myHistory=[]; myServed=0;
+    activeTicketId=null; myServedLog=[];
+    clearDisplay();
+    showToast('✓ New day — queue reset');
+    scheduleAutoReset();
+  }, ms);
+}
+scheduleAutoReset();
+
 function buildLogin(){
   const grid=document.getElementById('loginGrid');
   grid.innerHTML='';
