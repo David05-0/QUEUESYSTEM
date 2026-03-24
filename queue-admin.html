@@ -417,6 +417,13 @@ function setFbStatus(s){
   el.innerHTML=`<span class="fb-dot"></span>${s==='connected'?'Live':s==='error'?'Offline':'Connecting…'}`;
 }
 
+// Use Firebase .info/connected to immediately reflect true connection state
+const connectedRef = ref(db,'.info/connected');
+onValue(connectedRef, snap=>{
+  if(snap.val()===true) setFbStatus('connected');
+  else setFbStatus('error');
+});
+
 // ── Clock ──
 function updateClock(){
   const n=new Date();
@@ -437,7 +444,10 @@ function saveState(isReset=false){
 onValue(stateRef, snap=>{
   setFbStatus('connected');
   const data = snap.val();
-  if(!data) return;
+  if(!data){
+    renderAll();
+    return;
+  }
   window._lastResetFlag = data.resetFlag||null;
   ticketCounter = data.ticketCounter||0;
   log = data.log||[];
