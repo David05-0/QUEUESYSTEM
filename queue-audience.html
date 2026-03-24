@@ -293,8 +293,9 @@ window.startDisplay = function(){
     window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
   }
 
-  // Process anything already in the queue
-  if(!isAnnouncing && announceQueue.length) processAnnounceQueue();
+  // Process anything already queued while waiting for user to tap
+  isAnnouncing = false; // reset in case it was stuck
+  if(announceQueue.length) processAnnounceQueue();
 };
 let counterDisplay = [1,2,3,4].map(id=>({
   id, current:null, service:null, customer:null, priority:null, time:null
@@ -353,7 +354,10 @@ onValue(stateRef, snap=>{
 // ── Listen to callQueue — each entry triggers one announcement ──
 onValue(callQRef, snap=>{
   const data=snap.val();
-  if(!data){ announceQueue=[]; return; }
+  if(!data){
+    // callQueue empty — nothing to announce
+    return;
+  }
 
   const entries = Object.entries(data); // [[key, entry], ...]
   // Sort by ts ascending so first-called is announced first
@@ -387,23 +391,24 @@ onValue(callQRef, snap=>{
 });
 
 // ── Process one announcement at a time ──
+// Waits for audio to be unlocked (user tapped Start) before speaking
 function processAnnounceQueue(){
   if(!announceQueue.length){ isAnnouncing=false; return; }
+  // If audio not yet unlocked, hold — startDisplay() will re-trigger this
+  if(!audioUnlocked){ isAnnouncing=false; return; }
   isAnnouncing=true;
   const entry=announceQueue.shift();
 
-  // Show counter panel update
+  // Update counter panel immediately
   renderAll();
 
-  // Show fullscreen flash
+  // Flash + announce
   showFlashFor(entry, ()=>{
-    // After flash+speech done, remove entry from Firebase callQueue
-    // so other audience screens don't re-announce it
+    // Remove from Firebase so other screens don't re-announce
     if(entry._fbKey){
       remove(ref(db,'callQueue/'+entry._fbKey)).catch(()=>{});
     }
     seenCallKeys.delete(entry._fbKey);
-    // Small pause between announcements
     setTimeout(()=>{
       isAnnouncing=false;
       processAnnounceQueue();
@@ -414,7 +419,7 @@ function processAnnounceQueue(){
 // ── Flash + speech for one entry ──
 function showFlashFor(entry, onComplete){
   const color  = COLOR_HEX[entry.counter];
-  const num    = String(entry.ticketId).padStart(3,'0');
+  const num    = String(entry.ticketId||entry.id||0).padStart(3,'0');
   const cname  = COUNTER_NAMES[entry.counter-1];
   const cnum   = entry.counter;
 
@@ -477,9 +482,13 @@ function playChime(){
 }
 
 function doSpeak(ticket, onDone){
-  if(!audioUnlocked||!window.speechSynthesis){ if(onDone) onDone(); return; }
+  if(!audioUnlocked || !window.speechSynthesis){
+    // Audio not ready — skip speech but still call onDone to unblock queue
+    if(onDone) setTimeout(onDone, 100);
+    return;
+  }
   const cnum=ticket.counter;
-  const num=ticket.id;
+  const num=ticket.ticketId||ticket.id;
   // "Number 1, please go to Counter 4. Number 1, Counter 4."
   const line1=`Number ${num}, proceed to Counter ${cnum}.`;
   const line2=`Number ${num}, Counter ${cnum}.`;
