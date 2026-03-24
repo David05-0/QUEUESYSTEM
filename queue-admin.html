@@ -138,6 +138,67 @@
   .tag-payment{background:#e8f4f8;color:var(--teal);border:1px solid rgba(14,107,138,0.22)}
   .tag-served{background:rgba(30,132,73,0.08);color:var(--green);border:1px solid rgba(30,132,73,0.2)}
 
+  /* ── SERVICE TALLY PANEL ── */
+  .tally-card{background:var(--paper);border:1px solid var(--rule);border-radius:2px;box-shadow:0 2px 8px var(--shadow);overflow:hidden}
+  .tally-head{background:var(--ink);color:var(--bg);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  .tally-head-title{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:0.1em;display:flex;align-items:center;gap:10px}
+  .tally-head-sub{font-size:8px;color:rgba(244,241,234,0.45);letter-spacing:0.12em;text-transform:uppercase}
+  .tally-body{padding:10px 14px 14px}
+  .tally-row{display:grid;grid-template-columns:1fr 36px 36px 36px;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--rule)}
+  .tally-row:last-child{border-bottom:none}
+  .tally-row-head{display:grid;grid-template-columns:1fr 36px 36px 36px;gap:8px;padding:4px 0 6px;margin-bottom:2px;border-bottom:2px solid var(--ink)}
+  .tally-col-lbl{font-size:7px;letter-spacing:0.22em;text-transform:uppercase;color:var(--muted);text-align:center}
+  .tally-col-lbl:first-child{text-align:left}
+  .tally-svc-name{font-size:9px;letter-spacing:0.05em;color:var(--ink);display:flex;align-items:center;gap:6px;overflow:hidden}
+  .tally-svc-icon{font-size:13px;flex-shrink:0}
+  .tally-svc-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tally-num{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:0.04em;text-align:center;line-height:1}
+  .tally-num.total{color:var(--ink)}
+  .tally-num.pending{color:var(--amber)}
+  .tally-num.served{color:var(--green)}
+  .tally-num.zero{color:var(--rule)}
+  .tally-bar-wrap{grid-column:1/-1;height:3px;background:var(--rule);border-radius:2px;margin-top:-4px;margin-bottom:2px;overflow:hidden;display:none}
+  .tally-bar-fill{height:100%;background:var(--green);border-radius:2px;transition:width 0.4s ease}
+  .tally-row:hover .tally-bar-wrap{display:block}
+
+  /* ── SAVE POINT / EOD ── */
+  .eod-btn{width:100%;margin-top:7px;background:transparent;color:var(--accent2);border:1.5px solid var(--accent2);border-radius:3px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;padding:9px;cursor:pointer;transition:all 0.13s;display:flex;align-items:center;justify-content:center;gap:6px}
+  .eod-btn:hover{background:var(--accent2);color:var(--bg)}
+
+  /* Save Point modal */
+  .modal-backdrop{position:fixed;inset:0;background:rgba(24,24,15,0.6);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s;backdrop-filter:blur(3px)}
+  .modal-backdrop.show{opacity:1;pointer-events:all}
+  .modal{background:var(--paper);border:1.5px solid var(--ink);border-radius:4px;width:min(520px,92vw);box-shadow:0 12px 48px rgba(24,24,15,0.28);overflow:hidden;transform:translateY(10px);transition:transform 0.2s}
+  .modal-backdrop.show .modal{transform:translateY(0)}
+  .modal-hdr{background:var(--ink);color:var(--bg);padding:14px 20px;display:flex;align-items:center;justify-content:space-between}
+  .modal-hdr-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:0.1em}
+  .modal-hdr-sub{font-size:8px;letter-spacing:0.16em;text-transform:uppercase;color:rgba(244,241,234,0.4)}
+  .modal-close{background:none;border:none;color:rgba(244,241,234,0.5);cursor:pointer;font-size:18px;line-height:1;padding:2px 6px;transition:color 0.13s}
+  .modal-close:hover{color:var(--bg)}
+  .modal-body{padding:18px 20px 20px}
+  .save-meta{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+  .save-meta-item{flex:1;min-width:90px;background:var(--bg);border:1px solid var(--rule);border-radius:3px;padding:10px 12px;text-align:center}
+  .save-meta-val{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:0.04em;line-height:1}
+  .save-meta-lbl{font-size:7.5px;letter-spacing:0.16em;color:var(--muted);text-transform:uppercase;margin-top:2px}
+  .save-svc-list{margin-bottom:16px}
+  .save-svc-row{display:grid;grid-template-columns:1fr 40px 40px;gap:6px;align-items:center;padding:5px 0;border-bottom:1px solid var(--rule);font-size:9px;letter-spacing:0.05em}
+  .save-svc-row:last-child{border-bottom:none}
+  .save-svc-row-head{display:grid;grid-template-columns:1fr 40px 40px;gap:6px;font-size:7px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);padding-bottom:5px;border-bottom:2px solid var(--ink);margin-bottom:2px}
+  .save-svc-num{text-align:center;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.04em}
+  .save-svc-num.s{color:var(--green)}.save-svc-num.p{color:var(--amber)}
+  .modal-actions{display:flex;gap:8px}
+  .modal-act-btn{flex:1;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.1em;padding:12px;border-radius:3px;cursor:pointer;transition:all 0.13s;border:none}
+  .modal-act-btn.primary{background:var(--accent2);color:#fff}
+  .modal-act-btn.primary:hover{background:#0e2a46}
+  .modal-act-btn.secondary{background:transparent;color:var(--muted);border:1.5px solid var(--rule)}
+  .modal-act-btn.secondary:hover{border-color:var(--accent);color:var(--accent)}
+  .save-note{font-size:8px;letter-spacing:0.1em;color:var(--muted);text-align:center;margin-top:12px;line-height:1.7}
+  .saves-history{margin-top:14px;max-height:140px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--rule) transparent}
+  .saves-history-title{font-size:7.5px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--rule)}
+  .save-hist-item{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--rule);font-size:8.5px;letter-spacing:0.05em;color:var(--muted)}
+  .save-hist-item:last-child{border-bottom:none}
+  .save-hist-label{color:var(--ink);font-weight:500}
+
   /* Toast */
   .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(18px);background:var(--ink);color:var(--bg);padding:11px 26px;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.12em;opacity:0;transition:all 0.3s;pointer-events:none;z-index:999;white-space:nowrap}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -223,6 +284,7 @@
 
         <button class="issue-btn" onclick="issueTicket()">🖨 Issue &amp; Print Ticket</button>
         <button class="reset-btn" onclick="resetNumbering()">↺ Reset Numbering to 001</button>
+        <button class="eod-btn" onclick="openEodModal()">💾 Save &amp; End of Day</button>
       </div>
     </div>
 
@@ -245,6 +307,23 @@
         <div class="stat-card">
           <div class="stat-val" id="stServed" style="color:var(--green)">0</div>
           <div class="stat-lbl">Served</div>
+        </div>
+      </div>
+
+      <!-- Service Tally -->
+      <div class="tally-card">
+        <div class="tally-head">
+          <div class="tally-head-title">Service Tally</div>
+          <div class="tally-head-sub">Live count by service type</div>
+        </div>
+        <div class="tally-body">
+          <div class="tally-row-head">
+            <div class="tally-col-lbl">Service</div>
+            <div class="tally-col-lbl">Issued</div>
+            <div class="tally-col-lbl">Pending</div>
+            <div class="tally-col-lbl">Served</div>
+          </div>
+          <div id="tallyRows"></div>
         </div>
       </div>
 
@@ -278,11 +357,42 @@
   </div>
 </div>
 
+<!-- ── EOD Save Point Modal ── -->
+<div class="modal-backdrop" id="eodModal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div>
+        <div class="modal-hdr-title">💾 Save &amp; End of Day</div>
+        <div class="modal-hdr-sub">Snapshot today's session to Firebase</div>
+      </div>
+      <button class="modal-close" onclick="closeEodModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="save-meta" id="saveMeta"></div>
+      <div class="save-svc-list">
+        <div class="save-svc-row-head">
+          <div>Service</div><div style="text-align:center">Issued</div><div style="text-align:center">Served</div>
+        </div>
+        <div id="saveSvcRows"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-act-btn secondary" onclick="closeEodModal()">Cancel</button>
+        <button class="modal-act-btn primary" onclick="doSaveEod()">💾 Save Snapshot</button>
+      </div>
+      <div class="save-note">Saving records this session's data permanently.<br>The queue will NOT be reset — it continues as-is.<br>To start fresh, use ↺ Reset after saving.</div>
+      <div class="saves-history" id="savesHistory" style="display:none">
+        <div class="saves-history-title">Previous Saves This Session</div>
+        <div id="savesHistoryList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+import { getDatabase, ref, set, push, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
 const firebaseConfig = {
   apiKey:"AIzaSyD1jlmo6pdJhqwjbRDMby9cTBHzazRejcE",
@@ -296,7 +406,11 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db  = getDatabase(app);
-const stateRef = ref(db,'queueState');
+const stateRef  = ref(db,'queueState');
+const savesRef  = ref(db,'eodSaves');
+
+// Track EOD saves made this browser session for display in modal
+let sessionSaves = [];
 
 const COUNTER_NAMES = ['DMW Desk 1','DMW Desk 2','DMW Desk 3','DMW Desk 4'];
 
@@ -425,6 +539,7 @@ function genBarcode(id){
 // ── Render ──
 function renderAll(){
   renderStats();
+  renderTally();
   renderPool();
 }
 
@@ -486,6 +601,138 @@ function renderPool(){
     body.appendChild(card);
   });
 }
+
+// ── Service definitions (for tally order & icons) ──
+const SERVICES = [
+  {key:'OEC with Appointment',    icon:'📅', short:'OEC w/ Appt'},
+  {key:'OEC without Appointment', icon:'📋', short:'OEC w/o Appt'},
+  {key:'Government to Government',icon:'🏛️', short:'Gov to Gov'},
+  {key:'Direct Hire',             icon:'🤝', short:'Direct Hire'},
+  {key:'Agency Hire',             icon:'🏢', short:'Agency Hire'},
+  {key:'OFW Records',             icon:'🗂️', short:'OFW Records'},
+  {key:'Queries',                 icon:'💬', short:'Queries'},
+];
+
+function getTally(){
+  return SERVICES.map(s=>{
+    const issued  = log.filter(t=>t.service===s.key).length;
+    const served  = log.filter(t=>t.service===s.key&&t.served).length;
+    const pending = issued - served;
+    return {...s, issued, served, pending};
+  });
+}
+
+function renderTally(){
+  const wrap = document.getElementById('tallyRows');
+  wrap.innerHTML = '';
+  const tally = getTally();
+  tally.forEach(row=>{
+    const el = document.createElement('div');
+    el.className = 'tally-row';
+    const pct = row.issued ? Math.round((row.served/row.issued)*100) : 0;
+    el.innerHTML = `
+      <div class="tally-svc-name">
+        <span class="tally-svc-icon">${row.icon}</span>
+        <span class="tally-svc-label">${row.short}</span>
+      </div>
+      <div class="tally-num ${row.issued?'total':'zero'}">${row.issued||'—'}</div>
+      <div class="tally-num ${row.pending>0?'pending':'zero'}">${row.pending||'—'}</div>
+      <div class="tally-num ${row.served>0?'served':'zero'}">${row.served||'—'}</div>
+      <div class="tally-bar-wrap" style="display:${row.issued?'block':'none'}">
+        <div class="tally-bar-fill" style="width:${pct}%"></div>
+      </div>`;
+    wrap.appendChild(el);
+  });
+}
+
+// ── EOD Save Modal ──
+function openEodModal(){
+  const tally = getTally();
+  const totalIssued  = log.length;
+  const totalServed  = log.filter(t=>t.served).length;
+  const totalPending = log.filter(t=>!t.served).length;
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-PH',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+  const timeStr = [now.getHours(),now.getMinutes()].map(v=>String(v).padStart(2,'0')).join(':');
+
+  // Meta summary
+  document.getElementById('saveMeta').innerHTML = `
+    <div class="save-meta-item"><div class="save-meta-val" style="color:var(--accent)">${totalIssued}</div><div class="save-meta-lbl">Issued</div></div>
+    <div class="save-meta-item"><div class="save-meta-val" style="color:var(--green)">${totalServed}</div><div class="save-meta-lbl">Served</div></div>
+    <div class="save-meta-item"><div class="save-meta-val" style="color:var(--amber)">${totalPending}</div><div class="save-meta-lbl">Pending</div></div>
+    <div class="save-meta-item"><div class="save-meta-val" style="color:var(--muted)">${timeStr}</div><div class="save-meta-lbl">${dateStr}</div></div>`;
+
+  // Service breakdown
+  const svcWrap = document.getElementById('saveSvcRows');
+  svcWrap.innerHTML = '';
+  tally.filter(r=>r.issued>0).forEach(r=>{
+    const el=document.createElement('div');
+    el.className='save-svc-row';
+    el.innerHTML=`<span>${r.icon} ${r.short}</span>
+      <span class="save-svc-num p">${r.issued}</span>
+      <span class="save-svc-num s">${r.served}</span>`;
+    svcWrap.appendChild(el);
+  });
+  if(!tally.some(r=>r.issued>0)){
+    svcWrap.innerHTML='<div style="font-size:9px;color:var(--muted);padding:8px 0">No tickets issued yet.</div>';
+  }
+
+  // Session save history
+  renderSessionSaves();
+  document.getElementById('eodModal').classList.add('show');
+}
+window.openEodModal = openEodModal;
+
+function closeEodModal(){
+  document.getElementById('eodModal').classList.remove('show');
+}
+window.closeEodModal = closeEodModal;
+
+function renderSessionSaves(){
+  const wrap = document.getElementById('savesHistory');
+  const list = document.getElementById('savesHistoryList');
+  if(!sessionSaves.length){ wrap.style.display='none'; return; }
+  wrap.style.display='block';
+  list.innerHTML = sessionSaves.map(s=>`
+    <div class="save-hist-item">
+      <span class="save-hist-label">${s.label}</span>
+      <span>${s.issued} issued · ${s.served} served</span>
+    </div>`).join('');
+}
+
+function doSaveEod(){
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'});
+  const timeStr = [now.getHours(),now.getMinutes(),now.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':');
+  const label = `${dateStr} · ${timeStr}`;
+  const tally = getTally();
+
+  const snapshot = {
+    savedAt:   Date.now(),
+    savedAtLabel: label,
+    ticketCounter,
+    totalIssued:  log.length,
+    totalServed:  log.filter(t=>t.served).length,
+    totalPending: log.filter(t=>!t.served).length,
+    serviceTally: tally.map(r=>({service:r.key,icon:r.icon,issued:r.issued,served:r.served,pending:r.pending})),
+    log: [...log],  // full ticket log archived
+  };
+
+  // Push snapshot to eodSaves (appends, never overwrites)
+  push(savesRef, snapshot)
+    .then(()=>{
+      sessionSaves.unshift({label, issued:snapshot.totalIssued, served:snapshot.totalServed});
+      renderSessionSaves();
+      showToast('✓ Session saved to Firebase');
+    })
+    .catch(()=>showToast('⚠ Save failed — check connection'));
+}
+window.doSaveEod = doSaveEod;
+
+// Close modal on backdrop click
+document.getElementById('eodModal').addEventListener('click', function(e){
+  if(e.target===this) closeEodModal();
+});
 
 function resetNumbering(){
   if(!confirm('Reset ticket numbering to 001?\nThis clears all tickets on ALL devices.')) return;
