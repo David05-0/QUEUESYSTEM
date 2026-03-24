@@ -60,9 +60,11 @@
 
   /* Name */
   .name-row{margin-bottom:14px}
+  .name-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
   .name-input{width:100%;font-family:'DM Mono',monospace;font-size:12px;padding:9px 11px;background:var(--bg);border:1.5px solid var(--rule);border-radius:3px;color:var(--ink);outline:none;transition:border-color 0.13s}
   .name-input:focus{border-color:var(--ink)}
   .name-input::placeholder{color:var(--muted)}
+  .name-input-lbl{font-size:7px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
 
   /* Priority */
   .priority-row{display:flex;align-items:center;gap:9px;margin-bottom:18px;flex-wrap:wrap}
@@ -260,7 +262,18 @@
 
         <div class="field-label">2 · Customer Name <span style="color:var(--muted)">(optional)</span></div>
         <div class="name-row">
-          <input type="text" class="name-input" id="customerName" placeholder="Enter name…" maxlength="40" autocomplete="off">
+          <div class="name-grid">
+            <div>
+              <div class="name-input-lbl">First Name</div>
+              <input type="text" class="name-input" id="custFirstName" placeholder="First name…" maxlength="30" autocomplete="off">
+            </div>
+            <div>
+              <div class="name-input-lbl">Last Name</div>
+              <input type="text" class="name-input" id="custLastName" placeholder="Last name…" maxlength="30" autocomplete="off">
+            </div>
+          </div>
+          <div class="name-input-lbl">Nickname <span style="color:var(--muted);font-size:6.5px">(used in announcement)</span></div>
+          <input type="text" class="name-input" id="custNickname" placeholder="Nickname…" maxlength="20" autocomplete="off">
         </div>
 
         <div class="field-label">3 · Priority</div>
@@ -486,13 +499,18 @@ function issueTicket(){
     id: ticketCounter,
     counter: 0,            // 0 = unassigned, counter picks it up
     service: selectedSvc,
-    customer: document.getElementById('customerName').value.trim()||null,
+    firstName: document.getElementById('custFirstName').value.trim()||null,
+    lastName:  document.getElementById('custLastName').value.trim()||null,
+    nickname:  document.getElementById('custNickname').value.trim()||null,
+    customer:  [document.getElementById('custFirstName').value.trim(), document.getElementById('custLastName').value.trim()].filter(Boolean).join(' ')||null,
     priority: selectedPrio,
     time: timeStr, date: dateStr,
     served: false, compliance: false, paymentHold: false
   };
   log.unshift(ticket);
-  document.getElementById('customerName').value = '';
+  document.getElementById('custFirstName').value = '';
+  document.getElementById('custLastName').value  = '';
+  document.getElementById('custNickname').value  = '';
   saveState();
   showToast(`#${String(ticket.id).padStart(3,'0')} → Pool`);
 }
