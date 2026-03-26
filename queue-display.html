@@ -245,7 +245,18 @@
   .served-info{flex:1;overflow:hidden}
   .served-svc{font-size:7.5px;letter-spacing:0.07em;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .served-cust{font-size:9px;letter-spacing:0.04em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .served-dur{font-size:7px;color:var(--teal);letter-spacing:0.05em;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .served-time{font-size:7px;color:var(--muted);flex-shrink:0}
+
+  /* Live elapsed timer in Now Serving */
+  .cv-elapsed{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:0.12em;color:var(--muted);margin-top:6px;display:flex;align-items:center;gap:6px;opacity:0;transition:opacity 0.3s}
+  .cv-elapsed.active{opacity:1}
+  .cv-elapsed-lbl{font-family:'DM Mono',monospace;font-size:7px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)}
+  .cv-elapsed-val{font-size:22px;letter-spacing:0.1em}
+  #counterView.c1 .cv-elapsed-val{color:var(--c1)}
+  #counterView.c2 .cv-elapsed-val{color:var(--c2)}
+  #counterView.c3 .cv-elapsed-val{color:var(--c3)}
+  #counterView.c4 .cv-elapsed-val{color:var(--c4)}
 
   @keyframes popIn{from{transform:scale(0.82);opacity:0}to{transform:scale(1);opacity:1}}
 
@@ -295,6 +306,12 @@
       <div class="cv-wave" id="cvWave">
         <div class="wave-bars"><span></span><span></span><span></span><span></span><span></span></div>
         <div class="cv-wave-lbl">Announcing</div>
+      </div>
+
+      <!-- Live elapsed timer -->
+      <div class="cv-elapsed" id="cvElapsed">
+        <div class="cv-elapsed-lbl">Elapsed</div>
+        <div class="cv-elapsed-val" id="cvElapsedVal">00:00</div>
       </div>
 
       <!-- Call next button (shown when idle / no active ticket) -->
@@ -570,6 +587,29 @@ function clearDisplay(){
   document.getElementById('cvWave').classList.remove('active');
   document.getElementById('cvCallBtn').style.display='';
   document.getElementById('cvActionPanel').classList.remove('visible');
+  document.getElementById('cvElapsed').classList.remove('active');
+}
+
+// ── Elapsed timer tick ──
+let _elapsedInterval = null;
+function startElapsedTimer(startTime){
+  clearInterval(_elapsedInterval);
+  const el = document.getElementById('cvElapsedVal');
+  const elWrap = document.getElementById('cvElapsed');
+  elWrap.classList.add('active');
+  function tick(){
+    const sec = Math.round((Date.now() - startTime) / 1000);
+    const mm = String(Math.floor(sec/60)).padStart(2,'0');
+    const ss = String(sec%60).padStart(2,'0');
+    el.textContent = `${mm}:${ss}`;
+  }
+  tick();
+  _elapsedInterval = setInterval(tick, 1000);
+}
+function stopElapsedTimer(){
+  clearInterval(_elapsedInterval);
+  _elapsedInterval = null;
+  document.getElementById('cvElapsed').classList.remove('active');
 }
 
 // ── Claim client from pool ──
@@ -686,6 +726,9 @@ function updateNowServing(ticket){
   document.getElementById('cvPill').textContent='Serving';
   document.getElementById('cvPill').className='cv-pill serving';
 
+  // Start elapsed timer from ticket's startTime (or now if missing)
+  startElapsedTimer(ticket.startTime || Date.now());
+
   // Hide call btn, show action panel
   document.getElementById('cvCallBtn').style.display='none';
   document.getElementById('cvActionPanel').classList.add('visible');
@@ -707,6 +750,7 @@ function sendToHold(type){
   showToast(`#${String(t.id).padStart(3,'0')} → ${label}`);
   activeTicketId=null;
   sessionStorage.removeItem('ssTicketId');
+  stopElapsedTimer();
   clearDisplay();
   document.getElementById('cvPill').textContent=type==='comply'?'Compliance':'Payment';
   document.getElementById('cvPill').className=`cv-pill ${type}`;
@@ -721,6 +765,7 @@ function markDone(){
   const t=sharedLog.find(x=>x.id===activeTicketId);
   if(!t) return;
   t.served=true;
+  t.endTime=Date.now();
   t.compliance=false;
   t.paymentHold=false;
   // Clear lastCall so audience removes this number from display
@@ -728,7 +773,7 @@ function markDone(){
     window._lastCall=null;
   }
   // Track in local served log for display
-  myServedLog.unshift({ id:t.id, service:t.service||'', customer:t.customer||null, time: nowTime() });
+  myServedLog.unshift({ id:t.id, service:t.service||'', customer:t.customer||null, time: nowTime(), startTime: t.startTime||null, endTime: t.endTime||null });
   saveShared();
   myHistory.unshift(t.id);
   if(myHistory.length>6) myHistory.pop();
@@ -736,6 +781,7 @@ function markDone(){
   showToast(`#${String(t.id).padStart(3,'0')} ✓ Served`);
   activeTicketId=null;
   sessionStorage.removeItem('ssTicketId');
+  stopElapsedTimer();
   clearDisplay();
   renderView();
 }
@@ -770,7 +816,7 @@ window.onHoldDrop=function(e,type){
   t.paymentHold=(type==='payment');
   // If this is the active ticket, clear it from audience too
   if(t.id===activeTicketId){
-    activeTicketId=null; clearDisplay();
+    activeTicketId=null; stopElapsedTimer(); clearDisplay();
     if(window._lastCall && window._lastCall.ticketId===t.id) window._lastCall=null;
   }
   t.counter=activeCounter;
@@ -825,6 +871,8 @@ function renderView(){
     document.getElementById('cvActionPanel').classList.add('visible');
     document.getElementById('cvPill').textContent='Serving';
     document.getElementById('cvPill').className='cv-pill serving';
+    // Keep elapsed timer running (start if not already)
+    if(!_elapsedInterval) startElapsedTimer(active.startTime || Date.now());
   } else {
     // No active ticket — show call button
     const btn=document.getElementById('cvCallBtn');
@@ -893,15 +941,27 @@ function renderView(){
   if(!myServedLog.length){
     servedEl.innerHTML='<span style="font-size:9px;color:var(--muted)">None yet</span>';
   } else {
-    servedEl.innerHTML=myServedLog.map(s=>`
+    servedEl.innerHTML=myServedLog.map(s=>{
+      let durStr='';
+      if(s.startTime && s.endTime){
+        const sec=Math.round((s.endTime-s.startTime)/1000);
+        const mm=String(Math.floor(sec/60)).padStart(2,'0');
+        const ss=String(sec%60).padStart(2,'0');
+        const startFmt=new Date(s.startTime).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+        const endFmt=new Date(s.endTime).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+        durStr=`<div class="served-dur">▶ ${startFmt} &nbsp;■ ${endFmt} &nbsp;⏱ ${mm}:${ss}</div>`;
+      }
+      return `
       <div class="served-item">
         <div class="served-num">${String(s.id).padStart(3,'0')}</div>
         <div class="served-info">
           <div class="served-svc">${s.service}</div>
           ${s.customer?`<div class="served-cust">${s.customer}</div>`:''}
+          ${durStr}
         </div>
         <div class="served-time">${s.time}</div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   }
 
   // Pool
