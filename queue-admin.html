@@ -728,8 +728,8 @@ window.doSaveEod = doSaveEod;
 
 function downloadSnapshotPdf(snapshot){
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
-  const PW = 210, PH = 297;
+  const doc = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' });
+  const PW = 297, PH = 210;
   const ML = 18, MR = 18, MT = 18;
   let y = MT;
 
@@ -793,17 +793,17 @@ function downloadSnapshotPdf(snapshot){
   y+=9;
   rect(ML,y,PW-ML-MR,6,[232,228,220]);
   txt('SERVICE', ML+2, y+4.2,7,'normal',[133,127,114]);
-  txt('ISSUED',  ML+96,y+4.2,7,'normal',[133,127,114],'center');
-  txt('SERVED',  ML+118,y+4.2,7,'normal',[30,132,73],'center');
-  txt('PENDING', ML+140,y+4.2,7,'normal',[154,111,0],'center');
+  txt('ISSUED',  ML+180,y+4.2,7,'normal',[133,127,114],'center');
+  txt('SERVED',  ML+210,y+4.2,7,'normal',[30,132,73],'center');
+  txt('PENDING', ML+240,y+4.2,7,'normal',[154,111,0],'center');
   y+=7;
   const activeSvcs=snapshot.serviceTally.filter(r=>r.issued>0);
   activeSvcs.forEach((r,i)=>{
     if(i%2===1) rect(ML,y,PW-ML-MR,7,[248,245,238]);
     txt(r.service, ML+2,  y+5, 8,'normal',[24,24,15]);
-    txt(String(r.issued),  ML+96, y+5,10,'bold',[176,58,46],'center');
-    txt(String(r.served),  ML+118,y+5,10,'bold',[30,132,73],'center');
-    txt(String(r.pending), ML+140,y+5,10,'bold',[154,111,0],'center');
+    txt(String(r.issued),  ML+180,y+5,10,'bold',[176,58,46],'center');
+    txt(String(r.served),  ML+210,y+5,10,'bold',[30,132,73],'center');
+    txt(String(r.pending), ML+240,y+5,10,'bold',[154,111,0],'center');
     hline(y+7,0.15);
     y+=7;
   });
@@ -816,18 +816,18 @@ function downloadSnapshotPdf(snapshot){
   txt(snapshot.log.length+' TICKETS',PW-MR-3,y+5,7,'normal',[180,175,160],'right');
   y+=9;
 
-  // Column positions (usable width = PW - ML - MR = 174mm)
-  // NO=2, NAME=16, SERVICE=58, DESK=108, START=123, END=140, DUR=157, STATUS=168
+  // Column positions — landscape usable width = 261mm
+  // NO=2, NAME=18, SERVICE=64, DESK=160, START=185, END=210, DUR=234, STATUS=248
   function logHeader(){
     rect(ML,y,PW-ML-MR,6,[232,228,220]);
     txt('NO.',    ML+2,  y+4.2,6.5,'normal',[133,127,114]);
-    txt('NAME',   ML+16, y+4.2,6.5,'normal',[133,127,114]);
-    txt('SERVICE',ML+58, y+4.2,6.5,'normal',[133,127,114]);
-    txt('DESK',   ML+108,y+4.2,6.5,'normal',[133,127,114]);
-    txt('START',  ML+123,y+4.2,6.5,'normal',[133,127,114]);
-    txt('END',    ML+140,y+4.2,6.5,'normal',[133,127,114]);
-    txt('DUR',    ML+157,y+4.2,6.5,'normal',[133,127,114]);
-    txt('STATUS', ML+168,y+4.2,6.5,'normal',[133,127,114]);
+    txt('NAME',   ML+18, y+4.2,6.5,'normal',[133,127,114]);
+    txt('SERVICE',ML+64, y+4.2,6.5,'normal',[133,127,114]);
+    txt('DESK',   ML+160,y+4.2,6.5,'normal',[133,127,114]);
+    txt('START',  ML+185,y+4.2,6.5,'normal',[133,127,114]);
+    txt('END',    ML+210,y+4.2,6.5,'normal',[133,127,114]);
+    txt('DUR',    ML+234,y+4.2,6.5,'normal',[133,127,114]);
+    txt('STATUS', ML+248,y+4.2,6.5,'normal',[133,127,114]);
     y+=7;
   }
   logHeader();
@@ -839,8 +839,8 @@ function downloadSnapshotPdf(snapshot){
     }
     if(i%2===1) rect(ML,y,PW-ML-MR,ROW_H,[248,245,238]);
     const numStr  = String(t.id).padStart(3,'0')+(t.priority==='priority'?' !':'');
-    const nameStr = t.customer?(t.customer.length>18?t.customer.slice(0,17)+'...':t.customer):'--';
-    const svcStr  = t.service ?(t.service.length>22 ?t.service.slice(0,21)+'...':t.service) :'--';
+    const nameStr = t.customer?(t.customer.length>30?t.customer.slice(0,29)+'...':t.customer):'--';
+    const svcStr  = t.service ?(t.service.length>40 ?t.service.slice(0,39)+'...':t.service) :'--';
     const deskStr = t.counter ?'Desk '+t.counter:'--';
     const status  = t.served?'Served':(t.compliance?'Comply':(t.paymentHold?'Payment':'Waiting'));
     const stColor = t.served?[30,132,73]:(t.compliance||t.paymentHold?[154,111,0]:[133,127,114]);
@@ -862,13 +862,13 @@ function downloadSnapshotPdf(snapshot){
       durStr = String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');
     }
     txt(numStr,  ML+2,  y+4.2,7,'normal',[24,24,15]);
-    txt(nameStr, ML+16, y+4.2,7,'normal',[24,24,15]);
-    txt(svcStr,  ML+58, y+4.2,6.5,'normal',[80,75,65]);
-    txt(deskStr, ML+108,y+4.2,7,'normal',[24,24,15]);
-    txt(startStr,ML+123,y+4.2,6,'normal',[80,75,65]);
-    txt(endStr,  ML+140,y+4.2,6,'normal',[80,75,65]);
-    txt(durStr,  ML+157,y+4.2,7,'bold',[14,107,138]);
-    txt(status,  ML+168,y+4.2,7,'bold',stColor);
+    txt(nameStr, ML+18, y+4.2,7,'normal',[24,24,15]);
+    txt(svcStr,  ML+64, y+4.2,7,'normal',[80,75,65]);
+    txt(deskStr, ML+160,y+4.2,7,'normal',[24,24,15]);
+    txt(startStr,ML+185,y+4.2,7,'normal',[80,75,65]);
+    txt(endStr,  ML+210,y+4.2,7,'normal',[80,75,65]);
+    txt(durStr,  ML+234,y+4.2,7,'bold',[14,107,138]);
+    txt(status,  ML+248,y+4.2,7,'bold',stColor);
     hline(y+ROW_H,0.1);
     y+=ROW_H;
   });
