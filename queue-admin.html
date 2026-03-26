@@ -710,7 +710,7 @@ function doSaveEod(){
     totalIssued:  log.length,
     totalServed:  log.filter(t=>t.served).length,
     totalPending: log.filter(t=>!t.served).length,
-    serviceTally: tally.map(r=>({service:r.key,icon:r.icon,issued:r.issued,served:r.served,pending:r.pending})),
+    serviceTally: tally.map(r=>({service:r.key,issued:r.issued,served:r.served,pending:r.pending})),
     log: [...log],  // full ticket log archived
   };
 
@@ -800,7 +800,7 @@ function downloadSnapshotPdf(snapshot){
   const activeSvcs=snapshot.serviceTally.filter(r=>r.issued>0);
   activeSvcs.forEach((r,i)=>{
     if(i%2===1) rect(ML,y,PW-ML-MR,7,[248,245,238]);
-    txt((r.icon||'')+' '+r.service, ML+2,  y+5, 8,'normal',[24,24,15]);
+    txt(r.service, ML+2,  y+5, 8,'normal',[24,24,15]);
     txt(String(r.issued),  ML+96, y+5,10,'bold',[176,58,46],'center');
     txt(String(r.served),  ML+118,y+5,10,'bold',[30,132,73],'center');
     txt(String(r.pending), ML+140,y+5,10,'bold',[154,111,0],'center');
