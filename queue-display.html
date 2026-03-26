@@ -247,14 +247,19 @@
   #counterView.c4 .claim-flash{background:rgba(125,60,152,0.18);color:var(--c4)}
 
   /* Served log */
-  .served-list{display:flex;flex-direction:column;gap:4px;max-height:130px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
-  .served-item{display:flex;align-items:center;gap:8px;padding:5px 8px;background:var(--panel);border:1px solid var(--border);border-left:2px solid var(--green);border-radius:3px;animation:slideIn 0.2s ease}
-  .served-num{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:0.04em;color:var(--green);min-width:34px;flex-shrink:0}
+  .served-list{display:flex;flex-direction:column;gap:5px;max-height:180px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+  .served-item{display:flex;flex-direction:column;padding:7px 10px 7px 12px;background:var(--panel);border:1px solid var(--border);border-left:2px solid var(--green);border-radius:3px;animation:slideIn 0.2s ease;gap:2px}
+  .served-item-top{display:flex;align-items:center;gap:8px}
+  .served-num{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.04em;color:var(--green);min-width:36px;flex-shrink:0}
   .served-info{flex:1;overflow:hidden}
   .served-svc{font-size:7.5px;letter-spacing:0.07em;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .served-cust{font-size:9px;letter-spacing:0.04em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .served-dur{font-size:7px;color:var(--teal);letter-spacing:0.05em;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .served-time{font-size:7px;color:var(--muted);flex-shrink:0}
+  .served-cust{font-size:10px;letter-spacing:0.04em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .served-time{font-size:7px;color:var(--muted);flex-shrink:0;align-self:flex-start}
+  .served-dur{font-size:7.5px;color:var(--teal);letter-spacing:0.06em;display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-top:2px;border-top:1px solid var(--border);margin-top:2px}
+  .served-dur .dur-part{white-space:nowrap;display:inline-flex;align-items:center;gap:3px}
+  .served-dur .dur-label{font-size:6.5px;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted)}
+  .served-dur .dur-val{color:var(--teal)}
+  .served-dur .dur-total{font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--green);letter-spacing:0.08em}
 
   /* Live elapsed timer in Now Serving */
   .cv-elapsed{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:0.12em;color:var(--muted);margin-top:6px;display:flex;align-items:center;gap:6px;opacity:0;transition:opacity 0.3s}
@@ -982,24 +987,34 @@ function renderView(){
     servedEl.innerHTML='<span style="font-size:9px;color:var(--muted)">None yet</span>';
   } else {
     servedEl.innerHTML=myServedLog.map(s=>{
-      let durStr='';
+      // Format a timestamp to HH:MM:SS (24h)
+      const fmtTs = ts => {
+        if(!ts) return '--';
+        const d=new Date(ts);
+        return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0');
+      };
+      let durHtml='';
       if(s.startTime && s.endTime){
         const sec=Math.round((s.endTime-s.startTime)/1000);
         const mm=String(Math.floor(sec/60)).padStart(2,'0');
         const ss=String(sec%60).padStart(2,'0');
-        const startFmt=new Date(s.startTime).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-        const endFmt=new Date(s.endTime).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-        durStr=`<div class="served-dur">▶ ${startFmt} &nbsp;■ ${endFmt} &nbsp;⏱ ${mm}:${ss}</div>`;
+        durHtml=`<div class="served-dur">
+          <span class="dur-part"><span class="dur-label">Start</span><span class="dur-val">${fmtTs(s.startTime)}</span></span>
+          <span class="dur-part"><span class="dur-label">End</span><span class="dur-val">${fmtTs(s.endTime)}</span></span>
+          <span class="dur-part"><span class="dur-label">Duration</span><span class="dur-total">${mm}:${ss}</span></span>
+        </div>`;
       }
       return `
       <div class="served-item">
-        <div class="served-num">${String(s.id).padStart(3,'0')}</div>
-        <div class="served-info">
-          <div class="served-svc">${s.service}</div>
-          ${s.customer?`<div class="served-cust">${s.customer}</div>`:''}
-          ${durStr}
+        <div class="served-item-top">
+          <div class="served-num">${String(s.id).padStart(3,'0')}</div>
+          <div class="served-info">
+            <div class="served-svc">${s.service}</div>
+            ${s.customer?`<div class="served-cust">${s.customer}</div>`:''}
+          </div>
+          <div class="served-time">${s.time}</div>
         </div>
-        <div class="served-time">${s.time}</div>
+        ${durHtml}
       </div>`;
     }).join('');
   }
