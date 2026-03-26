@@ -765,7 +765,7 @@ function downloadSnapshotPdf(snapshot){
 
   // Header bar
   rect(0,0,PW,22,[24,24,15]);
-  txt('DMW DESK — SESSION SNAPSHOT',ML,10,13,'bold',[253,250,243]);
+  txt('DMW DESK - SESSION SNAPSHOT',ML,10,13,'bold',[253,250,243]);
   txt('QUEUE MANAGEMENT SYSTEM',ML,16,7,'normal',[180,175,160]);
   txt(timeLabel,PW-MR,10,11,'bold',[240,192,64],'right');
   txt(dateLabel,PW-MR,16,7,'normal',[180,175,160],'right');
@@ -837,16 +837,25 @@ function downloadSnapshotPdf(snapshot){
     }
     if(i%2===1) rect(ML,y,PW-ML-MR,ROW_H,[248,245,238]);
     const numStr  = String(t.id).padStart(3,'0')+(t.priority==='priority'?' !':'');
-    const nameStr = t.customer?(t.customer.length>18?t.customer.slice(0,17)+'...':t.customer):'—';
-    const svcStr  = t.service ?(t.service.length>22 ?t.service.slice(0,21)+'...':t.service) :'—';
-    const deskStr = t.counter ?'Desk '+t.counter:'—';
+    const nameStr = t.customer?(t.customer.length>18?t.customer.slice(0,17)+'...':t.customer):'--';
+    const svcStr  = t.service ?(t.service.length>22 ?t.service.slice(0,21)+'...':t.service) :'--';
+    const deskStr = t.counter ?'Desk '+t.counter:'--';
     const status  = t.served?'Served':(t.compliance?'Comply':(t.paymentHold?'Payment':'Waiting'));
     const stColor = t.served?[30,132,73]:(t.compliance||t.paymentHold?[154,111,0]:[133,127,114]);
-    // Time formatting
-    const fmtTime = (ts) => ts ? new Date(ts).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) : '—';
+    // Time formatting - plain ASCII to avoid jsPDF font encoding issues
+    const fmtTime = (ts) => {
+      if(!ts) return '--';
+      const d = new Date(ts);
+      const h = d.getHours();
+      const mm = String(d.getMinutes()).padStart(2,'0');
+      const ss = String(d.getSeconds()).padStart(2,'0');
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      const h12 = String(h % 12 || 12).padStart(2,'0');
+      return h12 + ':' + mm + ':' + ss + ' ' + ampm;
+    };
     const startStr = fmtTime(t.startTime);
     const endStr   = fmtTime(t.endTime);
-    let durStr = '—';
+    let durStr = '--';
     if(t.startTime && t.endTime){
       const sec = Math.round((t.endTime - t.startTime)/1000);
       durStr = String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');
@@ -868,7 +877,7 @@ function downloadSnapshotPdf(snapshot){
   for(let p=1;p<=pages;p++){
     doc.setPage(p);
     hline(PH-10,0.3,[213,208,194]);
-    txt('DMW Queue System · Snapshot: '+snapshot.savedAtLabel,ML,PH-6,6.5,'normal',[133,127,114]);
+    txt('DMW Queue System - Snapshot: '+snapshot.savedAtLabel,ML,PH-6,6.5,'normal',[133,127,114]);
     txt('Page '+p+' of '+pages,PW-MR,PH-6,6.5,'normal',[133,127,114],'right');
   }
 
