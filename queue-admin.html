@@ -816,16 +816,18 @@ function downloadSnapshotPdf(snapshot){
   txt(snapshot.log.length+' TICKETS',PW-MR-3,y+5,7,'normal',[180,175,160],'right');
   y+=9;
 
+  // Column positions (usable width = PW - ML - MR = 174mm)
+  // NO=2, NAME=16, SERVICE=58, DESK=108, START=123, END=140, DUR=157, STATUS=168
   function logHeader(){
     rect(ML,y,PW-ML-MR,6,[232,228,220]);
     txt('NO.',    ML+2,  y+4.2,6.5,'normal',[133,127,114]);
     txt('NAME',   ML+16, y+4.2,6.5,'normal',[133,127,114]);
-    txt('SERVICE',ML+60, y+4.2,6.5,'normal',[133,127,114]);
+    txt('SERVICE',ML+58, y+4.2,6.5,'normal',[133,127,114]);
     txt('DESK',   ML+108,y+4.2,6.5,'normal',[133,127,114]);
-    txt('START',  ML+124,y+4.2,6.5,'normal',[133,127,114]);
-    txt('END',    ML+142,y+4.2,6.5,'normal',[133,127,114]);
-    txt('DUR',    ML+160,y+4.2,6.5,'normal',[133,127,114]);
-    txt('STATUS', ML+175,y+4.2,6.5,'normal',[133,127,114]);
+    txt('START',  ML+123,y+4.2,6.5,'normal',[133,127,114]);
+    txt('END',    ML+140,y+4.2,6.5,'normal',[133,127,114]);
+    txt('DUR',    ML+157,y+4.2,6.5,'normal',[133,127,114]);
+    txt('STATUS', ML+168,y+4.2,6.5,'normal',[133,127,114]);
     y+=7;
   }
   logHeader();
@@ -849,9 +851,8 @@ function downloadSnapshotPdf(snapshot){
       const h = d.getHours();
       const mm = String(d.getMinutes()).padStart(2,'0');
       const ss = String(d.getSeconds()).padStart(2,'0');
-      const ampm = h >= 12 ? 'PM' : 'AM';
-      const h12 = String(h % 12 || 12).padStart(2,'0');
-      return h12 + ':' + mm + ':' + ss + ' ' + ampm;
+      const hh = String(h).padStart(2,'0');
+      return hh + ':' + mm + ':' + ss;
     };
     const startStr = fmtTime(t.startTime);
     const endStr   = fmtTime(t.endTime);
@@ -862,12 +863,12 @@ function downloadSnapshotPdf(snapshot){
     }
     txt(numStr,  ML+2,  y+4.2,7,'normal',[24,24,15]);
     txt(nameStr, ML+16, y+4.2,7,'normal',[24,24,15]);
-    txt(svcStr,  ML+60, y+4.2,6.5,'normal',[80,75,65]);
+    txt(svcStr,  ML+58, y+4.2,6.5,'normal',[80,75,65]);
     txt(deskStr, ML+108,y+4.2,7,'normal',[24,24,15]);
-    txt(startStr,ML+124,y+4.2,6,'normal',[80,75,65]);
-    txt(endStr,  ML+142,y+4.2,6,'normal',[80,75,65]);
-    txt(durStr,  ML+160,y+4.2,7,'bold',[14,107,138]);
-    txt(status,  ML+175,y+4.2,7,'bold',stColor);
+    txt(startStr,ML+123,y+4.2,6,'normal',[80,75,65]);
+    txt(endStr,  ML+140,y+4.2,6,'normal',[80,75,65]);
+    txt(durStr,  ML+157,y+4.2,7,'bold',[14,107,138]);
+    txt(status,  ML+168,y+4.2,7,'bold',stColor);
     hline(y+ROW_H,0.1);
     y+=ROW_H;
   });
