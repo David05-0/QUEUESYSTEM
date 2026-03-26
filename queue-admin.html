@@ -506,6 +506,7 @@ function issueTicket(){
     customer:  [document.getElementById('custFirstName').value.trim(), document.getElementById('custLastName').value.trim()].filter(Boolean).join(' ')||null,
     priority: selectedPrio,
     time: timeStr, date: dateStr,
+    startTime: Date.now(),
     served: false, compliance: false, paymentHold: false
   };
   log.unshift(ticket);
@@ -571,12 +572,26 @@ function renderPool(){
     if(t.paymentHold)     tags.push(`<span class="tag tag-payment">💳 Payment</span>`);
     if(t.served)          tags.push(`<span class="tag tag-served">✓ Served</span>`);
 
+    // Build time info with start/end/duration
+    let timeInfo = `${t.date} · ${t.time}`;
+    if(t.startTime){
+      const startFmt = new Date(t.startTime).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+      timeInfo = `▶ ${startFmt}`;
+      if(t.endTime){
+        const endFmt = new Date(t.endTime).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+        const dur = Math.round((t.endTime - t.startTime)/1000);
+        const mm = String(Math.floor(dur/60)).padStart(2,'0');
+        const ss = String(dur%60).padStart(2,'0');
+        timeInfo += ` &nbsp;■ ${endFmt} &nbsp;⏱ ${mm}:${ss}`;
+      }
+    }
+
     card.innerHTML = `
       <div class="cc-num">${String(t.id).padStart(3,'0')}</div>
       <div class="cc-body">
         <div class="cc-svc">${t.service}</div>
         ${t.customer?`<div class="cc-cust">${t.customer}</div>`:''}
-        <div class="cc-time">${t.date} · ${t.time}</div>
+        <div class="cc-time">${timeInfo}</div>
       </div>
       <div class="cc-tags">${tags.join('')}</div>`;
     body.appendChild(card);
@@ -805,9 +820,12 @@ function downloadSnapshotPdf(snapshot){
     rect(ML,y,PW-ML-MR,6,[232,228,220]);
     txt('NO.',    ML+2,  y+4.2,6.5,'normal',[133,127,114]);
     txt('NAME',   ML+16, y+4.2,6.5,'normal',[133,127,114]);
-    txt('SERVICE',ML+64, y+4.2,6.5,'normal',[133,127,114]);
-    txt('DESK',   ML+118,y+4.2,6.5,'normal',[133,127,114]);
-    txt('STATUS', ML+138,y+4.2,6.5,'normal',[133,127,114]);
+    txt('SERVICE',ML+60, y+4.2,6.5,'normal',[133,127,114]);
+    txt('DESK',   ML+108,y+4.2,6.5,'normal',[133,127,114]);
+    txt('START',  ML+124,y+4.2,6.5,'normal',[133,127,114]);
+    txt('END',    ML+142,y+4.2,6.5,'normal',[133,127,114]);
+    txt('DUR',    ML+160,y+4.2,6.5,'normal',[133,127,114]);
+    txt('STATUS', ML+175,y+4.2,6.5,'normal',[133,127,114]);
     y+=7;
   }
   logHeader();
@@ -819,16 +837,28 @@ function downloadSnapshotPdf(snapshot){
     }
     if(i%2===1) rect(ML,y,PW-ML-MR,ROW_H,[248,245,238]);
     const numStr  = String(t.id).padStart(3,'0')+(t.priority==='priority'?' !':'');
-    const nameStr = t.customer?(t.customer.length>22?t.customer.slice(0,21)+'...':t.customer):'—';
-    const svcStr  = t.service ?(t.service.length>26 ?t.service.slice(0,25) +'...':t.service) :'—';
+    const nameStr = t.customer?(t.customer.length>18?t.customer.slice(0,17)+'...':t.customer):'—';
+    const svcStr  = t.service ?(t.service.length>22 ?t.service.slice(0,21)+'...':t.service) :'—';
     const deskStr = t.counter ?'Desk '+t.counter:'—';
     const status  = t.served?'Served':(t.compliance?'Comply':(t.paymentHold?'Payment':'Waiting'));
     const stColor = t.served?[30,132,73]:(t.compliance||t.paymentHold?[154,111,0]:[133,127,114]);
+    // Time formatting
+    const fmtTime = (ts) => ts ? new Date(ts).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) : '—';
+    const startStr = fmtTime(t.startTime);
+    const endStr   = fmtTime(t.endTime);
+    let durStr = '—';
+    if(t.startTime && t.endTime){
+      const sec = Math.round((t.endTime - t.startTime)/1000);
+      durStr = String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');
+    }
     txt(numStr,  ML+2,  y+4.2,7,'normal',[24,24,15]);
     txt(nameStr, ML+16, y+4.2,7,'normal',[24,24,15]);
-    txt(svcStr,  ML+64, y+4.2,6.5,'normal',[80,75,65]);
-    txt(deskStr, ML+118,y+4.2,7,'normal',[24,24,15]);
-    txt(status,  ML+138,y+4.2,7,'bold',stColor);
+    txt(svcStr,  ML+60, y+4.2,6.5,'normal',[80,75,65]);
+    txt(deskStr, ML+108,y+4.2,7,'normal',[24,24,15]);
+    txt(startStr,ML+124,y+4.2,6,'normal',[80,75,65]);
+    txt(endStr,  ML+142,y+4.2,6,'normal',[80,75,65]);
+    txt(durStr,  ML+160,y+4.2,7,'bold',[14,107,138]);
+    txt(status,  ML+175,y+4.2,7,'bold',stColor);
     hline(y+ROW_H,0.1);
     y+=ROW_H;
   });
