@@ -190,6 +190,14 @@
   @keyframes callingGlow{0%,100%{opacity:1}50%{opacity:0.4}}
   .qb-prio{color:#e74c3c;border:1px solid rgba(231,76,60,0.3);background:rgba(231,76,60,0.08)}
   .cv-q-empty{font-size:9px;letter-spacing:0.08em;color:var(--muted);text-align:center;padding:16px 0}
+  .cv-q-time{font-size:7px;letter-spacing:0.07em;color:var(--muted);margin-top:3px;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+  .cv-q-time .q-start{color:var(--muted)}
+  .cv-q-time .q-elapsed{font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:0.08em}
+  #counterView.c1 .cv-q-item.calling .cv-q-time .q-elapsed{color:var(--c1)}
+  #counterView.c2 .cv-q-item.calling .cv-q-time .q-elapsed{color:var(--c2)}
+  #counterView.c3 .cv-q-item.calling .cv-q-time .q-elapsed{color:var(--c3)}
+  #counterView.c4 .cv-q-item.calling .cv-q-time .q-elapsed{color:var(--c4)}
+  .cv-q-item:not(.calling) .cv-q-time .q-elapsed{color:var(--amber)}
 
   /* History */
   .hist-chips{display:flex;flex-wrap:wrap;gap:4px}
@@ -707,6 +715,19 @@ function speak(ticket){
   },150);
 }
 
+// ── Global card elapsed ticker — updates all qel-* spans every second ──
+setInterval(()=>{
+  document.querySelectorAll('[id^="qel-"]').forEach(el=>{
+    const ticketId = parseInt(el.id.replace('qel-',''));
+    const t = sharedLog.find(x=>x.id===ticketId);
+    if(!t || !t.startTime) return;
+    const sec = Math.round((Date.now()-t.startTime)/1000);
+    const mm = String(Math.floor(sec/60)).padStart(2,'0');
+    const ss = String(sec%60).padStart(2,'0');
+    el.textContent = mm+':'+ss;
+  });
+}, 1000);
+
 // Preload voices on page load
 if(window.speechSynthesis){
   window.speechSynthesis.getVoices();
@@ -750,7 +771,6 @@ function sendToHold(type){
   showToast(`#${String(t.id).padStart(3,'0')} → ${label}`);
   activeTicketId=null;
   sessionStorage.removeItem('ssTicketId');
-  stopElapsedTimer();
   clearDisplay();
   document.getElementById('cvPill').textContent=type==='comply'?'Compliance':'Payment';
   document.getElementById('cvPill').className=`cv-pill ${type}`;
@@ -816,7 +836,7 @@ window.onHoldDrop=function(e,type){
   t.paymentHold=(type==='payment');
   // If this is the active ticket, clear it from audience too
   if(t.id===activeTicketId){
-    activeTicketId=null; stopElapsedTimer(); clearDisplay();
+    activeTicketId=null; clearDisplay();
     if(window._lastCall && window._lastCall.ticketId===t.id) window._lastCall=null;
   }
   t.counter=activeCounter;
@@ -915,11 +935,31 @@ function renderView(){
       else if(t._isNext)   badges.push(`<span class="qb qb-next">Next</span>`);
       if(t.priority==='priority') badges.push(`<span class="qb qb-prio">⚡</span>`);
 
+      // Build time line for card
+      let qTimeHtml = '';
+      if(t.startTime){
+        const st = new Date(t.startTime);
+        const sh = String(st.getHours()).padStart(2,'0');
+        const sm = String(st.getMinutes()).padStart(2,'0');
+        const ss = String(st.getSeconds()).padStart(2,'0');
+        const startFmt = sh+':'+sm+':'+ss;
+        const elSec = Math.round((Date.now()-t.startTime)/1000);
+        const em = String(Math.floor(elSec/60)).padStart(2,'0');
+        const es = String(elSec%60).padStart(2,'0');
+        const elapsedFmt = em+':'+es;
+        const elId = 'qel-'+t.id;
+        qTimeHtml = `<div class="cv-q-time">
+          <span class="q-start">▶ ${startFmt}</span>
+          <span style="color:var(--border)">·</span>
+          <span class="q-elapsed" id="${elId}">${elapsedFmt}</span>
+        </div>`;
+      }
       item.innerHTML=`
         <div class="cv-q-num">${String(t.id).padStart(3,'0')}</div>
         <div class="cv-q-info">
           <div class="cv-q-svc">${t.service||''}</div>
           ${t.customer?`<div class="cv-q-cust">${t.customer}</div>`:''}
+          ${qTimeHtml}
         </div>
         <div class="cv-q-badges">${badges.join('')}</div>`;
       listEl.appendChild(item);
@@ -1012,7 +1052,11 @@ function renderHoldZone(tickets, chipsId, emptyId, chipCls){
     chip.setAttribute('ondragstart',`startHoldDrag(event,${t.id})`);
     chip.setAttribute('ondragend','endHoldDrag(event)');
     chip.title=`${t.service}${t.customer?' · '+t.customer:''} — drag back to queue to re-call`;
-    chip.textContent=`${String(t.id).padStart(3,'0')}${t.priority==='priority'?'⚡':''}`;
+    const chipElSec = t.startTime ? Math.round((Date.now()-t.startTime)/1000) : 0;
+    const chipMm = String(Math.floor(chipElSec/60)).padStart(2,'0');
+    const chipSs = String(chipElSec%60).padStart(2,'0');
+    const chipTimer = t.startTime ? ` ${chipMm}:${chipSs}` : '';
+    chip.innerHTML=`<span>${String(t.id).padStart(3,'0')}${t.priority==='priority'?'⚡':''}</span><span style="font-family:'DM Mono',monospace;font-size:8px;opacity:0.75;margin-left:3px" id="qel-${t.id}">${chipTimer}</span>`;
     wrap.insertBefore(chip,empty);
   });
 }
