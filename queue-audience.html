@@ -373,8 +373,7 @@ onValue(stateRef,snap=>{
   // ── React to a number being CALLED (lastCall.ts changes) ──
   const lc=data.lastCall||null;
   if(lc && lc.ts && lc.ts!==lastCallTs){
-    // Update lastCallTs IMMEDIATELY to prevent any re-fired snapshot from
-    // triggering this block again for the same call
+    // Update lastCallTs IMMEDIATELY so any re-fired snapshot can't trigger this again
     lastCallTs=lc.ts;
 
     const cd=counterDisplay[lc.counter-1];
@@ -396,13 +395,15 @@ onValue(stateRef,snap=>{
       customer:lc.customer, priority:lc.priority, time:nowTime()
     });
     if(activityLog.length>40) activityLog.pop();
-    // Flash + enqueue speech ranked by call time — exactly once
+    // Flash + enqueue speech ranked by call time
     triggerCallFlash({
       id:lc.ticketId, counter:lc.counter, service:lc.service,
       customer:lc.customer, nickname:lc.nickname||null,
       priority:lc.priority, calledAt:lc.ts
     });
   }
+
+  // lastCallTs already updated at top of the if-block above
 
   // ── Clear counter panel when lastCall is nulled (ticket went to hold) ──
   if(!lc && lastCallTs!==null){
@@ -582,13 +583,8 @@ function doSpeak(ticket, onDone){
     }
 
     let started=false;
-    // 1st play — on end, pause 800ms then play 2nd
-    const u1=makeUtterance(announcement, ()=>{
-      setTimeout(()=>{
-        const u2=makeUtterance(announcement, ()=>{ if(onDone) onDone(); });
-        window.speechSynthesis.speak(u2);
-      }, 800);
-    });
+    // Play announcement once only
+    const u1=makeUtterance(announcement, ()=>{ if(onDone) onDone(); });
     u1.onstart=()=>{ started=true; };
     window.speechSynthesis.speak(u1);
 
