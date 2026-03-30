@@ -433,6 +433,30 @@ onValue(stateRef,snap=>{
     announceQueue=announceQueue.filter(q=>q.id!==t.id);
   });
 
+  // ── Detect transferred tickets — counter changed on unserved tickets ──
+  const prevLog = window._prevLog || [];
+  sharedLog.forEach(t=>{
+    if(t.served || t.counter===0) return; // skip served and unassigned
+    const prev = prevLog.find(p=>p.id===t.id);
+    if(!prev || prev.counter===t.counter) return; // no change
+    if(prev.counter===0) return; // was unassigned before, not a transfer
+    // This ticket moved from prev.counter → t.counter
+    const fromName = COUNTER_NAMES[prev.counter-1] || ('Desk '+prev.counter);
+    const toName   = COUNTER_NAMES[t.counter-1]    || ('Desk '+t.counter);
+    // Add a transfer entry to activityLog
+    activityLog.unshift({
+      num: t.id,
+      counter: t.counter,
+      service: t.service||'',
+      customer: t.customer||null,
+      priority: t.priority||'normal',
+      time: nowTime(),
+      transferred: true,
+      fromName, toName
+    });
+    if(activityLog.length>40) activityLog.pop();
+  });
+
   // ── Clear counter panel when a ticket was transferred away (counter changed) ──
   // For each counter's currently displayed ticket, check if it still belongs to that counter
   [1,2,3,4].forEach(counterId=>{
@@ -656,12 +680,16 @@ function renderLastCalled(){
   if(!activityLog.length){wrap.innerHTML='<div style="font-size:9px;color:var(--muted);letter-spacing:0.14em;text-transform:uppercase;padding:10px 0">No calls yet</div>';return;}
   const last=activityLog[0];
   const color=COLOR_HEX[last.counter];
+  const transferBadge = last.transferred
+    ? `<div style="font-size:7px;letter-spacing:0.14em;text-transform:uppercase;color:var(--amber);border:1px solid rgba(226,160,0,0.4);background:rgba(226,160,0,0.08);padding:2px 6px;border-radius:2px;margin-top:3px;display:inline-block">↔ Transferred from ${last.fromName}</div>`
+    : '';
   wrap.innerHTML=`<div class="last-called-card">
     <div class="lc-num" style="color:${color}">${String(last.num).padStart(3,'0')}</div>
     <div class="lc-info">
       <div class="lc-counter" style="color:${color}">${COUNTER_NAMES[last.counter-1]}</div>
       <div class="lc-svc">${last.service||''}${last.priority==='priority'?' ⚡':''}</div>
       ${last.customer?`<div class="lc-cust">${last.customer}</div>`:''}
+      ${transferBadge}
     </div>
     <div class="lc-time">${last.time||''}</div>
   </div>`;
@@ -674,9 +702,15 @@ function renderActivityFeed(){
   activityLog.slice(0,20).forEach(a=>{
     const item=document.createElement('div');
     item.className='activity-item'; item.dataset.c=a.counter;
+    const topLine = a.transferred
+      ? `<span style="color:var(--amber)">↔ ${a.fromName} → ${COUNTER_NAMES[a.counter-1]}</span>`
+      : `${COUNTER_NAMES[a.counter-1]} · ${a.service||''}`;
+    const botLine = a.transferred
+      ? `<div class="ai-bot" style="color:var(--muted)">${a.service||''}${a.customer?' · '+a.customer:''}</div>`
+      : (a.customer?`<div class="ai-bot">${a.customer}</div>`:'');
     item.innerHTML=`<div class="ai-num">${String(a.num).padStart(3,'0')}</div>
-      <div class="ai-body"><div class="ai-top">${COUNTER_NAMES[a.counter-1]} · ${a.service||''}</div>${a.customer?`<div class="ai-bot">${a.customer}</div>`:''}</div>
-      ${a.priority==='priority'?'<div class="ai-prio">⚡</div>':''}
+      <div class="ai-body"><div class="ai-top">${topLine}</div>${botLine}</div>
+      ${a.priority==='priority'&&!a.transferred?'<div class="ai-prio">⚡</div>':''}
       <div class="ai-time">${a.time||''}</div>`;
     feed.appendChild(item);
   });
