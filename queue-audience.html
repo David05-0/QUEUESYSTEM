@@ -38,7 +38,7 @@
   @keyframes fbPulse{0%,100%{opacity:1}50%{opacity:0.4}}
 
   /* MAIN */
-  .main-content{display:grid;grid-template-columns:1fr 320px;overflow:hidden}
+  .main-content{display:grid;grid-template-columns:52px 1fr 320px;overflow:hidden}
   .main-content.has-video{grid-template-columns:1fr 380px 320px}
 
   /* ── VIDEO PLAYER ── */
@@ -46,7 +46,7 @@
   /* When video is active — video pane expands, counters stack */
   .video-pane{position:relative;display:flex;flex-direction:column;border-right:1px solid var(--border);background:#000;overflow:hidden}
   .video-pane video{width:100%;height:100%;object-fit:contain;display:block}
-  .video-pane.empty{display:none}
+  .video-pane.empty{display:flex;align-items:center;justify-content:center;background:var(--deep);flex-direction:column;gap:6px;padding:8px 4px}
   .video-empty-msg{text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px}
   .video-empty-icon{font-size:48px;opacity:0.2}
   .video-empty-lbl{font-size:9px;letter-spacing:0.24em;text-transform:uppercase;color:var(--muted)}
@@ -299,44 +299,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db  = getDatabase(app);
 const stateRef = ref(db,'queueState');
-const videoRef = ref(db,'queueState/videoData');
-
-// ── Firebase-driven video playback ──
-let fbVideoLoaded = false;
-let lastVideoTs = null;
-
-onValue(videoRef, snap=>{
-  const data = snap.val();
-  const vid = document.getElementById('videoPlayer');
-  const pane = document.getElementById('videoPaneWrap');
-  const mc = document.getElementById('mainContent');
-
-  if(data && data.dataUrl && data.pushedAt !== lastVideoTs){
-    lastVideoTs = data.pushedAt;
-    // Load video from base64 data URL
-    vid.src = data.dataUrl;
-    vid.style.display = 'block';
-    document.getElementById('videoEmptyMsg').style.display = 'none';
-    pane.classList.remove('empty');
-    mc.classList.add('has-video');
-    fbVideoLoaded = true;
-    vid.muted = true; // start muted, browser will allow autoplay
-    vid.loop = true;
-    vid.play().catch(()=>{});
-  } else if(!data || !data.dataUrl){
-    // Admin removed the video
-    if(fbVideoLoaded){
-      vid.pause();
-      vid.src = '';
-      vid.style.display = 'none';
-      document.getElementById('videoEmptyMsg').style.display = '';
-      pane.classList.add('empty');
-      mc.classList.remove('has-video');
-      fbVideoLoaded = false;
-      lastVideoTs = null;
-    }
-  }
-});
 
 const COUNTER_NAMES = ['DMW Desk 2','DMW Desk 3','DMW Desk 4','DMW Desk 5'];
 const COLOR_HEX = {1:'#e67e22',2:'#2471a3',3:'#1e8449',4:'#7d3c98'};
