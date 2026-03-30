@@ -373,6 +373,10 @@ onValue(stateRef,snap=>{
   // ── React to a number being CALLED (lastCall.ts changes) ──
   const lc=data.lastCall||null;
   if(lc && lc.ts && lc.ts!==lastCallTs){
+    // Update lastCallTs IMMEDIATELY to prevent any re-fired snapshot from
+    // triggering this block again for the same call
+    lastCallTs=lc.ts;
+
     const cd=counterDisplay[lc.counter-1];
 
     // If this counter was already announcing a different number, cancel it
@@ -392,16 +396,13 @@ onValue(stateRef,snap=>{
       customer:lc.customer, priority:lc.priority, time:nowTime()
     });
     if(activityLog.length>40) activityLog.pop();
-    // Flash + enqueue speech ranked by call time
+    // Flash + enqueue speech ranked by call time — exactly once
     triggerCallFlash({
       id:lc.ticketId, counter:lc.counter, service:lc.service,
       customer:lc.customer, nickname:lc.nickname||null,
       priority:lc.priority, calledAt:lc.ts
     });
   }
-
-  // Update tracked ts (null means hold happened)
-  if(lc) lastCallTs=lc.ts;
 
   // ── Clear counter panel when lastCall is nulled (ticket went to hold) ──
   if(!lc && lastCallTs!==null){
