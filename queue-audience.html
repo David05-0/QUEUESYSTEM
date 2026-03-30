@@ -38,10 +38,34 @@
   @keyframes fbPulse{0%,100%{opacity:1}50%{opacity:0.4}}
 
   /* MAIN */
-  .main-content{display:grid;grid-template-columns:1fr 320px;overflow:hidden}
+  .main-content{display:grid;grid-template-columns:52px 1fr 320px;overflow:hidden}
+  .main-content.has-video{grid-template-columns:1fr 380px 320px}
 
-  /* Counter panels */
+  /* ── VIDEO PLAYER ── */
   .counters-area{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;border-right:1px solid var(--border)}
+  /* When video is active — video pane expands, counters stack */
+  .video-pane{position:relative;display:flex;flex-direction:column;border-right:1px solid var(--border);background:#000;overflow:hidden}
+  .video-pane video{width:100%;height:100%;object-fit:contain;display:block}
+  .video-pane.empty{display:flex;align-items:center;justify-content:center;background:var(--deep);flex-direction:column;gap:6px;padding:8px 4px}
+  .video-empty-msg{text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px}
+  .video-empty-icon{font-size:48px;opacity:0.2}
+  .video-empty-lbl{font-size:9px;letter-spacing:0.24em;text-transform:uppercase;color:var(--muted)}
+  .video-upload-btn{font-family:'Bebas Neue',sans-serif;font-size:10px;letter-spacing:0.1em;padding:8px 6px;background:transparent;border:1.5px solid var(--border);color:var(--muted);border-radius:3px;cursor:pointer;transition:all 0.15s;writing-mode:vertical-lr;text-orientation:mixed;white-space:nowrap}
+  .video-upload-btn:hover{border-color:var(--gold);color:var(--gold)}
+  .video-controls{position:absolute;bottom:0;left:0;right:0;padding:8px 12px;background:linear-gradient(transparent,rgba(0,0,0,0.7));display:flex;align-items:center;gap:8px;opacity:0;transition:opacity 0.2s}
+  .video-pane:hover .video-controls{opacity:1}
+  .vc-btn{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;padding:4px 10px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:2px;cursor:pointer;transition:all 0.13s;white-space:nowrap}
+  .vc-btn:hover{background:rgba(255,255,255,0.2)}
+  .vc-btn.danger:hover{background:rgba(176,58,46,0.4);border-color:rgba(176,58,46,0.6);color:#ff8080}
+  .vc-spacer{flex:1}
+  .vc-label{font-size:7px;letter-spacing:0.16em;color:rgba(255,255,255,0.5);text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px}
+  /* Dim video when call flash is showing */
+  .video-pane.dimmed video{filter:brightness(0.25);transition:filter 0.4s}
+  /* When video active, counter panels go 1-col stacked */
+  .main-content.has-video .counters-area{grid-template-columns:1fr;grid-template-rows:repeat(4,1fr)}
+  .main-content.has-video .counter-panel{border-right:none}
+  .main-content.has-video .counter-panel:nth-child(2){border-right:none}
+  .main-content.has-video .counter-panel:last-child{border-bottom:none}
   .counter-panel{position:relative;display:flex;flex-direction:column;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:28px 32px;overflow:hidden;transition:background 0.5s}
   .counter-panel:nth-child(2){border-right:none}.counter-panel:nth-child(3){border-bottom:none}.counter-panel:nth-child(4){border-right:none;border-bottom:none}
   .counter-panel::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity 0.8s;pointer-events:none}
@@ -217,7 +241,26 @@
     </div>
   </div>
 
-  <div class="main-content">
+  <!-- Hidden file input for video upload -->
+  <input type="file" id="videoFileInput" accept="video/*" style="display:none" onchange="handleVideoUpload(event)">
+
+  <div class="main-content" id="mainContent">
+    <div class="video-pane empty" id="videoPaneWrap">
+      <div class="video-empty-msg" id="videoEmptyMsg">
+        <div class="video-empty-icon">▶</div>
+        <div class="video-empty-lbl">No video loaded</div>
+        <button class="video-upload-btn" onclick="document.getElementById('videoFileInput').click()">+ Upload Video</button>
+      </div>
+      <video id="videoPlayer" loop muted style="display:none" playsinline></video>
+      <div class="video-controls" id="videoControls">
+        <button class="vc-btn" id="vcPlayPause" onclick="toggleVideoPlayPause()">⏸ Pause</button>
+        <button class="vc-btn" id="vcMute" onclick="toggleVideoMute()">🔊 Mute</button>
+        <span class="vc-label" id="vcLabel"></span>
+        <span class="vc-spacer"></span>
+        <button class="vc-btn" onclick="document.getElementById('videoFileInput').click()">⟳ Change</button>
+        <button class="vc-btn danger" onclick="removeVideo()">✕ Remove</button>
+      </div>
+    </div>
     <div class="counters-area" id="countersArea"></div>
     <div class="sidebar">
       <div class="last-called-section">
@@ -287,6 +330,85 @@ function startDisplay() {
   }
 }
 window.startDisplay=startDisplay;
+
+// ── Video Player ──
+let videoLoaded = false;
+
+function handleVideoUpload(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const url = URL.createObjectURL(file);
+  const vid = document.getElementById('videoPlayer');
+  const pane = document.getElementById('videoPaneWrap');
+  const emptyMsg = document.getElementById('videoEmptyMsg');
+  const mc = document.getElementById('mainContent');
+
+  vid.src = url;
+  vid.style.display = 'block';
+  emptyMsg.style.display = 'none';
+  pane.classList.remove('empty');
+  mc.classList.add('has-video');
+  videoLoaded = true;
+
+  // Show filename
+  document.getElementById('vcLabel').textContent = file.name;
+  // Unmute and play (user gesture already happened via click)
+  vid.muted = false;
+  vid.play().catch(()=>{ vid.muted=true; vid.play(); });
+  updatePlayPauseBtn();
+  updateMuteBtn();
+  // Reset file input so same file can be re-selected
+  e.target.value = '';
+}
+window.handleVideoUpload = handleVideoUpload;
+
+function toggleVideoPlayPause(){
+  const vid = document.getElementById('videoPlayer');
+  if(vid.paused) vid.play(); else vid.pause();
+  updatePlayPauseBtn();
+}
+window.toggleVideoPlayPause = toggleVideoPlayPause;
+
+function toggleVideoMute(){
+  const vid = document.getElementById('videoPlayer');
+  vid.muted = !vid.muted;
+  updateMuteBtn();
+}
+window.toggleVideoMute = toggleVideoMute;
+
+function updatePlayPauseBtn(){
+  const vid = document.getElementById('videoPlayer');
+  document.getElementById('vcPlayPause').textContent = vid.paused ? '▶ Play' : '⏸ Pause';
+}
+
+function updateMuteBtn(){
+  const vid = document.getElementById('videoPlayer');
+  document.getElementById('vcMute').textContent = vid.muted ? '🔇 Unmute' : '🔊 Mute';
+}
+
+function removeVideo(){
+  if(!confirm('Remove the video?')) return;
+  const vid = document.getElementById('videoPlayer');
+  const pane = document.getElementById('videoPaneWrap');
+  const emptyMsg = document.getElementById('videoEmptyMsg');
+  const mc = document.getElementById('mainContent');
+  vid.pause();
+  vid.src = '';
+  vid.style.display = 'none';
+  emptyMsg.style.display = '';
+  pane.classList.add('empty');
+  mc.classList.remove('has-video');
+  videoLoaded = false;
+  document.getElementById('vcLabel').textContent = '';
+}
+window.removeVideo = removeVideo;
+
+// Dim video during call flash, restore after
+function dimVideo(dim){
+  const pane = document.getElementById('videoPaneWrap');
+  if(dim) pane.classList.add('dimmed');
+  else pane.classList.remove('dimmed');
+}
 
 function updateClock(){
   const n=new Date();
@@ -385,6 +507,7 @@ onValue(stateRef,snap=>{
       // Hide call flash if it was showing the old number for this counter
       if(flashTimer) clearTimeout(flashTimer);
       document.getElementById('callFlash').classList.remove('show');
+      dimVideo(false);
       isAnnouncing=false;
     }
 
@@ -547,6 +670,7 @@ function runAnnouncement(ticket){
   // ── Show flash ──
   if(flashTimer) clearTimeout(flashTimer);
   document.getElementById('callFlash').classList.add('show');
+  dimVideo(true);
 
   // ── Counter panel effects ──
   const numEl=document.getElementById(`cpnum-${ticket.counter}`);
@@ -561,6 +685,7 @@ function runAnnouncement(ticket){
       // Speech done — brief pause, then hide flash, then next item
       setTimeout(()=>{
         document.getElementById('callFlash').classList.remove('show');
+        dimVideo(false);
         // Gap between announcements: cooldown gives other counters breathing room
         setTimeout(()=>processAnnounceQueue(), announceQueue.length>0 ? COOLDOWN_MS : 0);
       }, 400);
