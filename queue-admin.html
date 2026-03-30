@@ -226,6 +226,38 @@
   .save-hist-item:last-child{border-bottom:none}
   .save-hist-label{color:var(--ink);font-weight:500}
 
+  /* ── VIDEO MANAGER CARD ── */
+  .video-card{background:var(--paper);border:1px solid var(--rule);border-radius:2px;box-shadow:0 2px 8px var(--shadow);overflow:hidden}
+  .video-head{background:var(--ink);color:var(--bg);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  .video-head-title{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:0.1em;display:flex;align-items:center;gap:8px}
+  .video-head-sub{font-size:8px;color:rgba(244,241,234,0.45);letter-spacing:0.12em;text-transform:uppercase}
+  .video-body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:12px}
+  .video-drop-zone{border:2px dashed var(--rule);border-radius:3px;padding:28px 16px;text-align:center;cursor:pointer;transition:all 0.2s;background:var(--bg);position:relative}
+  .video-drop-zone:hover,.video-drop-zone.drag-over{border-color:var(--ink);background:rgba(24,24,15,0.04)}
+  .video-drop-icon{font-size:32px;margin-bottom:8px;opacity:0.35}
+  .video-drop-lbl{font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);line-height:1.8}
+  .video-drop-lbl strong{color:var(--ink);display:block;font-size:11px}
+  .video-file-input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+  .video-preview{display:none;gap:12px;align-items:center;background:var(--bg);border:1px solid var(--rule);border-radius:3px;padding:12px 14px}
+  .video-preview.show{display:flex}
+  .video-thumb{width:72px;height:48px;object-fit:cover;border-radius:2px;background:#000;flex-shrink:0}
+  .video-meta{flex:1;overflow:hidden}
+  .video-meta-name{font-size:10px;letter-spacing:0.04em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .video-meta-size{font-size:8px;color:var(--muted);letter-spacing:0.08em;margin-top:2px}
+  .video-meta-status{font-size:8px;letter-spacing:0.12em;text-transform:uppercase;margin-top:4px;display:flex;align-items:center;gap:5px}
+  .video-status-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);flex-shrink:0}
+  .video-status-dot.uploading{background:var(--amber);animation:statusPulse 1s ease infinite}
+  .video-status-dot.live{background:var(--green)}
+  @keyframes statusPulse{0%,100%{opacity:1}50%{opacity:0.3}}
+  .video-progress-bar{height:3px;background:var(--rule);border-radius:2px;overflow:hidden;margin-top:6px}
+  .video-progress-fill{height:100%;background:var(--accent2);border-radius:2px;width:0%;transition:width 0.3s}
+  .video-remove-btn{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;padding:5px 10px;border:1px solid rgba(176,58,46,0.3);border-radius:2px;background:transparent;color:var(--accent);cursor:pointer;transition:all 0.13s;flex-shrink:0;white-space:nowrap}
+  .video-remove-btn:hover{background:rgba(176,58,46,0.08);border-color:var(--accent)}
+  .video-upload-btn{width:100%;font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:0.1em;padding:12px;background:var(--accent2);color:#fff;border:none;border-radius:3px;cursor:pointer;transition:all 0.13s;display:flex;align-items:center;justify-content:center;gap:8px}
+  .video-upload-btn:hover:not(:disabled){background:#0e2a46}
+  .video-upload-btn:disabled{opacity:0.4;cursor:not-allowed}
+  .video-note{font-size:8px;letter-spacing:0.1em;color:var(--muted);line-height:1.7;text-align:center}
+
   /* Toast */
   .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(18px);background:var(--ink);color:var(--bg);padding:11px 26px;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.12em;opacity:0;transition:all 0.3s;pointer-events:none;z-index:999;white-space:nowrap}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -383,6 +415,43 @@
           </div>
           <div class="transfer-preview" id="transferPreview">Select source and destination desks to preview the transfer.</div>
           <button class="transfer-btn" id="transferBtn" onclick="executeTransfer()" disabled>↔ Transfer All Tickets</button>
+        </div>
+      </div>
+
+      <!-- ── Video Manager ── -->
+      <div class="video-card">
+        <div class="video-head">
+          <div class="video-head-title">▶ Audience Video</div>
+          <div class="video-head-sub">Push video to audience screen via Firebase</div>
+        </div>
+        <div class="video-body">
+          <!-- Drop zone (shown when no video loaded) -->
+          <div class="video-drop-zone" id="videoDropZone">
+            <input type="file" class="video-file-input" id="videoFileInput" accept="video/mp4,video/webm,video/ogg" onchange="handleAdminVideoSelect(event)">
+            <div class="video-drop-icon">🎬</div>
+            <div class="video-drop-lbl">
+              <strong>Click to select a video</strong>
+              MP4 · WebM · OGG &nbsp;·&nbsp; Max 10 MB
+            </div>
+          </div>
+          <!-- Preview (shown after file selected) -->
+          <div class="video-preview" id="videoPreview">
+            <video class="video-thumb" id="videoThumb" muted playsinline></video>
+            <div class="video-meta">
+              <div class="video-meta-name" id="videoFileName">—</div>
+              <div class="video-meta-size" id="videoFileSize">—</div>
+              <div class="video-meta-status" id="videoStatus">
+                <span class="video-status-dot" id="videoStatusDot"></span>
+                <span id="videoStatusText">Ready to push</span>
+              </div>
+              <div class="video-progress-bar" id="videoProgressBar" style="display:none">
+                <div class="video-progress-fill" id="videoProgressFill"></div>
+              </div>
+            </div>
+            <button class="video-remove-btn" onclick="clearAdminVideo()">✕ Remove</button>
+          </div>
+          <button class="video-upload-btn" id="videoPushBtn" onclick="pushVideoToAudience()" disabled>▶ Push to Audience Screen</button>
+          <div class="video-note">Video is encoded and sent through Firebase.<br>The audience screen will auto-play it looped.</div>
         </div>
       </div>
 
@@ -1074,7 +1143,133 @@ document.getElementById('eodModal').addEventListener('click', function(e){
   if(e.target===this) closeEodModal();
 });
 
-function resetNumbering(){
+// ── VIDEO MANAGER ──
+const videoRef = db.ref('queueState/videoData');
+let adminVideoFile = null;
+let adminVideoDataUrl = null;
+
+function handleAdminVideoSelect(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const maxMB = 10;
+  if(file.size > maxMB * 1024 * 1024){
+    showToast(`⚠ File too large (max ${maxMB} MB)`);
+    e.target.value = '';
+    return;
+  }
+  adminVideoFile = file;
+  const url = URL.createObjectURL(file);
+
+  // Show preview
+  document.getElementById('videoDropZone').style.display = 'none';
+  const preview = document.getElementById('videoPreview');
+  preview.classList.add('show');
+  const thumb = document.getElementById('videoThumb');
+  thumb.src = url;
+  document.getElementById('videoFileName').textContent = file.name;
+  document.getElementById('videoFileSize').textContent = (file.size/1024/1024).toFixed(2) + ' MB';
+  setVideoStatus('ready', 'Ready to push');
+  document.getElementById('videoPushBtn').disabled = false;
+
+  // Read as base64 in background
+  const reader = new FileReader();
+  reader.onload = ev => { adminVideoDataUrl = ev.target.result; };
+  reader.readAsDataURL(file);
+}
+window.handleAdminVideoSelect = handleAdminVideoSelect;
+
+function setVideoStatus(state, text){
+  const dot = document.getElementById('videoStatusDot');
+  const txt = document.getElementById('videoStatusText');
+  dot.className = 'video-status-dot' + (state === 'uploading' ? ' uploading' : state === 'live' ? ' live' : '');
+  txt.textContent = text;
+}
+
+function pushVideoToAudience(){
+  if(!adminVideoDataUrl){ showToast('⚠ Video not ready yet'); return; }
+  const btn = document.getElementById('videoPushBtn');
+  btn.disabled = true;
+  setVideoStatus('uploading', 'Pushing to Firebase…');
+  document.getElementById('videoProgressBar').style.display = 'block';
+  // Animate progress bar (Firebase set is one shot, we simulate progress)
+  let pct = 0;
+  const fill = document.getElementById('videoProgressFill');
+  const prog = setInterval(()=>{ pct = Math.min(pct + 4, 88); fill.style.width = pct + '%'; }, 80);
+
+  videoRef.set({
+    dataUrl: adminVideoDataUrl,
+    name: adminVideoFile.name,
+    pushedAt: Date.now()
+  }).then(()=>{
+    clearInterval(prog);
+    fill.style.width = '100%';
+    setVideoStatus('live', 'Live on audience screen ✓');
+    showToast('▶ Video pushed to audience');
+    btn.disabled = false;
+    btn.textContent = '↺ Re-push Video';
+  }).catch(err=>{
+    clearInterval(prog);
+    console.error(err);
+    setVideoStatus('ready', 'Push failed — try again');
+    showToast('✕ Push failed');
+    btn.disabled = false;
+  });
+}
+window.pushVideoToAudience = pushVideoToAudience;
+
+function clearAdminVideo(){
+  if(!confirm('Remove the video from the audience screen?')) return;
+  videoRef.remove().then(()=>{
+    showToast('✓ Video removed from audience');
+  }).catch(()=>showToast('✕ Remove failed'));
+  // Reset UI
+  adminVideoFile = null;
+  adminVideoDataUrl = null;
+  document.getElementById('videoDropZone').style.display = '';
+  document.getElementById('videoPreview').classList.remove('show');
+  document.getElementById('videoPushBtn').disabled = true;
+  document.getElementById('videoPushBtn').textContent = '▶ Push to Audience Screen';
+  document.getElementById('videoProgressBar').style.display = 'none';
+  document.getElementById('videoProgressFill').style.width = '0%';
+  document.getElementById('videoFileInput').value = '';
+  const thumb = document.getElementById('videoThumb');
+  thumb.src = '';
+}
+window.clearAdminVideo = clearAdminVideo;
+
+// Drag-and-drop support
+const dropZone = document.getElementById('videoDropZone');
+dropZone.addEventListener('dragover', e=>{ e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', ()=>dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e=>{
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if(file && file.type.startsWith('video/')){
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    document.getElementById('videoFileInput').files = dt.files;
+    handleAdminVideoSelect({ target: { files: dt.files, value: '' } });
+  }
+});
+
+// On load, reflect current Firebase video state in admin UI
+videoRef.once('value', snap=>{
+  const data = snap.val();
+  if(data && data.dataUrl){
+    document.getElementById('videoDropZone').style.display = 'none';
+    document.getElementById('videoPreview').classList.add('show');
+    document.getElementById('videoFileName').textContent = data.name || 'video';
+    document.getElementById('videoFileSize').textContent = 'Already live';
+    setVideoStatus('live', 'Live on audience screen ✓');
+    document.getElementById('videoThumb').src = data.dataUrl;
+    adminVideoDataUrl = data.dataUrl;
+    const btn = document.getElementById('videoPushBtn');
+    btn.disabled = false;
+    btn.textContent = '↺ Re-push Video';
+  }
+});
+
   if(!confirm('Reset ticket numbering to 001?\nThis clears all tickets on ALL devices.')) return;
   log=[]; ticketCounter=0; saveState(true);
   showToast('✓ Reset — next ticket is 001');
