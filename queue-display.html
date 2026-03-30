@@ -507,11 +507,22 @@ onValue(stateRef,snap=>{
     lastResetFlag=newReset;
     refreshLoginCounts();
     if(activeCounter){
-      // If admin marked the active ticket as served or removed it,
+      // If admin marked the active ticket as served, removed it, or transferred it,
       // auto-clear this counter's display and stop the elapsed timer
       if(activeTicketId !== null){
         const activeInLog = sharedLog.find(t=>t.id===activeTicketId);
-        if(!activeInLog || activeInLog.served){
+        const wasTransferred = activeInLog && !activeInLog.served && activeInLog.counter !== activeCounter;
+        if(!activeInLog || activeInLog.served || wasTransferred){
+          if(wasTransferred && !activeInLog.served){
+            // Transferred to another desk — just clear, no served log entry
+            showToast(`#${String(activeTicketId).padStart(3,'0')} transferred by Admin`);
+            activeTicketId=null;
+            sessionStorage.removeItem('ssTicketId');
+            stopElapsedTimer();
+            clearDisplay();
+            renderView();
+            return;
+          }
           // Admin acted on this ticket — clear counter display gracefully
           if(activeInLog && activeInLog.served){
             // Was marked served by admin — add to local served log
