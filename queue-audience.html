@@ -299,6 +299,44 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db  = getDatabase(app);
 const stateRef = ref(db,'queueState');
+const videoRef = ref(db,'queueState/videoData');
+
+// ── Firebase-driven video playback ──
+let fbVideoLoaded = false;
+let lastVideoTs = null;
+
+onValue(videoRef, snap=>{
+  const data = snap.val();
+  const vid = document.getElementById('videoPlayer');
+  const pane = document.getElementById('videoPaneWrap');
+  const mc = document.getElementById('mainContent');
+
+  if(data && data.dataUrl && data.pushedAt !== lastVideoTs){
+    lastVideoTs = data.pushedAt;
+    // Load video from base64 data URL
+    vid.src = data.dataUrl;
+    vid.style.display = 'block';
+    document.getElementById('videoEmptyMsg').style.display = 'none';
+    pane.classList.remove('empty');
+    mc.classList.add('has-video');
+    fbVideoLoaded = true;
+    vid.muted = true; // start muted, browser will allow autoplay
+    vid.loop = true;
+    vid.play().catch(()=>{});
+  } else if(!data || !data.dataUrl){
+    // Admin removed the video
+    if(fbVideoLoaded){
+      vid.pause();
+      vid.src = '';
+      vid.style.display = 'none';
+      document.getElementById('videoEmptyMsg').style.display = '';
+      pane.classList.add('empty');
+      mc.classList.remove('has-video');
+      fbVideoLoaded = false;
+      lastVideoTs = null;
+    }
+  }
+});
 
 const COUNTER_NAMES = ['DMW Desk 2','DMW Desk 3','DMW Desk 4','DMW Desk 5'];
 const COLOR_HEX = {1:'#e67e22',2:'#2471a3',3:'#1e8449',4:'#7d3c98'};
