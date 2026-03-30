@@ -171,6 +171,23 @@
   .tally-bar-fill{height:100%;background:var(--green);border-radius:2px;transition:width 0.4s ease}
   .tally-row:hover .tally-bar-wrap{display:block}
 
+  /* ── COUNTER TRANSFER PANEL ── */
+  .transfer-card{background:var(--paper);border:1px solid var(--rule);border-radius:2px;box-shadow:0 2px 8px var(--shadow);overflow:hidden}
+  .transfer-head{background:var(--ink);color:var(--bg);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  .transfer-head-title{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:0.1em;display:flex;align-items:center;gap:8px}
+  .transfer-head-sub{font-size:8px;color:rgba(244,241,234,0.45);letter-spacing:0.12em;text-transform:uppercase}
+  .transfer-body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:12px}
+  .transfer-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .transfer-lbl{font-size:8px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);min-width:40px;flex-shrink:0}
+  .transfer-select{font-family:'DM Mono',monospace;font-size:11px;padding:7px 10px;background:var(--bg);border:1.5px solid var(--rule);border-radius:3px;color:var(--ink);outline:none;cursor:pointer;transition:border-color 0.13s;flex:1;min-width:120px}
+  .transfer-select:focus{border-color:var(--ink)}
+  .transfer-arrow{font-size:16px;color:var(--muted);flex-shrink:0}
+  .transfer-btn{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.1em;padding:10px 20px;border:none;border-radius:3px;cursor:pointer;transition:all 0.13s;background:var(--accent2);color:#fff;white-space:nowrap}
+  .transfer-btn:hover:not(:disabled){background:#0e2a46;transform:translateY(-1px)}
+  .transfer-btn:disabled{opacity:0.3;cursor:not-allowed;transform:none}
+  .transfer-preview{font-size:8px;letter-spacing:0.1em;color:var(--muted);padding:6px 10px;background:var(--bg);border:1px solid var(--rule);border-radius:3px;min-height:26px;line-height:1.7}
+  .transfer-preview span{color:var(--ink);font-weight:500}
+
   /* ── SAVE POINT / EOD ── */
   .eod-btn{width:100%;margin-top:7px;background:transparent;color:var(--accent2);border:1.5px solid var(--accent2);border-radius:3px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;padding:9px;cursor:pointer;transition:all 0.13s;display:flex;align-items:center;justify-content:center;gap:6px}
   .eod-btn:hover{background:var(--accent2);color:var(--bg)}
@@ -335,6 +352,37 @@
             <div class="tally-col-lbl">Served</div>
           </div>
           <div id="tallyRows"></div>
+        </div>
+      </div>
+
+      <!-- ── Counter Transfer Panel ── -->
+      <div class="transfer-card">
+        <div class="transfer-head">
+          <div class="transfer-head-title">↔ Transfer Counter Queue</div>
+          <div class="transfer-head-sub">Reassign all tickets from one desk to another</div>
+        </div>
+        <div class="transfer-body">
+          <div class="transfer-row">
+            <div class="transfer-lbl">From</div>
+            <select class="transfer-select" id="transferFrom" onchange="updateTransferPreview()">
+              <option value="">— Select desk —</option>
+              <option value="1">DMW Desk 2</option>
+              <option value="2">DMW Desk 3</option>
+              <option value="3">DMW Desk 4</option>
+              <option value="4">DMW Desk 5</option>
+            </select>
+            <div class="transfer-arrow">→</div>
+            <select class="transfer-select" id="transferTo" onchange="updateTransferPreview()">
+              <option value="">— Select desk —</option>
+              <option value="0">Unassigned Pool</option>
+              <option value="1">DMW Desk 2</option>
+              <option value="2">DMW Desk 3</option>
+              <option value="3">DMW Desk 4</option>
+              <option value="4">DMW Desk 5</option>
+            </select>
+          </div>
+          <div class="transfer-preview" id="transferPreview">Select source and destination desks to preview the transfer.</div>
+          <button class="transfer-btn" id="transferBtn" onclick="executeTransfer()" disabled>↔ Transfer All Tickets</button>
         </div>
       </div>
 
@@ -692,6 +740,89 @@ function renderTally(){
     wrap.appendChild(el);
   });
 }
+
+// ── Counter Transfer ──
+const COUNTER_LABELS = {0:'Unassigned Pool',1:'DMW Desk 2',2:'DMW Desk 3',3:'DMW Desk 4',4:'DMW Desk 5'};
+
+function updateTransferPreview(){
+  const fromVal = document.getElementById('transferFrom').value;
+  const toVal   = document.getElementById('transferTo').value;
+  const btn     = document.getElementById('transferBtn');
+  const preview = document.getElementById('transferPreview');
+
+  if(!fromVal || toVal===''){
+    preview.innerHTML = 'Select source and destination desks to preview the transfer.';
+    btn.disabled = true;
+    return;
+  }
+  if(fromVal === toVal){
+    preview.innerHTML = '<span style="color:var(--accent)">Source and destination cannot be the same desk.</span>';
+    btn.disabled = true;
+    return;
+  }
+
+  const from = parseInt(fromVal);
+  const to   = parseInt(toVal);
+
+  // Count tickets that would be moved
+  const toMove = log.filter(t => !t.served && t.counter === from);
+  const active = toMove.filter(t => !t.compliance && !t.paymentHold);
+  const onHold = toMove.filter(t => t.compliance || t.paymentHold);
+
+  if(!toMove.length){
+    preview.innerHTML = `<span style="color:var(--muted)">No active tickets on ${COUNTER_LABELS[from]}.</span>`;
+    btn.disabled = true;
+    return;
+  }
+
+  const destLabel = COUNTER_LABELS[to];
+  let msg = `<span>${toMove.length} ticket${toMove.length!==1?'s':''}</span> will move from <span>${COUNTER_LABELS[from]}</span> → <span>${destLabel}</span>`;
+  if(active.length)  msg += ` &nbsp;·&nbsp; <span>${active.length} in queue</span>`;
+  if(onHold.length)  msg += ` &nbsp;·&nbsp; <span>${onHold.length} on hold</span>`;
+  preview.innerHTML = msg;
+  btn.disabled = false;
+}
+window.updateTransferPreview = updateTransferPreview;
+
+function executeTransfer(){
+  const fromVal = document.getElementById('transferFrom').value;
+  const toVal   = document.getElementById('transferTo').value;
+  if(!fromVal || toVal==='') return;
+
+  const from = parseInt(fromVal);
+  const to   = parseInt(toVal);
+  if(from === to) return;
+
+  const toMove = log.filter(t => !t.served && t.counter === from);
+  if(!toMove.length){ showToast('No tickets to transfer'); return; }
+
+  const fromLabel = COUNTER_LABELS[from];
+  const toLabel   = COUNTER_LABELS[to];
+
+  if(!confirm(`Transfer ${toMove.length} ticket${toMove.length!==1?'s':''} from ${fromLabel} to ${toLabel}?
+
+The counter staff at ${fromLabel} will see their queue clear immediately.`)) return;
+
+  // Reassign all unserved tickets from source to destination
+  toMove.forEach(t => {
+    t.counter = to;
+    // Clear hold flags if going to unassigned pool — pool doesn't show hold state
+    if(to === 0){
+      t.compliance  = false;
+      t.paymentHold = false;
+    }
+  });
+
+  saveState();
+
+  // Reset selects and preview
+  document.getElementById('transferFrom').value = '';
+  document.getElementById('transferTo').value   = '';
+  updateTransferPreview();
+
+  showToast(`✓ ${toMove.length} ticket${toMove.length!==1?'s':''} → ${toLabel}`);
+}
+window.executeTransfer = executeTransfer;
 
 // ── EOD Save Modal ──
 function openEodModal(){
