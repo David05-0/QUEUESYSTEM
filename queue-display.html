@@ -506,7 +506,42 @@ onValue(stateRef,snap=>{
     sharedTicketCounter=data.ticketCounter||0;
     lastResetFlag=newReset;
     refreshLoginCounts();
-    if(activeCounter) renderView();
+    if(activeCounter){
+      // If admin marked the active ticket as served or removed it,
+      // auto-clear this counter's display and stop the elapsed timer
+      if(activeTicketId !== null){
+        const activeInLog = sharedLog.find(t=>t.id===activeTicketId);
+        if(!activeInLog || activeInLog.served){
+          // Admin acted on this ticket — clear counter display gracefully
+          if(activeInLog && activeInLog.served){
+            // Was marked served by admin — add to local served log
+            myServedLog.unshift({
+              id: activeInLog.id,
+              service: activeInLog.service||'',
+              customer: activeInLog.customer||null,
+              time: nowTime(),
+              startTime: activeInLog.startTime||null,
+              endTime: activeInLog.endTime||null
+            });
+            myHistory.unshift(activeInLog.id);
+            if(myHistory.length>6) myHistory.pop();
+            myServed++;
+            showToast(`#${String(activeTicketId).padStart(3,'0')} marked Served by Admin`);
+          } else {
+            // Was removed by admin
+            showToast(`#${String(activeTicketId).padStart(3,'0')} removed by Admin`);
+          }
+          activeTicketId=null;
+          sessionStorage.removeItem('ssTicketId');
+          stopElapsedTimer();
+          clearDisplay();
+          if(window._lastCall && (window._lastCall.ticketId===(activeInLog&&activeInLog.id))){
+            window._lastCall=null;
+          }
+        }
+      }
+      renderView();
+    }
   }
 },()=>{
   document.getElementById('fbBadge').className='fb-badge';
@@ -651,8 +686,7 @@ function callNext(){
   activeTicketId=ticket.id;
   sessionStorage.setItem('ssTicketId', ticket.id);
 
-  // Stamp calledAt on first call; set _alreadyCalled flag if re-called
-  ticket._alreadyCalled = !!ticket.calledAt;
+  // Stamp calledAt on first call
   if(!ticket.calledAt) ticket.calledAt = Date.now();
 
   // Push lastCall to Firebase — overwrites previous call for this counter
@@ -670,13 +704,8 @@ function callNext(){
 
   updateNowServing(ticket);
   renderView();
-  // Only announce via speech if this is the first call — never repeat
-  if(!ticket._alreadyCalled){
-    showToast(`Calling #${String(ticket.id).padStart(3,'0')}`);
-    speak(ticket);
-  } else {
-    showToast(`Resuming #${String(ticket.id).padStart(3,'0')} (already called)`);
-  }
+  showToast(`Calling #${String(ticket.id).padStart(3,'0')}`);
+  speak(ticket);
 }
 window.callNext=callNext;
 
