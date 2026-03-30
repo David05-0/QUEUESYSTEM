@@ -432,6 +432,20 @@ onValue(stateRef,snap=>{
     // Remove from announce queue too (no point announcing a served ticket)
     announceQueue=announceQueue.filter(q=>q.id!==t.id);
   });
+
+  // ── Clear counter panel when a ticket was transferred away (counter changed) ──
+  // For each counter's currently displayed ticket, check if it still belongs to that counter
+  [1,2,3,4].forEach(counterId=>{
+    const cd=counterDisplay[counterId-1];
+    if(cd.current===null) return;
+    const ticketInLog=sharedLog.find(t=>t.id===cd.current);
+    // If ticket no longer exists, was served, or now belongs to a different counter → clear panel
+    if(!ticketInLog || ticketInLog.served || ticketInLog.counter!==counterId){
+      cd.current=null; cd.service=null; cd.customer=null; cd.priority=null; cd.time=null; cd.calledAt=0;
+      announceQueue=announceQueue.filter(q=>q.counter!==counterId);
+    }
+  });
+
   window._prevLog=[...sharedLog];
 
   renderAll();
