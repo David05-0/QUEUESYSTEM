@@ -140,6 +140,14 @@
   .tag-payment{background:#e8f4f8;color:var(--teal);border:1px solid rgba(14,107,138,0.22)}
   .tag-served{background:rgba(30,132,73,0.08);color:var(--green);border:1px solid rgba(30,132,73,0.2)}
 
+  /* ── CARD ADMIN ACTIONS ── */
+  .cc-actions{display:flex;gap:4px;flex-shrink:0;flex-direction:column;align-items:flex-end}
+  .cc-act-btn{font-family:'DM Mono',monospace;font-size:7px;letter-spacing:0.12em;text-transform:uppercase;padding:3px 7px;border-radius:2px;cursor:pointer;border:1px solid;transition:all 0.13s;white-space:nowrap;background:transparent}
+  .cc-act-btn.serve-btn{color:var(--green);border-color:rgba(30,132,73,0.3)}
+  .cc-act-btn.serve-btn:hover{background:rgba(30,132,73,0.1);border-color:var(--green)}
+  .cc-act-btn.remove-btn{color:var(--accent);border-color:rgba(176,58,46,0.3)}
+  .cc-act-btn.remove-btn:hover{background:rgba(176,58,46,0.1);border-color:var(--accent)}
+
   /* ── SERVICE TALLY PANEL ── */
   .tally-card{background:var(--paper);border:1px solid var(--rule);border-radius:2px;box-shadow:0 2px 8px var(--shadow);overflow:hidden}
   .tally-head{background:var(--ink);color:var(--bg);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
@@ -586,6 +594,13 @@ function renderPool(){
       }
     }
 
+    // Admin action buttons — only show relevant actions per ticket state
+    const actionBtns = [];
+    if(!t.served){
+      actionBtns.push(`<button class="cc-act-btn serve-btn" onclick="adminMarkServed(${t.id})">✓ Mark Served</button>`);
+    }
+    actionBtns.push(`<button class="cc-act-btn remove-btn" onclick="adminRemoveTicket(${t.id})">✕ Remove</button>`);
+
     card.innerHTML = `
       <div class="cc-num">${String(t.id).padStart(3,'0')}</div>
       <div class="cc-body">
@@ -593,10 +608,47 @@ function renderPool(){
         ${t.customer?`<div class="cc-cust">${t.customer}</div>`:''}
         <div class="cc-time">${timeInfo}</div>
       </div>
-      <div class="cc-tags">${tags.join('')}</div>`;
+      <div class="cc-tags">${tags.join('')}</div>
+      <div class="cc-actions">${actionBtns.join('')}</div>`;
     body.appendChild(card);
   });
 }
+
+// ── Admin: Mark Served ──
+function adminMarkServed(ticketId){
+  const t = log.find(x=>x.id===ticketId);
+  if(!t || t.served) return;
+  if(!confirm(`Mark ticket #${String(ticketId).padStart(3,'0')} as Served?
+This cannot be undone and the client will not be called again.`)) return;
+  t.served = true;
+  t.endTime = t.endTime || Date.now();
+  t.compliance = false;
+  t.paymentHold = false;
+  // Clear lastCall so audience immediately stops displaying this ticket
+  stateRef.once('value', snap => {
+    const d = snap.val() || {};
+    const lc = d.lastCall || null;
+    if(lc && lc.ticketId === ticketId){
+      stateRef.update({ lastCall: null });
+    }
+  });
+  saveState();
+  showToast(`#${String(ticketId).padStart(3,'0')} marked Served`);
+}
+window.adminMarkServed = adminMarkServed;
+
+// ── Admin: Remove Ticket ──
+function adminRemoveTicket(ticketId){
+  const t = log.find(x=>x.id===ticketId);
+  if(!t) return;
+  const label = `#${String(ticketId).padStart(3,'0')}${t.customer?' — '+t.customer:''}`;
+  if(!confirm(`Remove ticket ${label} from the queue?
+This permanently deletes it and the queue moves on.`)) return;
+  log = log.filter(x=>x.id!==ticketId);
+  saveState();
+  showToast(`${label} removed`);
+}
+window.adminRemoveTicket = adminRemoveTicket;
 
 // ── Service definitions (for tally order & icons) ──
 const SERVICES = [
