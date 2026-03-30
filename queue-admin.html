@@ -455,11 +455,16 @@ setInterval(updateClock,1000); updateClock();
 
 // ── Firebase ──
 function saveState(isReset=false){
-  stateRef.set({
+  const payload = {
     ticketCounter, log,
     lastUpdate: Date.now(),
     resetFlag: isReset ? Date.now() : (window._lastResetFlag||null)
-  }).catch(()=>setFbStatus('error'));
+  };
+  // If admin just marked a ticket served, clear lastCall atomically in the same write
+  if(window._clearLastCallId != null){
+    payload.lastCall = null;
+  }
+  stateRef.set(payload).catch(()=>setFbStatus('error'));
 }
 
 stateRef.on('value', snap=>{
@@ -624,15 +629,10 @@ This cannot be undone and the client will not be called again.`)) return;
   t.endTime = t.endTime || Date.now();
   t.compliance = false;
   t.paymentHold = false;
-  // Clear lastCall so audience immediately stops displaying this ticket
-  stateRef.once('value', snap => {
-    const d = snap.val() || {};
-    const lc = d.lastCall || null;
-    if(lc && lc.ticketId === ticketId){
-      stateRef.update({ lastCall: null });
-    }
-  });
+  // Single atomic write — clears lastCall if it pointed to this ticket
+  window._clearLastCallId = ticketId;
   saveState();
+  window._clearLastCallId = null;
   showToast(`#${String(ticketId).padStart(3,'0')} marked Served`);
 }
 window.adminMarkServed = adminMarkServed;
