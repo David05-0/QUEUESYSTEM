@@ -38,7 +38,7 @@
   @keyframes fbPulse{0%,100%{opacity:1}50%{opacity:0.4}}
 
   /* MAIN */
-  .main-content{display:grid;grid-template-columns:52px 1fr 320px;overflow:hidden}
+  .main-content{display:grid;grid-template-columns:0 1fr 320px;overflow:hidden}
   .main-content.has-video{grid-template-columns:1fr 380px 320px}
 
   /* ── VIDEO PLAYER ── */
@@ -46,7 +46,7 @@
   /* When video is active — video pane expands, counters stack */
   .video-pane{position:relative;display:flex;flex-direction:column;border-right:1px solid var(--border);background:#000;overflow:hidden}
   .video-pane video{width:100%;height:100%;object-fit:contain;display:block}
-  .video-pane.empty{display:flex;align-items:center;justify-content:center;background:var(--deep);flex-direction:column;gap:6px;padding:8px 4px}
+  .video-pane.empty{display:none}
   .video-empty-msg{text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px}
   .video-empty-icon{font-size:48px;opacity:0.2}
   .video-empty-lbl{font-size:9px;letter-spacing:0.24em;text-transform:uppercase;color:var(--muted)}
