@@ -255,11 +255,20 @@
   .served-svc{font-size:7.5px;letter-spacing:0.07em;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .served-cust{font-size:10px;letter-spacing:0.04em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .served-time{font-size:7px;color:var(--muted);flex-shrink:0;align-self:flex-start}
-  .served-dur{font-size:7.5px;color:var(--teal);letter-spacing:0.06em;display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-top:2px;border-top:1px solid var(--border);margin-top:2px}
+  .served-dur{font-size:7.5px;letter-spacing:0.06em;display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-top:4px;border-top:1px solid var(--border);margin-top:3px}
   .served-dur .dur-part{white-space:nowrap;display:inline-flex;align-items:center;gap:3px}
   .served-dur .dur-label{font-size:6.5px;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted)}
-  .served-dur .dur-val{color:var(--teal)}
-  .served-dur .dur-total{font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--green);letter-spacing:0.08em}
+  .served-dur .dur-val{color:var(--muted);font-family:'DM Mono',monospace;font-size:7.5px}
+  .served-dur .dur-total{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:0.08em}
+  .dur-amber{color:var(--amber)}
+  .dur-teal{color:var(--teal)}
+  .served-dur .dur-wait{border-left:1px solid var(--border);padding-left:6px}
+
+  /* Live wait timer on pool items */
+  .pi-wait{font-size:7px;letter-spacing:0.07em;color:var(--amber);margin-top:2px;display:flex;align-items:center;gap:3px}
+  .pi-wait-icon{font-size:8px}
+  .pi-wait-val{font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:0.08em;animation:waitPulse 1.8s ease infinite}
+  @keyframes waitPulse{0%,100%{opacity:1}50%{opacity:0.5}}
 
   /* Live elapsed timer in Now Serving */
   .cv-elapsed{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:0.12em;color:var(--muted);margin-top:6px;display:flex;align-items:center;gap:6px;opacity:0;transition:opacity 0.3s}
@@ -321,10 +330,17 @@
         <div class="cv-wave-lbl">Announcing</div>
       </div>
 
-      <!-- Live elapsed timer -->
+      <!-- Live dual timers: wait & service -->
       <div class="cv-elapsed" id="cvElapsed">
-        <div class="cv-elapsed-lbl">Elapsed</div>
-        <div class="cv-elapsed-val" id="cvElapsedVal">00:00</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:1px">
+          <div class="cv-elapsed-lbl" style="color:var(--amber)">⏳ Wait</div>
+          <div class="cv-elapsed-val" id="cvWaitVal" style="color:var(--amber);font-size:16px">--:--</div>
+        </div>
+        <div style="color:var(--muted);font-size:14px;margin:0 4px">·</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:1px">
+          <div class="cv-elapsed-lbl">▶ Service</div>
+          <div class="cv-elapsed-val" id="cvElapsedVal">00:00</div>
+        </div>
       </div>
 
       <!-- Call next button (shown when idle / no active ticket) -->
@@ -531,8 +547,9 @@ onValue(stateRef,snap=>{
               service: activeInLog.service||'',
               customer: activeInLog.customer||null,
               time: nowTime(),
-              startTime: activeInLog.startTime||null,
-              endTime: activeInLog.endTime||null
+              issuedAt:  activeInLog.issuedAt  || activeInLog.startTime || null,
+              calledAt:  activeInLog.calledAt  || null,
+              endTime:   activeInLog.endTime   || null
             });
             myHistory.unshift(activeInLog.id);
             if(myHistory.length>6) myHistory.pop();
@@ -694,7 +711,7 @@ function callNext(){
   activeTicketId=ticket.id;
   sessionStorage.setItem('ssTicketId', ticket.id);
 
-  // Stamp calledAt on first call
+  // Stamp calledAt on first call — this stops Timer 1 (wait) and starts Timer 2 (service)
   if(!ticket.calledAt) ticket.calledAt = Date.now();
 
   // Push lastCall to Firebase — overwrites previous call for this counter
@@ -720,13 +737,29 @@ function callNext(){
 }
 window.callNext=callNext;
 
-// ── Global card elapsed ticker — updates all qel-* spans every second ──
+// ── Global tickers: queue elapsed (qel-*) and pool wait (pwait-*) ──
 setInterval(()=>{
+  // Queue items: active = service timer from calledAt; waiting = wait timer from issuedAt
   document.querySelectorAll('[id^="qel-"]').forEach(el=>{
     const ticketId = parseInt(el.id.replace('qel-',''));
     const t = sharedLog.find(x=>x.id===ticketId);
-    if(!t || !t.startTime) return;
-    const sec = Math.round((Date.now()-t.startTime)/1000);
+    if(!t) return;
+    const ref = (t.id === activeTicketId && t.calledAt) ? t.calledAt
+              : (t.issuedAt || t.startTime);
+    if(!ref) return;
+    const sec = Math.round((Date.now()-ref)/1000);
+    const mm = String(Math.floor(sec/60)).padStart(2,'0');
+    const ss = String(sec%60).padStart(2,'0');
+    el.textContent = mm+':'+ss;
+  });
+  // Pool items: wait timer from issuedAt
+  document.querySelectorAll('[id^="pwait-"]').forEach(el=>{
+    const ticketId = parseInt(el.id.replace('pwait-',''));
+    const t = sharedLog.find(x=>x.id===ticketId);
+    if(!t) return;
+    const ref = t.issuedAt || t.startTime;
+    if(!ref) return;
+    const sec = Math.round((Date.now()-ref)/1000);
     const mm = String(Math.floor(sec/60)).padStart(2,'0');
     const ss = String(sec%60).padStart(2,'0');
     el.textContent = mm+':'+ss;
@@ -746,8 +779,21 @@ function updateNowServing(ticket){
   document.getElementById('cvPill').textContent='Serving';
   document.getElementById('cvPill').className='cv-pill serving';
 
-  // Start elapsed timer from ticket's startTime (or now if missing)
-  startElapsedTimer(ticket.startTime || Date.now());
+  // Show wait duration (Timer 1 — now frozen since calledAt is set)
+  const issued = ticket.issuedAt || ticket.startTime;
+  const called = ticket.calledAt;
+  const waitEl = document.getElementById('cvWaitVal');
+  if(issued && called){
+    const sec = Math.round((called - issued)/1000);
+    const mm = String(Math.floor(sec/60)).padStart(2,'0');
+    const ss = String(sec%60).padStart(2,'0');
+    waitEl.textContent = mm+':'+ss;
+  } else {
+    waitEl.textContent = '--:--';
+  }
+
+  // Start service elapsed timer from calledAt (Timer 2)
+  startElapsedTimer(ticket.calledAt || ticket.startTime || Date.now());
 
   // Hide call btn, show action panel
   document.getElementById('cvCallBtn').style.display='none';
@@ -784,15 +830,20 @@ function markDone(){
   const t=sharedLog.find(x=>x.id===activeTicketId);
   if(!t) return;
   t.served=true;
-  t.endTime=Date.now();
+  t.endTime=Date.now();  // Timer 2 stop
   t.compliance=false;
   t.paymentHold=false;
   // Clear lastCall so audience removes this number from display
   if(window._lastCall && window._lastCall.ticketId===activeTicketId){
     window._lastCall=null;
   }
-  // Track in local served log for display
-  myServedLog.unshift({ id:t.id, service:t.service||'', customer:t.customer||null, time: nowTime(), startTime: t.startTime||null, endTime: t.endTime||null });
+  // Track in local served log with both timers
+  myServedLog.unshift({
+    id:t.id, service:t.service||'', customer:t.customer||null, time: nowTime(),
+    issuedAt:  t.issuedAt  || t.startTime || null,   // Timer 1 start
+    calledAt:  t.calledAt  || null,                  // Timer 1 end / Timer 2 start
+    endTime:   t.endTime                             // Timer 2 end
+  });
   saveShared();
   myHistory.unshift(t.id);
   if(myHistory.length>6) myHistory.pop();
@@ -891,7 +942,7 @@ function renderView(){
     document.getElementById('cvPill').textContent='Serving';
     document.getElementById('cvPill').className='cv-pill serving';
     // Keep elapsed timer running (start if not already)
-    if(!_elapsedInterval) startElapsedTimer(active.startTime || Date.now());
+    if(!_elapsedInterval) startElapsedTimer(active.calledAt || active.startTime || Date.now());
   } else {
     // No active ticket — show call button
     const btn=document.getElementById('cvCallBtn');
@@ -934,23 +985,26 @@ function renderView(){
       else if(t._isNext)   badges.push(`<span class="qb qb-next">Next</span>`);
       if(t.priority==='priority') badges.push(`<span class="qb qb-prio">⚡</span>`);
 
-      // Build time line for card
+      // Build time line: Timer 1 for waiting items, Timer 2 for active
       let qTimeHtml = '';
-      if(t.startTime){
-        const st = new Date(t.startTime);
-        const sh = String(st.getHours()).padStart(2,'0');
-        const sm = String(st.getMinutes()).padStart(2,'0');
-        const ss = String(st.getSeconds()).padStart(2,'0');
-        const startFmt = sh+':'+sm+':'+ss;
-        const elSec = Math.round((Date.now()-t.startTime)/1000);
-        const em = String(Math.floor(elSec/60)).padStart(2,'0');
-        const es = String(elSec%60).padStart(2,'0');
-        const elapsedFmt = em+':'+es;
-        const elId = 'qel-'+t.id;
+      const issued = t.issuedAt || t.startTime;
+      if(t._isActive && t.calledAt){
+        // Show service timer (Timer 2) ticking
+        const svcSec = Math.round((Date.now()-t.calledAt)/1000);
+        const em = String(Math.floor(svcSec/60)).padStart(2,'0');
+        const es = String(svcSec%60).padStart(2,'0');
         qTimeHtml = `<div class="cv-q-time">
-          <span class="q-start">▶ ${startFmt}</span>
-          <span style="color:var(--border)">·</span>
-          <span class="q-elapsed" id="${elId}">${elapsedFmt}</span>
+          <span class="q-start" style="color:var(--teal)">▶ Svc</span>
+          <span class="q-elapsed" id="qel-${t.id}" style="color:var(--teal)">${em}:${es}</span>
+        </div>`;
+      } else if(issued){
+        // Show wait timer (Timer 1) ticking
+        const waitSec = Math.round((Date.now()-issued)/1000);
+        const wm = String(Math.floor(waitSec/60)).padStart(2,'0');
+        const ws = String(waitSec%60).padStart(2,'0');
+        qTimeHtml = `<div class="cv-q-time">
+          <span class="q-start" style="color:var(--amber)">⏳ Wait</span>
+          <span class="q-elapsed" id="qel-${t.id}" style="color:var(--amber)">${wm}:${ws}</span>
         </div>`;
       }
       item.innerHTML=`
@@ -981,23 +1035,28 @@ function renderView(){
     servedEl.innerHTML='<span style="font-size:9px;color:var(--muted)">None yet</span>';
   } else {
     servedEl.innerHTML=myServedLog.map(s=>{
-      // Format a timestamp to HH:MM:SS (24h)
       const fmtTs = ts => {
         if(!ts) return '--';
         const d=new Date(ts);
         return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0');
       };
-      let durHtml='';
-      if(s.startTime && s.endTime){
-        const sec=Math.round((s.endTime-s.startTime)/1000);
-        const mm=String(Math.floor(sec/60)).padStart(2,'0');
-        const ss=String(sec%60).padStart(2,'0');
-        durHtml=`<div class="served-dur">
-          <span class="dur-part"><span class="dur-label">Start</span><span class="dur-val">${fmtTs(s.startTime)}</span></span>
-          <span class="dur-part"><span class="dur-label">End</span><span class="dur-val">${fmtTs(s.endTime)}</span></span>
-          <span class="dur-part"><span class="dur-label">Duration</span><span class="dur-total">${mm}:${ss}</span></span>
-        </div>`;
-      }
+      const fmtDur = (a,b) => {
+        if(!a||!b) return '--';
+        const sec=Math.round((b-a)/1000);
+        return String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');
+      };
+      const issued  = s.issuedAt || s.startTime;
+      const called  = s.calledAt;
+      const ended   = s.endTime;
+      const waitDur = fmtDur(issued, called);
+      const svcDur  = fmtDur(called, ended);
+      const durHtml = (issued||called||ended) ? `<div class="served-dur">
+        <span class="dur-part"><span class="dur-label">⏳ Issued</span><span class="dur-val">${fmtTs(issued)}</span></span>
+        <span class="dur-part"><span class="dur-label">▶ Called</span><span class="dur-val">${fmtTs(called)}</span></span>
+        <span class="dur-part"><span class="dur-label">✓ Done</span><span class="dur-val">${fmtTs(ended)}</span></span>
+        <span class="dur-part dur-wait"><span class="dur-label">Wait</span><span class="dur-total dur-amber">${waitDur}</span></span>
+        <span class="dur-part dur-svc"><span class="dur-label">Service</span><span class="dur-total dur-teal">${svcDur}</span></span>
+      </div>` : '';
       return `
       <div class="served-item">
         <div class="served-item-top">
@@ -1032,6 +1091,7 @@ function renderView(){
           <div class="pi-svc">${t.service}</div>
           ${t.customer?`<div class="pi-cust">${t.customer}</div>`:''}
           <div class="pi-time">${t.time}</div>
+          ${(t.issuedAt||t.startTime)?`<div class="pi-wait"><span class="pi-wait-icon">⏳</span><span class="pi-wait-val" id="pwait-${t.id}">00:00</span></div>`:''}
         </div>
         <div class="pi-badges">
           ${t.priority==='priority'?'<span class="pi-badge pi-badge-prio">⚡</span>':''}
@@ -1061,10 +1121,11 @@ function renderHoldZone(tickets, chipsId, emptyId, chipCls){
     chip.setAttribute('ondragstart',`startHoldDrag(event,${t.id})`);
     chip.setAttribute('ondragend','endHoldDrag(event)');
     chip.title=`${t.service}${t.customer?' · '+t.customer:''} — drag back to queue to re-call`;
-    const chipElSec = t.startTime ? Math.round((Date.now()-t.startTime)/1000) : 0;
+    const ref = t.calledAt || t.issuedAt || t.startTime;
+    const chipElSec = ref ? Math.round((Date.now()-ref)/1000) : 0;
     const chipMm = String(Math.floor(chipElSec/60)).padStart(2,'0');
     const chipSs = String(chipElSec%60).padStart(2,'0');
-    const chipTimer = t.startTime ? ` ${chipMm}:${chipSs}` : '';
+    const chipTimer = ref ? ` ${chipMm}:${chipSs}` : '';
     chip.innerHTML=`<span>${String(t.id).padStart(3,'0')}${t.priority==='priority'?'⚡':''}</span><span style="font-family:'DM Mono',monospace;font-size:8px;opacity:0.75;margin-left:3px" id="qel-${t.id}">${chipTimer}</span>`;
     wrap.insertBefore(chip,empty);
   });
