@@ -229,6 +229,39 @@
   /* Toast */
   .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(18px);background:var(--ink);color:var(--bg);padding:11px 26px;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.12em;opacity:0;transition:all 0.3s;pointer-events:none;z-index:999;white-space:nowrap}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* ── SELECTIVE TRANSFER MODAL ── */
+  .stm-modal{background:var(--paper);border:1.5px solid var(--ink);border-radius:4px;width:min(640px,96vw);max-height:88vh;box-shadow:0 12px 48px rgba(24,24,15,0.28);overflow:hidden;display:flex;flex-direction:column;transform:translateY(10px);transition:transform 0.2s}
+  .modal-backdrop.show .stm-modal{transform:translateY(0)}
+  .stm-toolbar{display:flex;gap:8px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--rule);flex-wrap:wrap;background:var(--bg)}
+  .stm-toolbar-lbl{font-size:8px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);flex-shrink:0}
+  .stm-dest-select{font-family:'DM Mono',monospace;font-size:11px;padding:6px 10px;background:var(--paper);border:1.5px solid var(--rule);border-radius:3px;color:var(--ink);outline:none;cursor:pointer;transition:border-color 0.13s;flex:1;min-width:140px}
+  .stm-dest-select:focus{border-color:var(--ink)}
+  .stm-sel-all{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;padding:5px 10px;border:1px solid var(--rule);background:transparent;border-radius:3px;cursor:pointer;color:var(--muted);transition:all 0.13s;white-space:nowrap}
+  .stm-sel-all:hover{border-color:var(--ink);color:var(--ink)}
+  .stm-do-btn{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:0.1em;padding:7px 18px;border:none;border-radius:3px;cursor:pointer;transition:all 0.13s;background:var(--accent2);color:#fff;white-space:nowrap}
+  .stm-do-btn:hover:not(:disabled){background:#0e2a46}
+  .stm-do-btn:disabled{opacity:0.3;cursor:not-allowed}
+  .stm-list{overflow-y:auto;flex:1;padding:10px 14px;display:flex;flex-direction:column;gap:6px;scrollbar-width:thin;scrollbar-color:var(--rule) transparent}
+  .stm-empty{padding:28px;text-align:center;font-size:11px;color:var(--muted);letter-spacing:0.1em}
+  .stm-card{display:flex;align-items:center;gap:10px;padding:9px 12px 9px 10px;background:var(--bg);border:1.5px solid var(--rule);border-radius:3px;cursor:pointer;transition:all 0.13s;position:relative}
+  .stm-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px}
+  .stm-card[data-c="1"]::before{background:var(--c1)}.stm-card[data-c="2"]::before{background:var(--c2)}
+  .stm-card[data-c="3"]::before{background:var(--c3)}.stm-card[data-c="4"]::before{background:var(--c4)}
+  .stm-card[data-c="0"]::before{background:var(--rule)}
+  .stm-card:hover{border-color:var(--accent2)}
+  .stm-card.checked{border-color:var(--accent2);background:rgba(26,58,92,0.06)}
+  .stm-checkbox{width:16px;height:16px;border:1.5px solid var(--rule);border-radius:2px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all 0.13s;background:var(--paper)}
+  .stm-card.checked .stm-checkbox{background:var(--accent2);border-color:var(--accent2);color:#fff;font-size:10px}
+  .stm-num{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:0.04em;min-width:38px;flex-shrink:0;color:var(--muted)}
+  .stm-card[data-c="1"] .stm-num{color:var(--c1)}.stm-card[data-c="2"] .stm-num{color:var(--c2)}
+  .stm-card[data-c="3"] .stm-num{color:var(--c3)}.stm-card[data-c="4"] .stm-num{color:var(--c4)}
+  .stm-body{flex:1;overflow:hidden}
+  .stm-svc{font-size:9px;letter-spacing:0.07em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .stm-cust{font-size:8px;color:var(--muted);margin-top:1px}
+  .stm-badges{display:flex;gap:3px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;max-width:80px}
+  .stm-counter-badge{font-size:7px;letter-spacing:0.09em;padding:1px 5px;border-radius:2px;text-transform:uppercase;white-space:nowrap;border:1px solid}
+  .stm-count-info{font-size:8px;letter-spacing:0.1em;color:var(--muted);padding:4px 16px 8px;text-align:right;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -382,7 +415,10 @@
             </select>
           </div>
           <div class="transfer-preview" id="transferPreview">Select source and destination desks to preview the transfer.</div>
-          <button class="transfer-btn" id="transferBtn" onclick="executeTransfer()" disabled>↔ Transfer All Tickets</button>
+          <div style="display:flex;gap:7px;flex-wrap:wrap">
+            <button class="transfer-btn" id="transferBtn" onclick="executeTransfer()" disabled style="flex:1">↔ Transfer All</button>
+            <button class="transfer-btn" id="selectiveTransferBtn" onclick="openSelectiveTransfer()" disabled style="background:var(--ink);flex:1">☑ Select Tickets…</button>
+          </div>
         </div>
       </div>
 
@@ -412,6 +448,36 @@
         </div>
       </div>
 
+    </div>
+  </div>
+</div>
+
+<!-- ── Selective Transfer Modal ── -->
+<div class="modal-backdrop" id="selectiveTransferModal">
+  <div class="stm-modal">
+    <div class="modal-hdr">
+      <div>
+        <div class="modal-hdr-title">☑ Select Tickets to Transfer</div>
+        <div class="modal-hdr-sub" id="stmSubtitle">Choose individual tickets to reassign</div>
+      </div>
+      <button class="modal-close" onclick="closeSelectiveTransfer()">✕</button>
+    </div>
+    <div class="stm-toolbar">
+      <span class="stm-toolbar-lbl">Move to →</span>
+      <select class="stm-dest-select" id="stmDestSelect" onchange="updateStmBtn()">
+        <option value="">— Select destination —</option>
+        <option value="0">Unassigned Pool</option>
+        <option value="1">DMW Desk 2</option>
+        <option value="2">DMW Desk 3</option>
+        <option value="3">DMW Desk 4</option>
+        <option value="4">DMW Desk 5</option>
+      </select>
+      <button class="stm-sel-all" onclick="stmToggleAll()">Select All</button>
+      <button class="stm-do-btn" id="stmDoBtn" onclick="executeSelectiveTransfer()" disabled>↔ Transfer Selected</button>
+    </div>
+    <div class="stm-count-info" id="stmCountInfo">0 tickets selected</div>
+    <div class="stm-list" id="stmList">
+      <div class="stm-empty">No tickets available.</div>
     </div>
   </div>
 </div>
@@ -753,11 +819,20 @@ function updateTransferPreview(){
   if(!fromVal || toVal===''){
     preview.innerHTML = 'Select source and destination desks to preview the transfer.';
     btn.disabled = true;
+    // Still enable select-tickets if source has tickets
+    if(fromVal){
+      const from2 = parseInt(fromVal);
+      const hasTickets = log.filter(t => !t.served && t.counter === from2).length > 0;
+      document.getElementById('selectiveTransferBtn').disabled = !hasTickets;
+    } else {
+      document.getElementById('selectiveTransferBtn').disabled = true;
+    }
     return;
   }
   if(fromVal === toVal){
     preview.innerHTML = '<span style="color:var(--accent)">Source and destination cannot be the same desk.</span>';
     btn.disabled = true;
+    document.getElementById('selectiveTransferBtn').disabled = true;
     return;
   }
 
@@ -772,6 +847,7 @@ function updateTransferPreview(){
   if(!toMove.length){
     preview.innerHTML = `<span style="color:var(--muted)">No active tickets on ${COUNTER_LABELS[from]}.</span>`;
     btn.disabled = true;
+    document.getElementById('selectiveTransferBtn').disabled = true;
     return;
   }
 
@@ -781,8 +857,148 @@ function updateTransferPreview(){
   if(onHold.length)  msg += ` &nbsp;·&nbsp; <span>${onHold.length} on hold</span>`;
   preview.innerHTML = msg;
   btn.disabled = false;
+  document.getElementById('selectiveTransferBtn').disabled = false;
 }
 window.updateTransferPreview = updateTransferPreview;
+
+// ── Selective Transfer ──
+let _stmFromCounter = null;
+let _stmSelected = new Set(); // ticket IDs
+
+function openSelectiveTransfer(){
+  const fromVal = document.getElementById('transferFrom').value;
+  const toVal   = document.getElementById('transferTo').value;
+  if(!fromVal) return;
+
+  _stmFromCounter = parseInt(fromVal);
+  _stmSelected.clear();
+
+  // Pre-fill destination if already chosen
+  const destSelect = document.getElementById('stmDestSelect');
+  // Remove the source counter from destination options
+  Array.from(destSelect.options).forEach(opt=>{
+    opt.disabled = (opt.value !== '' && parseInt(opt.value) === _stmFromCounter);
+  });
+  destSelect.value = (toVal !== '' && parseInt(toVal) !== _stmFromCounter) ? toVal : '';
+
+  document.getElementById('stmSubtitle').textContent =
+    `Tickets from ${COUNTER_LABELS[_stmFromCounter]} · check to include`;
+
+  renderStmList();
+  updateStmBtn();
+  document.getElementById('selectiveTransferModal').classList.add('show');
+}
+window.openSelectiveTransfer = openSelectiveTransfer;
+
+function closeSelectiveTransfer(){
+  document.getElementById('selectiveTransferModal').classList.remove('show');
+  _stmSelected.clear();
+}
+window.closeSelectiveTransfer = closeSelectiveTransfer;
+
+function renderStmList(){
+  const list = document.getElementById('stmList');
+  const tickets = log.filter(t => !t.served && t.counter === _stmFromCounter);
+
+  if(!tickets.length){
+    list.innerHTML = `<div class="stm-empty">No active tickets on ${COUNTER_LABELS[_stmFromCounter]}.</div>`;
+    updateStmCountInfo(tickets.length);
+    return;
+  }
+
+  list.innerHTML = '';
+  tickets.forEach(t => {
+    const card = document.createElement('div');
+    card.className = 'stm-card' + (_stmSelected.has(t.id) ? ' checked' : '');
+    card.dataset.c = t.counter;
+    card.dataset.id = t.id;
+    card.onclick = () => stmToggleTicket(t.id, card);
+
+    const badges = [];
+    if(t.priority==='priority') badges.push(`<span class="stm-counter-badge" style="color:#b03a2e;border-color:rgba(176,58,46,0.3);background:#fdecea">⚡ Priority</span>`);
+    if(t.compliance)            badges.push(`<span class="stm-counter-badge" style="color:var(--amber);border-color:rgba(154,111,0,0.25);background:#fff8e1">⏸ Comply</span>`);
+    if(t.paymentHold)           badges.push(`<span class="stm-counter-badge" style="color:var(--teal);border-color:rgba(14,107,138,0.22);background:#e8f4f8">💳 Payment</span>`);
+    const cLabel = t.counter > 0
+      ? `<span class="stm-counter-badge" style="color:var(--c${t.counter});border-color:rgba(0,0,0,0.12);background:var(--c${t.counter}bg)">C${t.counter}</span>`
+      : `<span class="stm-counter-badge" style="color:var(--muted);border-color:rgba(133,127,114,0.2);background:rgba(133,127,114,0.08)">Pool</span>`;
+    badges.unshift(cLabel);
+
+    card.innerHTML = `
+      <div class="stm-checkbox">${_stmSelected.has(t.id) ? '✓' : ''}</div>
+      <div class="stm-num">${String(t.id).padStart(3,'0')}</div>
+      <div class="stm-body">
+        <div class="stm-svc">${t.service}</div>
+        ${t.customer ? `<div class="stm-cust">${t.customer}</div>` : ''}
+      </div>
+      <div class="stm-badges">${badges.join('')}</div>`;
+    list.appendChild(card);
+  });
+  updateStmCountInfo(tickets.length);
+}
+
+function stmToggleTicket(id, card){
+  if(_stmSelected.has(id)){
+    _stmSelected.delete(id);
+    card.classList.remove('checked');
+    card.querySelector('.stm-checkbox').textContent = '';
+  } else {
+    _stmSelected.add(id);
+    card.classList.add('checked');
+    card.querySelector('.stm-checkbox').textContent = '✓';
+  }
+  const total = log.filter(t => !t.served && t.counter === _stmFromCounter).length;
+  updateStmCountInfo(total);
+  updateStmBtn();
+}
+
+function stmToggleAll(){
+  const tickets = log.filter(t => !t.served && t.counter === _stmFromCounter);
+  const allChecked = tickets.every(t => _stmSelected.has(t.id));
+  if(allChecked){
+    tickets.forEach(t => _stmSelected.delete(t.id));
+  } else {
+    tickets.forEach(t => _stmSelected.add(t.id));
+  }
+  renderStmList();
+  updateStmBtn();
+}
+window.stmToggleAll = stmToggleAll;
+
+function updateStmCountInfo(total){
+  document.getElementById('stmCountInfo').textContent =
+    `${_stmSelected.size} of ${total} ticket${total!==1?'s':''} selected`;
+}
+
+function updateStmBtn(){
+  const dest = document.getElementById('stmDestSelect').value;
+  document.getElementById('stmDoBtn').disabled = !_stmSelected.size || dest === '';
+}
+window.updateStmBtn = updateStmBtn;
+
+function executeSelectiveTransfer(){
+  const destVal = document.getElementById('stmDestSelect').value;
+  if(destVal === '' || !_stmSelected.size) return;
+
+  const to = parseInt(destVal);
+  const fromLabel = COUNTER_LABELS[_stmFromCounter];
+  const toLabel   = COUNTER_LABELS[to];
+  const ids = [..._stmSelected];
+
+  if(!confirm(`Transfer ${ids.length} selected ticket${ids.length!==1?'s':''} from ${fromLabel} → ${toLabel}?`)) return;
+
+  ids.forEach(id => {
+    const t = log.find(x => x.id === id);
+    if(!t) return;
+    t.counter = to;
+    if(to === 0){ t.compliance = false; t.paymentHold = false; }
+  });
+
+  saveState();
+  closeSelectiveTransfer();
+  updateTransferPreview();
+  showToast(`✓ ${ids.length} ticket${ids.length!==1?'s':''} → ${toLabel}`);
+}
+window.executeSelectiveTransfer = executeSelectiveTransfer;
 
 function executeTransfer(){
   const fromVal = document.getElementById('transferFrom').value;
@@ -1072,6 +1288,9 @@ window.downloadSnapshotPdf = downloadSnapshotPdf;
 // Close modal on backdrop click
 document.getElementById('eodModal').addEventListener('click', function(e){
   if(e.target===this) closeEodModal();
+});
+document.getElementById('selectiveTransferModal').addEventListener('click', function(e){
+  if(e.target===this) closeSelectiveTransfer();
 });
 
 function resetNumbering(){
