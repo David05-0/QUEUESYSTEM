@@ -792,14 +792,13 @@ function markDone(){
     window._lastCall=null;
   }
   // Track in local served log for display
-  myServedLog.unshift({ id:t.id, service:t.service||'', customer:t.customer||null, time: nowTime(),
-    issuedAt: t.issuedAt||t.startTime||null, calledAt: t.calledAt||null, endTime: t.endTime||null });
+  myServedLog.unshift({ id:t.id, service:t.service||'', customer:t.customer||null, time: nowTime(), startTime: t.startTime||null, endTime: t.endTime||null });
   myHistory.unshift(t.id);
   if(myHistory.length>6) myHistory.pop();
   myServed++;
   showToast(`#${String(t.id).padStart(3,'0')} ✓ Served`);
-  // Clear activeTicketId BEFORE saveShared — prevents the Firebase echo from
-  // re-entering the "admin marked served" branch and adding a duplicate entry
+  // Clear activeTicketId BEFORE saveShared so the Firebase echo doesn't
+  // re-enter the "admin marked served" branch and add a duplicate entry
   activeTicketId=null;
   sessionStorage.removeItem('ssTicketId');
   stopElapsedTimer();
