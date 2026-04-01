@@ -3,517 +3,295 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Queue Admin — DMW Desk</title>
+<title>Queue Display — Audience Screen</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#f4f1ea;--paper:#fdfaf3;--ink:#18180f;
-    --rule:#d5d0c2;--accent:#b03a2e;--accent2:#1a3a5c;
-    --muted:#857f72;--shadow:rgba(24,24,15,0.10);--green:#1e8449;
-    --amber:#9a6f00;--teal:#0e6b8a;
-    --c1:#e67e22;--c1bg:#fdf3ec;
-    --c2:#2471a3;--c2bg:#eaf3fb;
-    --c3:#1e8449;--c3bg:#eafaf1;
-    --c4:#7d3c98;--c4bg:#f5eefb;
+    --bg:#06060a;--deep:#0d0d14;--panel:#10101a;--border:#1c1c2e;
+    --text:#eeeef6;--muted:#44445a;--dim:#2a2a3e;
+    --c1:#e67e22;--c2:#2471a3;--c3:#1e8449;--c4:#7d3c98;
+    --gold:#f0c040;--priority:#e74c3c;
   }
   *{margin:0;padding:0;box-sizing:border-box}
-  body{background:var(--bg);color:var(--ink);font-family:'DM Mono',monospace;min-height:100vh}
-  body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
-  .app{position:relative;z-index:1;max-width:1160px;margin:0 auto;padding:24px 20px 60px}
+  html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;overflow:hidden}
+  .bg-grid{position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,0.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.012) 1px,transparent 1px);background-size:64px 64px;z-index:0;animation:gridDrift 40s linear infinite}
+  @keyframes gridDrift{from{background-position:0 0,0 0}to{background-position:64px 64px,64px 64px}}
+  .bg-vignette{position:fixed;inset:0;background:radial-gradient(ellipse at center,transparent 25%,rgba(6,6,10,0.9) 100%);z-index:0}
+  .shell{position:relative;z-index:1;width:100vw;height:100vh;display:grid;grid-template-rows:auto 1fr auto}
 
-  /* ── HEADER ── */
-  header{display:flex;align-items:flex-end;justify-content:space-between;border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:24px;flex-wrap:wrap;gap:10px}
-  .brand-sup{font-size:9px;letter-spacing:0.3em;color:var(--muted);text-transform:uppercase;margin-bottom:2px}
-  .brand-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(32px,4vw,52px);letter-spacing:0.04em;line-height:1}
-  .brand-title span{color:var(--accent)}
-  .hdr-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
-  .clock{font-family:'Bebas Neue',sans-serif;font-size:clamp(24px,3vw,38px);color:var(--muted);letter-spacing:0.08em}
-  .fb-status{display:inline-flex;align-items:center;gap:5px;font-size:8px;letter-spacing:0.16em;text-transform:uppercase;padding:3px 9px;border-radius:20px;border:1px solid var(--rule);color:var(--muted)}
-  .fb-status.connected{color:var(--green);border-color:rgba(30,132,73,0.4);background:rgba(30,132,73,0.07)}
-  .fb-status.error{color:var(--accent);border-color:rgba(176,58,46,0.4);background:rgba(176,58,46,0.07)}
-  .fb-dot{width:5px;height:5px;border-radius:50%;background:currentColor}
-  .nav-links{display:flex;gap:8px;margin-top:2px}
-  .nav-link{font-size:8px;letter-spacing:0.16em;text-transform:uppercase;color:var(--accent2);text-decoration:none;border-bottom:1px solid var(--accent2);padding-bottom:1px;transition:color 0.15s}
-  .nav-link:hover{color:var(--accent);border-color:var(--accent)}
+  /* TOP BAR */
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 36px 12px;border-bottom:1px solid var(--border);background:rgba(13,13,20,0.9);backdrop-filter:blur(8px)}
+  .topbar-left{display:flex;align-items:center;gap:16px}
+  .logo-mark{width:34px;height:34px;border:2px solid var(--gold);border-radius:3px;display:flex;align-items:center;justify-content:center}
+  .logo-mark svg{width:18px;height:18px;fill:var(--gold)}
+  .brand-title{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:0.1em;line-height:1}
+  .brand-title span{color:var(--gold)}
+  .brand-sub{font-size:8px;letter-spacing:0.26em;color:var(--muted);text-transform:uppercase;margin-top:1px}
+  .topbar-center{font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:0.28em;color:var(--muted);text-transform:uppercase;border:1px solid var(--border);padding:5px 14px;border-radius:2px}
+  .topbar-right{display:flex;align-items:center;gap:24px}
+  .stat-badge{text-align:center}
+  .stat-badge-val{font-family:'Bebas Neue',sans-serif;font-size:24px;line-height:1;letter-spacing:0.04em}
+  .stat-badge-lbl{font-size:7px;letter-spacing:0.2em;color:var(--muted);text-transform:uppercase;margin-top:1px}
+  .clock-display{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:0.1em;color:var(--text);border-left:1px solid var(--border);padding-left:24px}
+  .fb-live{font-size:7px;letter-spacing:0.18em;text-transform:uppercase;padding:3px 9px;border-radius:20px;color:#3ddc84;border:1px solid rgba(61,220,132,0.35);background:rgba(61,220,132,0.07);display:flex;align-items:center;gap:4px}
+  .fb-live-dot{width:5px;height:5px;border-radius:50%;background:#3ddc84;animation:fbPulse 2s ease infinite}
+  @keyframes fbPulse{0%,100%{opacity:1}50%{opacity:0.4}}
 
-  /* ── 2-col layout ── */
-  .layout{display:grid;grid-template-columns:320px 1fr;gap:20px;align-items:start}
-  @media(max-width:820px){.layout{grid-template-columns:1fr}}
+  /* MAIN */
+  .main-content{display:grid;grid-template-columns:52px 1fr 320px;overflow:hidden}
+  .main-content.has-video{grid-template-columns:1fr 380px 320px}
 
-  /* ── ISSUE PANEL ── */
-  .issue-panel{background:var(--paper);border:1px solid var(--rule);border-radius:2px;box-shadow:0 2px 12px var(--shadow);overflow:hidden;position:sticky;top:20px}
-  .panel-head{background:var(--ink);color:var(--bg);padding:12px 20px;display:flex;align-items:center;justify-content:space-between}
-  .panel-head-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:0.1em}
-  .panel-head-sub{font-size:8px;letter-spacing:0.18em;color:rgba(244,241,234,0.4);text-transform:uppercase}
-  .panel-body{padding:18px 18px 20px}
-  .field-label{font-size:8px;letter-spacing:0.24em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+  /* ── VIDEO PLAYER ── */
+  .counters-area{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;border-right:1px solid var(--border)}
+  /* When video is active — video pane expands, counters stack */
+  .video-pane{position:relative;display:flex;flex-direction:column;border-right:1px solid var(--border);background:#000;overflow:hidden}
+  .video-pane video{width:100%;height:100%;object-fit:contain;display:block}
+  .video-pane.empty{display:flex;align-items:center;justify-content:center;background:var(--deep);flex-direction:column;gap:6px;padding:8px 4px}
+  .video-empty-msg{text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px}
+  .video-empty-icon{font-size:48px;opacity:0.2}
+  .video-empty-lbl{font-size:9px;letter-spacing:0.24em;text-transform:uppercase;color:var(--muted)}
+  .video-upload-btn{font-family:'Bebas Neue',sans-serif;font-size:10px;letter-spacing:0.1em;padding:8px 6px;background:transparent;border:1.5px solid var(--border);color:var(--muted);border-radius:3px;cursor:pointer;transition:all 0.15s;writing-mode:vertical-lr;text-orientation:mixed;white-space:nowrap}
+  .video-upload-btn:hover{border-color:var(--gold);color:var(--gold)}
+  .video-controls{position:absolute;bottom:0;left:0;right:0;padding:8px 12px;background:linear-gradient(transparent,rgba(0,0,0,0.7));display:flex;align-items:center;gap:8px;opacity:0;transition:opacity 0.2s}
+  .video-pane:hover .video-controls{opacity:1}
+  .vc-btn{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;padding:4px 10px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:2px;cursor:pointer;transition:all 0.13s;white-space:nowrap}
+  .vc-btn:hover{background:rgba(255,255,255,0.2)}
+  .vc-btn.danger:hover{background:rgba(176,58,46,0.4);border-color:rgba(176,58,46,0.6);color:#ff8080}
+  .vc-spacer{flex:1}
+  .vc-label{font-size:7px;letter-spacing:0.16em;color:rgba(255,255,255,0.5);text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px}
+  /* Dim video when call flash is showing */
+  .video-pane.dimmed video{filter:brightness(0.25);transition:filter 0.4s}
+  /* When video active, counter panels go 1-col stacked */
+  .main-content.has-video .counters-area{grid-template-columns:1fr;grid-template-rows:repeat(4,1fr)}
+  .main-content.has-video .counter-panel{border-right:none}
+  .main-content.has-video .counter-panel:nth-child(2){border-right:none}
+  .main-content.has-video .counter-panel:last-child{border-bottom:none}
+  .counter-panel{position:relative;display:flex;flex-direction:column;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:28px 32px;overflow:hidden;transition:background 0.5s}
+  /* ── ABSENT OVERLAY ── */
+  .counter-panel.absent{opacity:0.5}
+  .cp-absent-overlay{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(6,6,10,0.82);backdrop-filter:blur(2px);z-index:2}
+  .counter-panel.absent .cp-absent-overlay{display:flex}
+  .cp-absent-icon{font-size:32px;opacity:0.6}
+  .cp-absent-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(22px,3vw,36px);letter-spacing:0.2em;color:#ff5f5f}
+  .cp-absent-sub{font-size:9px;letter-spacing:0.26em;text-transform:uppercase;color:rgba(255,95,95,0.55)}
+  .counter-panel:nth-child(2){border-right:none}.counter-panel:nth-child(3){border-bottom:none}.counter-panel:nth-child(4){border-right:none;border-bottom:none}
+  .counter-panel::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity 0.8s;pointer-events:none}
+  .counter-panel[data-c="1"]::before{background:radial-gradient(ellipse at 30% 40%,rgba(230,126,34,0.13) 0%,transparent 65%)}
+  .counter-panel[data-c="2"]::before{background:radial-gradient(ellipse at 30% 40%,rgba(36,113,163,0.13) 0%,transparent 65%)}
+  .counter-panel[data-c="3"]::before{background:radial-gradient(ellipse at 30% 40%,rgba(30,132,73,0.13) 0%,transparent 65%)}
+  .counter-panel[data-c="4"]::before{background:radial-gradient(ellipse at 30% 40%,rgba(125,60,152,0.13) 0%,transparent 65%)}
+  .counter-panel.active::before{opacity:1}
+  .counter-accent-bar{position:absolute;left:0;top:0;bottom:0;width:6px}
+  .counter-panel[data-c="1"] .counter-accent-bar{background:var(--c1)}.counter-panel[data-c="2"] .counter-accent-bar{background:var(--c2)}
+  .counter-panel[data-c="3"] .counter-accent-bar{background:var(--c3)}.counter-panel[data-c="4"] .counter-accent-bar{background:var(--c4)}
+  .cp-label{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .cp-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+  .counter-panel[data-c="1"] .cp-dot{background:var(--c1)}.counter-panel[data-c="2"] .cp-dot{background:var(--c2)}
+  .counter-panel[data-c="3"] .cp-dot{background:var(--c3)}.counter-panel[data-c="4"] .cp-dot{background:var(--c4)}
+  .cp-name{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:0.18em;color:#ffffff}
+  .cp-status-pill{margin-left:auto;font-size:8px;letter-spacing:0.16em;text-transform:uppercase;padding:3px 10px;border-radius:20px;border:1px solid var(--border);color:var(--muted);transition:all 0.4s}
+  .cp-status-pill.serving{color:#3ddc84;border-color:rgba(61,220,132,0.4);background:rgba(61,220,132,0.07);animation:pillPulse 2s ease infinite}
+  @keyframes pillPulse{0%,100%{opacity:1}50%{opacity:0.6}}
+  .cp-number-wrap{flex:1;display:flex;align-items:center;gap:20px}
+  .cp-number{font-family:'Bebas Neue',sans-serif;font-size:clamp(80px,11vw,160px);line-height:0.9;letter-spacing:0.02em;color:var(--muted);transition:color 0.4s,text-shadow 0.4s}
+  .counter-panel[data-c="1"] .cp-number.has-num{color:var(--c1);text-shadow:0 0 80px rgba(230,126,34,0.45)}
+  .counter-panel[data-c="2"] .cp-number.has-num{color:var(--c2);text-shadow:0 0 80px rgba(36,113,163,0.45)}
+  .counter-panel[data-c="3"] .cp-number.has-num{color:var(--c3);text-shadow:0 0 80px rgba(30,132,73,0.45)}
+  .counter-panel[data-c="4"] .cp-number.has-num{color:var(--c4);text-shadow:0 0 80px rgba(125,60,152,0.45)}
+  .cp-number.pop{animation:numPop 0.55s cubic-bezier(0.34,1.56,0.64,1)}
+  @keyframes numPop{0%{transform:scale(0.6) translateY(20px);opacity:0}60%{transform:scale(1.08) translateY(-4px);opacity:1}100%{transform:scale(1) translateY(0)}}
+  .cp-info-col{display:flex;flex-direction:column;gap:5px}
+  .cp-now-lbl{font-size:9px;letter-spacing:0.22em;text-transform:uppercase;color:var(--muted)}
+  .cp-service-tag{font-size:13px;letter-spacing:0.05em;color:var(--text);opacity:0.8;white-space:normal;line-height:1.3}
+  .cp-customer{font-size:16px;letter-spacing:0.05em;font-weight:500;white-space:normal;line-height:1.3}
+  .priority-tag{display:inline-flex;align-items:center;gap:3px;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--priority);border:1px solid rgba(231,76,60,0.35);background:rgba(231,76,60,0.08);padding:3px 8px;border-radius:2px;margin-top:2px}
+  .cp-wave{position:absolute;bottom:14px;right:22px;display:flex;align-items:center;gap:4px;opacity:0;transition:opacity 0.3s}
+  .cp-wave.active{opacity:1}
+  .cp-wave-label{font-size:7px;letter-spacing:0.18em;text-transform:uppercase}
+  .counter-panel[data-c="1"] .cp-wave-label{color:var(--c1)}.counter-panel[data-c="2"] .cp-wave-label{color:var(--c2)}
+  .counter-panel[data-c="3"] .cp-wave-label{color:var(--c3)}.counter-panel[data-c="4"] .cp-wave-label{color:var(--c4)}
+  .wave-bars{display:flex;gap:2px;align-items:flex-end}
+  .wave-bars span{display:block;width:2px;border-radius:1px;animation:barWave 0.9s ease infinite}
+  .counter-panel[data-c="1"] .wave-bars span{background:var(--c1)}.counter-panel[data-c="2"] .wave-bars span{background:var(--c2)}
+  .counter-panel[data-c="3"] .wave-bars span{background:var(--c3)}.counter-panel[data-c="4"] .wave-bars span{background:var(--c4)}
+  .wave-bars span:nth-child(1){height:5px}.wave-bars span:nth-child(2){height:11px;animation-delay:0.14s}.wave-bars span:nth-child(3){height:17px;animation-delay:0.26s}.wave-bars span:nth-child(4){height:9px;animation-delay:0.09s}.wave-bars span:nth-child(5){height:7px;animation-delay:0.2s}
+  @keyframes barWave{0%,100%{transform:scaleY(0.3)}50%{transform:scaleY(1)}}
+  .cp-queue-row{display:flex;align-items:center;gap:7px;margin-top:10px;flex-wrap:wrap}
+  .cp-queue-lbl{font-size:7px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);flex-shrink:0}
+  .q-badge{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:0.05em;padding:1px 7px;border-radius:2px;background:var(--panel);border:1px solid var(--border);color:var(--dim)}
+  .q-badge.up-next{border-color:var(--muted);color:var(--text);opacity:0.8}
 
-  /* Services */
-  .service-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:18px}
-  .svc-btn{border:1.5px solid var(--rule);background:var(--bg);border-radius:3px;padding:9px 8px;cursor:pointer;transition:all 0.13s;text-align:left;font-family:'DM Mono',monospace;display:flex;align-items:center;gap:7px}
-  .svc-btn:hover{border-color:var(--ink)}
-  .svc-btn.selected{border-color:var(--ink);background:var(--ink);color:var(--bg)}
-  .svc-icon{font-size:15px;flex-shrink:0}
-  .svc-name{font-size:9px;letter-spacing:0.09em;text-transform:uppercase;font-weight:500;display:block}
-  .svc-code{font-size:7.5px;letter-spacing:0.07em;color:var(--muted);margin-top:1px;display:block}
-  .svc-btn.selected .svc-code{color:rgba(244,241,234,0.45)}
+  /* SIDEBAR */
+  .sidebar{display:flex;flex-direction:column;overflow:hidden}
+  .last-called-section{flex-shrink:0;padding:16px 20px 14px;border-bottom:1px solid var(--border)}
+  .section-title{font-size:8px;letter-spacing:0.28em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:7px}
+  .section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+  .last-called-card{background:var(--deep);border:1px solid var(--border);border-radius:3px;padding:13px 16px;display:flex;align-items:center;gap:12px;animation:slideInRight 0.4s ease}
+  @keyframes slideInRight{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+  .lc-num{font-family:'Bebas Neue',sans-serif;font-size:46px;line-height:1;letter-spacing:0.04em;flex-shrink:0}
+  .lc-info{flex:1;overflow:hidden}
+  .lc-counter{font-size:9px;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:2px}
+  .lc-svc{font-size:10px;letter-spacing:0.05em;color:var(--muted);white-space:normal;word-break:break-word}
+  .lc-cust{font-size:11px;letter-spacing:0.04em;color:var(--text);margin-top:1px;white-space:normal;word-break:break-word}
+  .lc-time{font-size:9px;color:var(--muted);flex-shrink:0}
+  .activity-section{flex:1;overflow:hidden;display:flex;flex-direction:column;padding:14px 20px 0}
+  .activity-feed{flex:1;overflow-y:auto;scrollbar-width:none}
+  .activity-feed::-webkit-scrollbar{display:none}
+  .activity-item{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--border);animation:feedSlide 0.35s ease}
+  @keyframes feedSlide{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+  .activity-item:last-child{border-bottom:none}
+  .ai-num{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:0.04em;min-width:42px;flex-shrink:0}
+  .activity-item[data-c="1"] .ai-num{color:var(--c1)}.activity-item[data-c="2"] .ai-num{color:var(--c2)}
+  .activity-item[data-c="3"] .ai-num{color:var(--c3)}.activity-item[data-c="4"] .ai-num{color:var(--c4)}
+  .ai-body{flex:1;overflow:hidden}
+  .ai-top{font-size:9px;letter-spacing:0.07em;color:var(--text);opacity:0.7}
+  .ai-bot{font-size:8px;letter-spacing:0.05em;color:var(--muted);margin-top:1px}
+  .ai-time{font-size:8px;color:var(--muted);flex-shrink:0}
+  .ai-prio{font-size:7px;padding:1px 4px;border-radius:2px;color:var(--priority);border:1px solid rgba(231,76,60,0.3);background:rgba(231,76,60,0.07);flex-shrink:0}
 
-  /* Name */
-  .name-row{margin-bottom:14px}
-  .name-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
-  .name-input{width:100%;font-family:'DM Mono',monospace;font-size:12px;padding:9px 11px;background:var(--bg);border:1.5px solid var(--rule);border-radius:3px;color:var(--ink);outline:none;transition:border-color 0.13s}
-  .name-input:focus{border-color:var(--ink)}
-  .name-input::placeholder{color:var(--muted)}
-  .name-input-lbl{font-size:7px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+  /* TICKER */
+  .bottom-bar{border-top:1px solid var(--border);background:rgba(13,13,20,0.95);backdrop-filter:blur(8px);display:flex;align-items:center;height:42px;overflow:hidden}
+  .ticker-label{flex-shrink:0;background:var(--gold);color:#06060a;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:0.14em;padding:0 16px;height:100%;display:flex;align-items:center}
+  .ticker-track{flex:1;overflow:hidden;height:100%;display:flex;align-items:center}
+  .ticker-inner{display:inline-block;white-space:nowrap;animation:tickerScroll 32s linear infinite;font-size:10px;letter-spacing:0.2em;color:var(--muted);text-transform:uppercase}
+  @keyframes tickerScroll{from{transform:translateX(100vw)}to{transform:translateX(-100%)}}
 
-  /* Priority */
-  .priority-row{display:flex;align-items:center;gap:9px;margin-bottom:18px;flex-wrap:wrap}
-  .toggle-wrap{display:flex;gap:6px}
-  .prio-opt{border:1.5px solid var(--rule);background:var(--bg);border-radius:3px;padding:6px 12px;font-size:8px;letter-spacing:0.13em;text-transform:uppercase;cursor:pointer;font-family:'DM Mono',monospace;transition:all 0.13s}
-  .prio-opt.selected.normal{border-color:var(--ink);background:var(--ink);color:var(--bg)}
-  .prio-opt.selected.priority{border-color:var(--accent);background:var(--accent);color:#fff}
-  .prio-note{font-size:7.5px;letter-spacing:0.09em;color:var(--muted);text-transform:uppercase}
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     PROJECTED CALL FLASH — the big audience text
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .call-flash{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;flex-direction:column;background:rgba(6,6,10,0.95);opacity:0;pointer-events:none;transition:opacity 0.35s;backdrop-filter:blur(3px)}
+  .call-flash.show{opacity:1;pointer-events:all}
 
-  .issue-btn{width:100%;background:var(--ink);color:var(--bg);border:none;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:0.12em;padding:15px;cursor:pointer;transition:all 0.13s;display:flex;align-items:center;justify-content:center;gap:8px}
-  .issue-btn:hover:not(:disabled){background:var(--accent);transform:translateY(-1px);box-shadow:0 5px 18px rgba(176,58,46,0.22)}
-  .issue-btn:disabled{opacity:0.3;cursor:not-allowed;transform:none;box-shadow:none}
-  .reset-btn{width:100%;margin-top:7px;background:transparent;color:var(--muted);border:1.5px dashed var(--rule);border-radius:3px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;padding:9px;cursor:pointer;transition:all 0.13s}
-  .reset-btn:hover{color:var(--accent);border-color:var(--accent);border-style:solid}
+  /* "NOW SERVING" label */
+  .cf-now-lbl{font-size:clamp(14px,2vw,20px);letter-spacing:0.42em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;animation:cfFadeIn 0.4s ease}
 
-  /* ── RIGHT SIDE ── */
-  .right-side{display:flex;flex-direction:column;gap:16px}
+  /* Giant ticket number */
+  .cf-number{font-family:'Bebas Neue',sans-serif;font-size:clamp(140px,28vw,300px);line-height:0.85;letter-spacing:0.04em;animation:cfZoomIn 0.5s cubic-bezier(0.34,1.56,0.64,1)}
 
-  /* Stats */
-  .stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-  .stat-card{background:var(--paper);border:1px solid var(--rule);border-radius:2px;box-shadow:0 1px 6px var(--shadow);padding:12px 14px}
-  .stat-val{font-family:'Bebas Neue',sans-serif;font-size:28px;line-height:1;letter-spacing:0.04em}
-  .stat-lbl{font-size:7.5px;letter-spacing:0.18em;color:var(--muted);text-transform:uppercase;margin-top:2px}
+  /* "GO TO COUNTER X" — this is the projected instruction */
+  .cf-goto{font-family:'Bebas Neue',sans-serif;font-size:clamp(32px,5vw,64px);letter-spacing:0.14em;text-transform:uppercase;margin-top:14px;animation:cfFadeIn 0.5s ease 0.12s both;display:flex;align-items:center;gap:14px}
+  .cf-goto-num{font-family:'Bebas Neue',sans-serif}
+  .cf-goto-arrow{font-size:0.75em;opacity:0.65}
 
-  /* ── UNASSIGNED POOL ── */
-  .pool-card{background:var(--paper);border:1px solid var(--rule);border-radius:2px;box-shadow:0 2px 8px var(--shadow);overflow:hidden}
-  .pool-head{background:var(--ink);color:var(--bg);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
-  .pool-head-title{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:0.1em;display:flex;align-items:center;gap:10px}
-  .pool-count-badge{font-size:11px;background:rgba(244,241,234,0.15);padding:2px 10px;border-radius:20px;letter-spacing:0.06em;font-family:'DM Mono',monospace}
-  .pool-head-hint{font-size:8px;color:rgba(244,241,234,0.45);letter-spacing:0.12em;text-transform:uppercase}
+  /* Counter name badge */
+  .cf-counter-badge{display:inline-flex;align-items:center;gap:10px;padding:8px 22px;border-radius:4px;margin-top:6px;animation:cfFadeIn 0.5s ease 0.2s both}
+  .cf-counter-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+  .cf-counter-text{font-family:'Bebas Neue',sans-serif;font-size:clamp(18px,3vw,32px);letter-spacing:0.16em}
 
-  /* Filter tabs */
-  .pool-filters{display:flex;gap:6px;padding:10px 16px;border-bottom:1px solid var(--rule);flex-wrap:wrap;align-items:center}
-  .pf-btn{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;padding:4px 10px;border:1px solid var(--rule);background:var(--bg);border-radius:20px;cursor:pointer;transition:all 0.13s;color:var(--muted)}
-  .pf-btn:hover{border-color:var(--ink);color:var(--ink)}
-  .pf-btn.active{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-  .pf-sep{width:1px;height:16px;background:var(--rule);flex-shrink:0}
+  .cf-service{font-size:clamp(13px,1.8vw,18px);letter-spacing:0.14em;color:var(--muted);margin-top:10px;animation:cfFadeIn 0.5s ease 0.25s both}
+  .cf-customer{font-family:'Bebas Neue',sans-serif;font-size:clamp(42px,6.5vw,90px);letter-spacing:0.06em;color:#fff;margin-top:8px;animation:cfFadeIn 0.5s ease 0.3s both}
+  .cf-fullname{font-family:'Bebas Neue',sans-serif;font-size:clamp(52px,8vw,110px);letter-spacing:0.04em;color:var(--gold);margin-top:4px;animation:cfFadeIn 0.5s ease 0.35s both;text-align:center}
+  .cf-priority{display:inline-flex;align-items:center;gap:5px;font-size:clamp(12px,1.4vw,15px);letter-spacing:0.14em;text-transform:uppercase;color:var(--priority);border:1px solid rgba(231,76,60,0.4);background:rgba(231,76,60,0.08);padding:5px 14px;border-radius:3px;margin-top:6px;animation:cfFadeIn 0.5s ease 0.32s both}
 
-  /* Client cards */
-  .pool-body{padding:12px 14px;display:flex;flex-direction:column;gap:7px;max-height:520px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--rule) transparent}
-  .pool-empty{padding:32px 16px;text-align:center;font-size:11px;color:var(--muted);letter-spacing:0.1em}
+  @keyframes cfZoomIn{from{transform:scale(0.5);opacity:0}to{transform:scale(1);opacity:1}}
+  @keyframes cfFadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 
-  .client-card{display:flex;align-items:center;gap:11px;padding:10px 12px 10px 14px;background:var(--bg);border:1px solid var(--rule);border-radius:3px;position:relative;animation:fadeUp 0.2s ease;transition:border-color 0.15s,box-shadow 0.15s}
-  .client-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px;background:var(--rule);transition:background 0.2s}
-  /* unassigned = gray bar */
-  .client-card.assigned[data-c="1"]::before{background:var(--c1)}
-  .client-card.assigned[data-c="2"]::before{background:var(--c2)}
-  .client-card.assigned[data-c="3"]::before{background:var(--c3)}
-  .client-card.assigned[data-c="4"]::before{background:var(--c4)}
-  @keyframes fadeUp{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
-
-  .cc-num{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:0.04em;min-width:42px;flex-shrink:0;color:var(--muted)}
-  .client-card.assigned[data-c="1"] .cc-num{color:var(--c1)}
-  .client-card.assigned[data-c="2"] .cc-num{color:var(--c2)}
-  .client-card.assigned[data-c="3"] .cc-num{color:var(--c3)}
-  .client-card.assigned[data-c="4"] .cc-num{color:var(--c4)}
-
-  .cc-body{flex:1;overflow:hidden}
-  .cc-svc{font-size:9px;letter-spacing:0.08em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .cc-cust{font-size:8px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .cc-time{font-size:7.5px;color:var(--muted);margin-top:2px;letter-spacing:0.05em}
-
-  .cc-tags{display:flex;flex-wrap:wrap;gap:3px;justify-content:flex-end;flex-shrink:0;max-width:90px}
-  .tag{font-size:7px;letter-spacing:0.09em;padding:1px 5px;border-radius:2px;text-transform:uppercase;white-space:nowrap}
-  .tag-unassigned{background:rgba(133,127,114,0.12);color:var(--muted);border:1px solid rgba(133,127,114,0.2)}
-  .tag-counter{font-family:'DM Mono',monospace}
-  .client-card.assigned[data-c="1"] .tag-counter{background:var(--c1bg);color:var(--c1);border:1px solid rgba(230,126,34,0.25)}
-  .client-card.assigned[data-c="2"] .tag-counter{background:var(--c2bg);color:var(--c2);border:1px solid rgba(36,113,163,0.25)}
-  .client-card.assigned[data-c="3"] .tag-counter{background:var(--c3bg);color:var(--c3);border:1px solid rgba(30,132,73,0.25)}
-  .client-card.assigned[data-c="4"] .tag-counter{background:var(--c4bg);color:var(--c4);border:1px solid rgba(125,60,152,0.25)}
-  .tag-priority{background:#fdecea;color:#b03a2e;border:1px solid rgba(176,58,46,0.22)}
-  .tag-comply{background:#fff8e1;color:var(--amber);border:1px solid rgba(154,111,0,0.22)}
-  .tag-payment{background:#e8f4f8;color:var(--teal);border:1px solid rgba(14,107,138,0.22)}
-  .tag-served{background:rgba(30,132,73,0.08);color:var(--green);border:1px solid rgba(30,132,73,0.2)}
-
-  /* ── CARD ADMIN ACTIONS ── */
-  .cc-actions{display:flex;gap:4px;flex-shrink:0;flex-direction:column;align-items:flex-end}
-  .cc-act-btn{font-family:'DM Mono',monospace;font-size:7px;letter-spacing:0.12em;text-transform:uppercase;padding:3px 7px;border-radius:2px;cursor:pointer;border:1px solid;transition:all 0.13s;white-space:nowrap;background:transparent}
-  .cc-act-btn.serve-btn{color:var(--green);border-color:rgba(30,132,73,0.3)}
-  .cc-act-btn.serve-btn:hover{background:rgba(30,132,73,0.1);border-color:var(--green)}
-  .cc-act-btn.remove-btn{color:var(--accent);border-color:rgba(176,58,46,0.3)}
-  .cc-act-btn.remove-btn:hover{background:rgba(176,58,46,0.1);border-color:var(--accent)}
-
-  /* ── SERVICE TALLY PANEL ── */
-  .tally-card{background:var(--paper);border:1px solid var(--rule);border-radius:2px;box-shadow:0 2px 8px var(--shadow);overflow:hidden}
-  .tally-head{background:var(--ink);color:var(--bg);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
-  .tally-head-title{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:0.1em;display:flex;align-items:center;gap:10px}
-  .tally-head-sub{font-size:8px;color:rgba(244,241,234,0.45);letter-spacing:0.12em;text-transform:uppercase}
-  .tally-body{padding:10px 14px 14px}
-  .tally-row{display:grid;grid-template-columns:1fr 36px 36px 36px;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--rule)}
-  .tally-row:last-child{border-bottom:none}
-  .tally-row-head{display:grid;grid-template-columns:1fr 36px 36px 36px;gap:8px;padding:4px 0 6px;margin-bottom:2px;border-bottom:2px solid var(--ink)}
-  .tally-col-lbl{font-size:7px;letter-spacing:0.22em;text-transform:uppercase;color:var(--muted);text-align:center}
-  .tally-col-lbl:first-child{text-align:left}
-  .tally-svc-name{font-size:9px;letter-spacing:0.05em;color:var(--ink);display:flex;align-items:center;gap:6px;overflow:hidden}
-  .tally-svc-icon{font-size:13px;flex-shrink:0}
-  .tally-svc-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .tally-num{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:0.04em;text-align:center;line-height:1}
-  .tally-num.total{color:var(--ink)}
-  .tally-num.pending{color:var(--amber)}
-  .tally-num.served{color:var(--green)}
-  .tally-num.zero{color:var(--rule)}
-  .tally-bar-wrap{grid-column:1/-1;height:3px;background:var(--rule);border-radius:2px;margin-top:-4px;margin-bottom:2px;overflow:hidden;display:none}
-  .tally-bar-fill{height:100%;background:var(--green);border-radius:2px;transition:width 0.4s ease}
-  .tally-row:hover .tally-bar-wrap{display:block}
-
-  /* ── COUNTER STATUS / ABSENT / TRANSFER ── */
-  .transfer-card{background:var(--paper);border:1px solid var(--rule);border-radius:2px;box-shadow:0 2px 8px var(--shadow);overflow:hidden}
-  .transfer-head{background:var(--ink);color:var(--bg);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
-  .transfer-head-title{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:0.1em;display:flex;align-items:center;gap:8px}
-  .transfer-head-sub{font-size:8px;color:rgba(244,241,234,0.45);letter-spacing:0.12em;text-transform:uppercase}
-  .transfer-body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px}
-  .counter-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  .cg-item{border:1.5px solid var(--rule);border-radius:3px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;background:var(--bg);transition:all 0.2s}
-  .cg-item.absent{border-color:var(--accent);background:rgba(176,58,46,0.04)}
-  .cg-item-top{display:flex;align-items:center;gap:8px}
-  .cg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-  .cg-name{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:0.1em;flex:1}
-  .cg-count{font-size:7.5px;letter-spacing:0.09em;color:var(--muted)}
-  .cg-absent-badge{font-size:7px;letter-spacing:0.12em;text-transform:uppercase;padding:2px 7px;border-radius:20px;color:var(--accent);border:1px solid rgba(176,58,46,0.3);background:rgba(176,58,46,0.07);display:none;align-items:center;gap:3px}
-  .cg-item.absent .cg-absent-badge{display:inline-flex}
-  .cg-btns{display:flex;gap:5px;flex-wrap:wrap}
-  .cg-btn{font-family:'DM Mono',monospace;font-size:7.5px;letter-spacing:0.1em;text-transform:uppercase;padding:4px 9px;border-radius:2px;cursor:pointer;border:1px solid;transition:all 0.13s;background:transparent;white-space:nowrap}
-  .cg-btn-absent{color:var(--accent);border-color:rgba(176,58,46,0.3)}
-  .cg-btn-absent:hover{background:rgba(176,58,46,0.1);border-color:var(--accent)}
-  .cg-btn-restore{color:var(--green);border-color:rgba(30,132,73,0.3);display:none}
-  .cg-btn-restore:hover{background:rgba(30,132,73,0.1);border-color:var(--green)}
-  .cg-item.absent .cg-btn-absent{display:none}
-  .cg-item.absent .cg-btn-restore{display:inline-flex}
-  .cg-btn-transfer{color:var(--accent2);border-color:rgba(26,58,92,0.3)}
-  .cg-btn-transfer:hover{background:rgba(26,58,92,0.1);border-color:var(--accent2)}
-
-  /* Selective Transfer Modal */
-  .stm-backdrop{position:fixed;inset:0;background:rgba(24,24,15,0.6);z-index:300;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s;backdrop-filter:blur(3px)}
-  .stm-backdrop.show{opacity:1;pointer-events:all}
-  .stm-modal{background:var(--paper);border:1.5px solid var(--ink);border-radius:4px;width:min(600px,95vw);max-height:88vh;box-shadow:0 12px 48px rgba(24,24,15,0.28);overflow:hidden;display:flex;flex-direction:column;transform:translateY(10px);transition:transform 0.2s}
-  .stm-backdrop.show .stm-modal{transform:translateY(0)}
-  .stm-hdr{background:var(--ink);color:var(--bg);padding:13px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-  .stm-hdr-left{display:flex;flex-direction:column;gap:2px}
-  .stm-hdr-title{font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:0.1em}
-  .stm-hdr-sub{font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(244,241,234,0.45)}
-  .stm-close{background:none;border:none;color:rgba(244,241,234,0.5);cursor:pointer;font-size:18px;padding:2px 6px;transition:color 0.13s}
-  .stm-close:hover{color:var(--bg)}
-  .stm-toolbar{display:flex;gap:8px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--rule);flex-wrap:wrap;flex-shrink:0;background:var(--bg)}
-  .stm-toolbar-lbl{font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);flex-shrink:0}
-  .stm-dest-select{font-family:'DM Mono',monospace;font-size:11px;padding:6px 10px;background:var(--paper);border:1.5px solid var(--rule);border-radius:3px;color:var(--ink);outline:none;cursor:pointer;transition:border-color 0.13s;flex:1;min-width:140px}
-  .stm-dest-select:focus{border-color:var(--ink)}
-  .stm-sel-all{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;padding:5px 10px;border:1px solid var(--rule);background:transparent;border-radius:3px;cursor:pointer;color:var(--muted);transition:all 0.13s;white-space:nowrap}
-  .stm-sel-all:hover{border-color:var(--ink);color:var(--ink)}
-  .stm-do-btn{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:0.1em;padding:7px 18px;border:none;border-radius:3px;cursor:pointer;transition:all 0.13s;background:var(--accent2);color:#fff;white-space:nowrap}
-  .stm-do-btn:hover:not(:disabled){background:#0e2a46}
-  .stm-do-btn:disabled{opacity:0.3;cursor:not-allowed}
-  .stm-count-info{font-size:8px;letter-spacing:0.1em;color:var(--muted);padding:4px 14px 6px;text-align:right;flex-shrink:0}
-  .stm-list{overflow-y:auto;flex:1;padding:8px 12px;display:flex;flex-direction:column;gap:5px;scrollbar-width:thin;scrollbar-color:var(--rule) transparent}
-  .stm-empty{padding:28px;text-align:center;font-size:11px;color:var(--muted);letter-spacing:0.1em}
-  .stm-card{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg);border:1.5px solid var(--rule);border-radius:3px;cursor:pointer;transition:all 0.13s;position:relative}
-  .stm-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px}
-  .stm-card[data-c="1"]::before{background:var(--c1)}.stm-card[data-c="2"]::before{background:var(--c2)}
-  .stm-card[data-c="3"]::before{background:var(--c3)}.stm-card[data-c="4"]::before{background:var(--c4)}
-  .stm-card:hover{border-color:var(--accent2)}
-  .stm-card.checked{border-color:var(--accent2);background:rgba(26,58,92,0.05)}
-  .stm-checkbox{width:16px;height:16px;border:1.5px solid var(--rule);border-radius:2px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all 0.13s;background:var(--paper)}
-  .stm-card.checked .stm-checkbox{background:var(--accent2);border-color:var(--accent2);color:#fff}
-  .stm-num{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:0.04em;min-width:38px;flex-shrink:0;color:var(--muted)}
-  .stm-card[data-c="1"] .stm-num{color:var(--c1)}.stm-card[data-c="2"] .stm-num{color:var(--c2)}
-  .stm-card[data-c="3"] .stm-num{color:var(--c3)}.stm-card[data-c="4"] .stm-num{color:var(--c4)}
-  .stm-body{flex:1;overflow:hidden}
-  .stm-svc{font-size:9px;letter-spacing:0.07em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .stm-cust{font-size:8px;color:var(--muted);margin-top:1px}
-  .stm-time{font-size:7.5px;color:var(--muted);margin-top:2px}
-  .stm-badges{display:flex;gap:3px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;max-width:80px}
-  .stm-badge{font-size:7px;letter-spacing:0.09em;padding:1px 5px;border-radius:2px;text-transform:uppercase;white-space:nowrap;border:1px solid}
-  .stm-badge-prio{color:var(--accent);border-color:rgba(176,58,46,0.3);background:rgba(176,58,46,0.06)}
-  .stm-badge-hold{color:var(--amber);border-color:rgba(154,111,0,0.25);background:rgba(154,111,0,0.06)}
-  .stm-badge-pay{color:var(--teal);border-color:rgba(14,107,138,0.22);background:rgba(14,107,138,0.06)}
-
-  /* ── SAVE POINT / EOD ── */
-  .eod-btn{width:100%;margin-top:7px;background:transparent;color:var(--accent2);border:1.5px solid var(--accent2);border-radius:3px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;padding:9px;cursor:pointer;transition:all 0.13s;display:flex;align-items:center;justify-content:center;gap:6px}
-  .eod-btn:hover{background:var(--accent2);color:var(--bg)}
-
-  /* Save Point modal */
-  .modal-backdrop{position:fixed;inset:0;background:rgba(24,24,15,0.6);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s;backdrop-filter:blur(3px)}
-  .modal-backdrop.show{opacity:1;pointer-events:all}
-  .modal{background:var(--paper);border:1.5px solid var(--ink);border-radius:4px;width:min(520px,92vw);box-shadow:0 12px 48px rgba(24,24,15,0.28);overflow:hidden;transform:translateY(10px);transition:transform 0.2s}
-  .modal-backdrop.show .modal{transform:translateY(0)}
-  .modal-hdr{background:var(--ink);color:var(--bg);padding:14px 20px;display:flex;align-items:center;justify-content:space-between}
-  .modal-hdr-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:0.1em}
-  .modal-hdr-sub{font-size:8px;letter-spacing:0.16em;text-transform:uppercase;color:rgba(244,241,234,0.4)}
-  .modal-close{background:none;border:none;color:rgba(244,241,234,0.5);cursor:pointer;font-size:18px;line-height:1;padding:2px 6px;transition:color 0.13s}
-  .modal-close:hover{color:var(--bg)}
-  .modal-body{padding:18px 20px 20px}
-  .save-meta{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
-  .save-meta-item{flex:1;min-width:90px;background:var(--bg);border:1px solid var(--rule);border-radius:3px;padding:10px 12px;text-align:center}
-  .save-meta-val{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:0.04em;line-height:1}
-  .save-meta-lbl{font-size:7.5px;letter-spacing:0.16em;color:var(--muted);text-transform:uppercase;margin-top:2px}
-  .save-svc-list{margin-bottom:16px}
-  .save-svc-row{display:grid;grid-template-columns:1fr 40px 40px;gap:6px;align-items:center;padding:5px 0;border-bottom:1px solid var(--rule);font-size:9px;letter-spacing:0.05em}
-  .save-svc-row:last-child{border-bottom:none}
-  .save-svc-row-head{display:grid;grid-template-columns:1fr 40px 40px;gap:6px;font-size:7px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);padding-bottom:5px;border-bottom:2px solid var(--ink);margin-bottom:2px}
-  .save-svc-num{text-align:center;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.04em}
-  .save-svc-num.s{color:var(--green)}.save-svc-num.p{color:var(--amber)}
-  .modal-actions{display:flex;gap:8px}
-  .modal-act-btn{flex:1;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.1em;padding:12px;border-radius:3px;cursor:pointer;transition:all 0.13s;border:none}
-  .modal-act-btn.primary{background:var(--accent2);color:#fff}
-  .modal-act-btn.primary:hover{background:#0e2a46}
-  .modal-act-btn.secondary{background:transparent;color:var(--muted);border:1.5px solid var(--rule)}
-  .modal-act-btn.secondary:hover{border-color:var(--accent);color:var(--accent)}
-  .save-note{font-size:8px;letter-spacing:0.1em;color:var(--muted);text-align:center;margin-top:12px;line-height:1.7}
-  .saves-history{margin-top:14px;max-height:140px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--rule) transparent}
-  .saves-history-title{font-size:7.5px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--rule)}
-  .save-hist-item{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--rule);font-size:8.5px;letter-spacing:0.05em;color:var(--muted)}
-  .save-hist-item:last-child{border-bottom:none}
-  .save-hist-label{color:var(--ink);font-weight:500}
-
-  /* Toast */
-  .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(18px);background:var(--ink);color:var(--bg);padding:11px 26px;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.12em;opacity:0;transition:all 0.3s;pointer-events:none;z-index:999;white-space:nowrap}
-  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  /* START OVERLAY */
+  #startOverlay{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;background:var(--bg)}
+  #startOverlay.hidden{display:none}
+  .start-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,8vw,96px);letter-spacing:0.06em;line-height:1;text-align:center}
+  .start-title span{color:var(--gold)}
+  .start-sub{font-size:11px;letter-spacing:0.26em;text-transform:uppercase;color:var(--muted);text-align:center}
+  .start-btn{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:0.16em;background:var(--gold);color:#06060a;border:none;border-radius:6px;padding:22px 68px;cursor:pointer;transition:all 0.15s;animation:startPulse 2s ease infinite}
+  .start-btn:hover{filter:brightness(1.1);transform:scale(1.03)}
+  @keyframes startPulse{0%,100%{box-shadow:0 0 0 0 rgba(240,192,64,0.4)}50%{box-shadow:0 0 0 20px rgba(240,192,64,0)}}
+  .start-note{font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);text-align:center;max-width:400px;line-height:1.8}
 </style>
 </head>
 <body>
-<div class="app">
-  <header>
-    <div>
-      <div class="brand-sup">Admin Console · DMW Queue</div>
-      <div class="brand-title">DMW<span>DESK</span></div>
-    </div>
-    <div class="hdr-right">
-      <div class="clock" id="clock">00:00:00</div>
-      <div style="display:flex;align-items:center;gap:8px;margin-top:3px">
-        <span class="fb-status" id="fbStatus"><span class="fb-dot"></span>Connecting…</span>
-        <div class="nav-links">
-          <a href="/display" target="_blank" class="nav-link">Display</a>
-          <a href="/audience" target="_blank" class="nav-link">Audience</a>
-        </div>
-      </div>
-    </div>
-  </header>
+<div class="bg-grid"></div>
+<div class="bg-vignette"></div>
 
-  <div class="layout">
-
-    <!-- ── LEFT: Issue form ── -->
-    <div class="issue-panel">
-      <div class="panel-head">
-        <div class="panel-head-title">Issue Ticket</div>
-        <div class="panel-head-sub">Added to unassigned pool</div>
-      </div>
-      <div class="panel-body">
-
-        <div class="field-label">1 · Service Type</div>
-        <div class="service-grid">
-          <button class="svc-btn selected" data-svc="OEC with Appointment" onclick="selectSvc(this)">
-            <span class="svc-icon">📅</span><div><span class="svc-name">OEC w/ Appt</span><span class="svc-code">With Appointment</span></div>
-          </button>
-          <button class="svc-btn" data-svc="OEC without Appointment" onclick="selectSvc(this)">
-            <span class="svc-icon">📋</span><div><span class="svc-name">OEC w/o Appt</span><span class="svc-code">Without Appointment</span></div>
-          </button>
-          <button class="svc-btn" data-svc="Government to Government" onclick="selectSvc(this)">
-            <span class="svc-icon">🏛️</span><div><span class="svc-name">Gov to Gov</span><span class="svc-code">Gov to Gov</span></div>
-          </button>
-          <button class="svc-btn" data-svc="Direct Hire" onclick="selectSvc(this)">
-            <span class="svc-icon">🤝</span><div><span class="svc-name">Direct Hire</span><span class="svc-code">Direct Hire</span></div>
-          </button>
-          <button class="svc-btn" data-svc="Agency Hire" onclick="selectSvc(this)">
-            <span class="svc-icon">🏢</span><div><span class="svc-name">Agency Hire</span><span class="svc-code">Agency Hire</span></div>
-          </button>
-          <button class="svc-btn" data-svc="OFW Records" onclick="selectSvc(this)">
-            <span class="svc-icon">🗂️</span><div><span class="svc-name">OFW Records</span><span class="svc-code">OFW Records</span></div>
-          </button>
-          <button class="svc-btn" data-svc="Queries" onclick="selectSvc(this)">
-            <span class="svc-icon">💬</span><div><span class="svc-name">Queries</span><span class="svc-code">General Queries</span></div>
-          </button>
-        </div>
-
-        <div class="field-label">2 · Customer Name <span style="color:var(--muted)">(optional)</span></div>
-        <div class="name-row">
-          <div class="name-grid">
-            <div>
-              <div class="name-input-lbl">First Name</div>
-              <input type="text" class="name-input" id="custFirstName" placeholder="First name…" maxlength="30" autocomplete="off">
-            </div>
-            <div>
-              <div class="name-input-lbl">Last Name</div>
-              <input type="text" class="name-input" id="custLastName" placeholder="Last name…" maxlength="30" autocomplete="off">
-            </div>
-          </div>
-          <div class="name-input-lbl">Nickname <span style="color:var(--muted);font-size:6.5px">(used in announcement)</span></div>
-          <input type="text" class="name-input" id="custNickname" placeholder="Nickname…" maxlength="20" autocomplete="off">
-        </div>
-
-        <div class="field-label">3 · Priority</div>
-        <div class="priority-row">
-          <div class="toggle-wrap">
-            <button class="prio-opt selected normal" onclick="selectPrio('normal',this)">Normal</button>
-            <button class="prio-opt priority" onclick="selectPrio('priority',this)">⚡ Priority</button>
-          </div>
-          <span class="prio-note">Seniors · PWD · Urgent</span>
-        </div>
-
-        <button class="issue-btn" onclick="issueTicket()">✚ Issue Ticket</button>
-        <button class="reset-btn" onclick="resetNumbering()">↺ Reset Numbering to 001</button>
-        <button class="eod-btn" onclick="openEodModal()">💾 Save &amp; End of Day</button>
-      </div>
-    </div>
-
-    <!-- ── RIGHT: Stats + Pool ── -->
-    <div class="right-side">
-
-      <div class="stats-bar">
-        <div class="stat-card">
-          <div class="stat-val" id="stTotal" style="color:var(--accent)">0</div>
-          <div class="stat-lbl">Issued</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-val" id="stUnassigned" style="color:var(--muted)">0</div>
-          <div class="stat-lbl">Unassigned</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-val" id="stInQueue">0</div>
-          <div class="stat-lbl">In Queues</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-val" id="stServed" style="color:var(--green)">0</div>
-          <div class="stat-lbl">Served</div>
-        </div>
-      </div>
-
-      <!-- Service Tally -->
-      <div class="tally-card">
-        <div class="tally-head">
-          <div class="tally-head-title">Service Tally</div>
-          <div class="tally-head-sub">Live count by service type</div>
-        </div>
-        <div class="tally-body">
-          <div class="tally-row-head">
-            <div class="tally-col-lbl">Service</div>
-            <div class="tally-col-lbl">Issued</div>
-            <div class="tally-col-lbl">Pending</div>
-            <div class="tally-col-lbl">Served</div>
-          </div>
-          <div id="tallyRows"></div>
-        </div>
-      </div>
-
-      <!-- ── Counter Absent / Transfer Panel ── -->
-      <div class="transfer-card">
-        <div class="transfer-head">
-          <div class="transfer-head-title">🖥 Counter Status &amp; Transfer</div>
-          <div class="transfer-head-sub">Mark absent · select tickets · reassign</div>
-        </div>
-        <div class="transfer-body">
-          <div class="counter-grid" id="counterStatusGrid"></div>
-        </div>
-      </div>
-
-      <!-- All clients pile -->
-      <div class="pool-card">
-        <div class="pool-head">
-          <div class="pool-head-title">
-            Client Pool
-            <span class="pool-count-badge" id="poolCountBadge">0 clients</span>
-          </div>
-          <div class="pool-head-hint">DMW Desks pick clients from their display</div>
-        </div>
-        <div class="pool-filters">
-          <button class="pf-btn active" data-f="all"        onclick="setFilter(this)">All</button>
-          <button class="pf-btn"        data-f="unassigned" onclick="setFilter(this)">Unassigned</button>
-          <button class="pf-btn"        data-f="queued"     onclick="setFilter(this)">In Queue</button>
-          <button class="pf-btn"        data-f="hold"       onclick="setFilter(this)">On Hold</button>
-          <button class="pf-btn"        data-f="served"     onclick="setFilter(this)">Served</button>
-          <div class="pf-sep"></div>
-          <button class="pf-btn" data-f="c1" onclick="setFilter(this)" style="color:var(--c1)">C1</button>
-          <button class="pf-btn" data-f="c2" onclick="setFilter(this)" style="color:var(--c2)">C2</button>
-          <button class="pf-btn" data-f="c3" onclick="setFilter(this)" style="color:var(--c3)">C3</button>
-          <button class="pf-btn" data-f="c4" onclick="setFilter(this)" style="color:var(--c4)">C4</button>
-        </div>
-        <div class="pool-body" id="poolBody">
-          <div class="pool-empty" id="poolEmpty">No tickets issued yet</div>
-        </div>
-      </div>
-
-    </div>
-  </div>
+<!-- START OVERLAY -->
+<div id="startOverlay">
+  <div class="start-title">QUEUE<span>SYS</span></div>
+  <div class="start-sub">Audience Display · Voice Announcements</div>
+  <button class="start-btn" onclick="startDisplay()">▶ TAP TO START</button>
+  <div class="start-note">Tap once to enable voice announcements.<br>This screen will announce numbers automatically.</div>
 </div>
 
-<!-- ── Selective Transfer Modal ── -->
-<div class="stm-backdrop" id="stmBackdrop">
-  <div class="stm-modal">
-    <div class="stm-hdr">
-      <div class="stm-hdr-left">
-        <div class="stm-hdr-title" id="stmTitle">Transfer Tickets</div>
-        <div class="stm-hdr-sub" id="stmSub">Select tickets to reassign</div>
-      </div>
-      <button class="stm-close" onclick="closeStm()">✕</button>
-    </div>
-    <div class="stm-toolbar">
-      <span class="stm-toolbar-lbl">Move to →</span>
-      <select class="stm-dest-select" id="stmDestSelect" onchange="updateStmBtn()">
-        <option value="">— Select destination —</option>
-        <option value="0">Unassigned Pool</option>
-        <option value="1">DMW Desk 2</option>
-        <option value="2">DMW Desk 3</option>
-        <option value="3">DMW Desk 4</option>
-        <option value="4">DMW Desk 5</option>
-      </select>
-      <button class="stm-sel-all" onclick="stmToggleAll()">Select All</button>
-      <button class="stm-do-btn" id="stmDoBtn" onclick="executeStmTransfer()" disabled>↔ Transfer</button>
-    </div>
-    <div class="stm-count-info" id="stmCountInfo">0 selected</div>
-    <div class="stm-list" id="stmList"></div>
+<!-- CALL FLASH — projected announcement -->
+<div class="call-flash" id="callFlash">
+  <div class="cf-now-lbl">NOW SERVING</div>
+  <div class="cf-number" id="cfNumber" style="color:var(--gold)">000</div>
+  <div class="cf-goto" id="cfGoto">
+    <span class="cf-goto-num" id="cfGotoNum" style="color:var(--gold)">No. 000</span>
+    <span class="cf-goto-arrow">→</span>
+    <span style="font-size:0.6em;opacity:0.7;letter-spacing:0.2em">PROCEED TO</span>
+    <span id="cfGotoCounter" style="color:var(--gold)">Counter 1</span>
   </div>
+  <div class="cf-counter-badge" id="cfCounterBadge">
+    <div class="cf-counter-dot" id="cfCounterDot"></div>
+    <div class="cf-counter-text" id="cfCounterText">Counter 1</div>
+  </div>
+  <div class="cf-service" id="cfService"></div>
+  <div class="cf-customer" id="cfCustomer"></div>
+  <div class="cf-fullname" id="cfFullname" style="display:none"></div>
+  <div class="cf-priority" id="cfPriority" style="display:none">⚡ PRIORITY CUSTOMER</div>
 </div>
 
-<!-- ── EOD Save Point Modal ── -->
-<div class="modal-backdrop" id="eodModal">
-  <div class="modal">
-    <div class="modal-hdr">
+<div class="shell">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M4 4h6v6H4V4zm0 10h6v6H4v-6zm10-10h6v6h-6V4zm0 10h6v6h-6v-6z"/></svg></div>
       <div>
-        <div class="modal-hdr-title">💾 Save &amp; End of Day</div>
-        <div class="modal-hdr-sub">Snapshot today's session to Firebase</div>
+        <div class="brand-title">QUEUE<span>SYS</span></div>
+        <div class="brand-sub">Audience Display</div>
       </div>
-      <button class="modal-close" onclick="closeEodModal()">✕</button>
     </div>
-    <div class="modal-body">
-      <div class="save-meta" id="saveMeta"></div>
-      <div class="save-svc-list">
-        <div class="save-svc-row-head">
-          <div>Service</div><div style="text-align:center">Issued</div><div style="text-align:center">Served</div>
-        </div>
-        <div id="saveSvcRows"></div>
+    <div class="topbar-center">PLEASE WAIT FOR YOUR NUMBER TO BE CALLED</div>
+    <div class="topbar-right">
+      <div id="fbLiveIndicator" class="fb-live" style="opacity:0.4"><span class="fb-live-dot"></span>Firebase</div>
+      <div class="stat-badge"><div class="stat-badge-val" id="sbWaiting" style="color:var(--gold)">0</div><div class="stat-badge-lbl">Waiting</div></div>
+      <div class="stat-badge"><div class="stat-badge-val" id="sbServed" style="color:var(--c3)">0</div><div class="stat-badge-lbl">Served</div></div>
+      <div class="clock-display" id="clock">00:00:00</div>
+    </div>
+  </div>
+
+  <!-- Hidden file input for video upload -->
+  <input type="file" id="videoFileInput" accept="video/*" style="display:none" onchange="handleVideoUpload(event)">
+
+  <div class="main-content" id="mainContent">
+    <div class="video-pane empty" id="videoPaneWrap">
+      <div class="video-empty-msg" id="videoEmptyMsg">
+        <div class="video-empty-icon">▶</div>
+        <div class="video-empty-lbl">No video loaded</div>
+        <button class="video-upload-btn" onclick="document.getElementById('videoFileInput').click()">+ Upload Video</button>
       </div>
-      <div class="modal-actions">
-        <button class="modal-act-btn secondary" onclick="closeEodModal()">Cancel</button>
-        <button class="modal-act-btn primary" onclick="doSaveEod()">💾 Save Snapshot</button>
+      <video id="videoPlayer" loop muted style="display:none" playsinline></video>
+      <div class="video-controls" id="videoControls">
+        <button class="vc-btn" id="vcPlayPause" onclick="toggleVideoPlayPause()">⏸ Pause</button>
+        <button class="vc-btn" id="vcMute" onclick="toggleVideoMute()">🔊 Mute</button>
+        <span class="vc-label" id="vcLabel"></span>
+        <span class="vc-spacer"></span>
+        <button class="vc-btn" onclick="document.getElementById('videoFileInput').click()">⟳ Change</button>
+        <button class="vc-btn danger" onclick="removeVideo()">✕ Remove</button>
       </div>
-      <div class="save-note">Saving records this session's data permanently.<br>The queue will NOT be reset — it continues as-is.<br>To start fresh, use ↺ Reset after saving.</div>
-      <div class="saves-history" id="savesHistory" style="display:none">
-        <div class="saves-history-title">Previous Saves This Session</div>
-        <div id="savesHistoryList"></div>
+    </div>
+    <div class="counters-area" id="countersArea"></div>
+    <div class="sidebar">
+      <div class="last-called-section">
+        <div class="section-title">Last Called</div>
+        <div id="lastCalledWrap"><div style="font-size:9px;color:var(--muted);letter-spacing:0.14em;text-transform:uppercase;padding:10px 0">No calls yet</div></div>
       </div>
+      <div class="activity-section">
+        <div class="section-title" style="flex-shrink:0">Recent Activity</div>
+        <div class="activity-feed" id="activityFeed"><div style="font-size:9px;color:var(--muted);letter-spacing:0.14em;text-transform:uppercase">No activity yet</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="ticker-label">NOTICE</div>
+    <div class="ticker-track">
+      <div class="ticker-inner">PLEASE KEEP YOUR TICKET SAFE &nbsp;·&nbsp; LISTEN FOR YOUR NUMBER TO BE ANNOUNCED &nbsp;·&nbsp; PROCEED IMMEDIATELY TO YOUR ASSIGNED COUNTER &nbsp;·&nbsp; PRIORITY LANE: SENIORS, PWD &amp; PREGNANT WOMEN &nbsp;·&nbsp; GOVERNMENT TO GOVERNMENT TRANSACTIONS — PLEASE HAVE YOUR DOCUMENTS READY &nbsp;·&nbsp; DIRECT HIRE APPLICANTS — PAYMENT AT DESIGNATED COUNTER &nbsp;·&nbsp; THANK YOU FOR YOUR PATIENCE &nbsp;·&nbsp;</div>
     </div>
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
 const firebaseConfig = {
   apiKey:"AIzaSyD1jlmo6pdJhqwjbRDMby9cTBHzazRejcE",
@@ -525,36 +303,121 @@ const firebaseConfig = {
   appId:"1:314957208142:web:51f960c760f8682e77811f"
 };
 
-firebase.initializeApp(firebaseConfig);
-const db       = firebase.database();
-const stateRef = db.ref('queueState');
-const savesRef = db.ref('eodSaves');
-
-// Track EOD saves made this browser session for display in modal
-let sessionSaves = [];
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+const stateRef = ref(db,'queueState');
 
 const COUNTER_NAMES = ['DMW Desk 2','DMW Desk 3','DMW Desk 4','DMW Desk 5'];
+const COLOR_HEX = {1:'#e67e22',2:'#2471a3',3:'#1e8449',4:'#7d3c98'};
+const COLOR_BG  = {1:'rgba(230,126,34,0.1)',2:'rgba(36,113,163,0.1)',3:'rgba(30,132,73,0.1)',4:'rgba(125,60,152,0.1)'};
 
-let selectedSvc  = 'OEC with Appointment';
-let selectedPrio = 'normal';
-let log = [];
-let ticketCounter = 0;
-let activeFilter  = 'all';
+let sharedLog = [];
+let activityLog = [];
+let absentCounters = new Set(); // synced from admin via Firebase
+// undefined = page just loaded; first Firebase snapshot silently adopts resetFlag — no reset triggered
+let lastResetFlag = undefined;
+let lastCallTs = null;
+let flashTimer = null;
+let audioUnlocked = false;
+let audioCtx = null;
+let counterDisplay = [1,2,3,4].map(id=>({id,current:null,service:null,customer:null,priority:null,time:null,calledAt:0}));
 
-// ── FB status ──
-function setFbStatus(s){
-  const el=document.getElementById('fbStatus');
-  el.className='fb-status '+s;
-  el.innerHTML=`<span class="fb-dot"></span>${s==='connected'?'Live':s==='error'?'Offline':'Connecting…'}`;
+function startDisplay() {
+  audioUnlocked = true;
+  document.getElementById('startOverlay').classList.add('hidden');
+  try {
+    audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    const buf = audioCtx.createBuffer(1,1,22050);
+    const src = audioCtx.createBufferSource();
+    src.buffer=buf; src.connect(audioCtx.destination); src.start(0);
+  } catch(e){ console.warn('AudioContext:',e); }
+  if(window.speechSynthesis){
+    window.speechSynthesis.cancel();
+    const w=new SpeechSynthesisUtterance(' ');
+    w.volume=0.01; window.speechSynthesis.speak(w);
+  }
+}
+window.startDisplay=startDisplay;
+
+// ── Video Player ──
+let videoLoaded = false;
+
+function handleVideoUpload(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const url = URL.createObjectURL(file);
+  const vid = document.getElementById('videoPlayer');
+  const pane = document.getElementById('videoPaneWrap');
+  const emptyMsg = document.getElementById('videoEmptyMsg');
+  const mc = document.getElementById('mainContent');
+
+  vid.src = url;
+  vid.style.display = 'block';
+  emptyMsg.style.display = 'none';
+  pane.classList.remove('empty');
+  mc.classList.add('has-video');
+  videoLoaded = true;
+
+  // Show filename
+  document.getElementById('vcLabel').textContent = file.name;
+  // Unmute and play (user gesture already happened via click)
+  vid.muted = false;
+  vid.play().catch(()=>{ vid.muted=true; vid.play(); });
+  updatePlayPauseBtn();
+  updateMuteBtn();
+  // Reset file input so same file can be re-selected
+  e.target.value = '';
+}
+window.handleVideoUpload = handleVideoUpload;
+
+function toggleVideoPlayPause(){
+  const vid = document.getElementById('videoPlayer');
+  if(vid.paused) vid.play(); else vid.pause();
+  updatePlayPauseBtn();
+}
+window.toggleVideoPlayPause = toggleVideoPlayPause;
+
+function toggleVideoMute(){
+  const vid = document.getElementById('videoPlayer');
+  vid.muted = !vid.muted;
+  updateMuteBtn();
+}
+window.toggleVideoMute = toggleVideoMute;
+
+function updatePlayPauseBtn(){
+  const vid = document.getElementById('videoPlayer');
+  document.getElementById('vcPlayPause').textContent = vid.paused ? '▶ Play' : '⏸ Pause';
 }
 
-// Use Firebase .info/connected to immediately reflect true connection state
-db.ref('.info/connected').on('value', snap=>{
-  if(snap.val()===true) setFbStatus('connected');
-  else setFbStatus('error');
-});
+function updateMuteBtn(){
+  const vid = document.getElementById('videoPlayer');
+  document.getElementById('vcMute').textContent = vid.muted ? '🔇 Unmute' : '🔊 Mute';
+}
 
-// ── Clock ──
+function removeVideo(){
+  if(!confirm('Remove the video?')) return;
+  const vid = document.getElementById('videoPlayer');
+  const pane = document.getElementById('videoPaneWrap');
+  const emptyMsg = document.getElementById('videoEmptyMsg');
+  const mc = document.getElementById('mainContent');
+  vid.pause();
+  vid.src = '';
+  vid.style.display = 'none';
+  emptyMsg.style.display = '';
+  pane.classList.add('empty');
+  mc.classList.remove('has-video');
+  videoLoaded = false;
+  document.getElementById('vcLabel').textContent = '';
+}
+window.removeVideo = removeVideo;
+
+// Dim video during call flash, restore after
+function dimVideo(dim){
+  const pane = document.getElementById('videoPaneWrap');
+  if(dim) pane.classList.add('dimmed');
+  else pane.classList.remove('dimmed');
+}
+
 function updateClock(){
   const n=new Date();
   document.getElementById('clock').textContent=
@@ -562,688 +425,453 @@ function updateClock(){
 }
 setInterval(updateClock,1000); updateClock();
 
-// ── Firebase ──
-function saveState(isReset=false){
-  const payload = {
-    ticketCounter, log,
-    lastUpdate: Date.now(),
-    resetFlag: isReset ? Date.now() : (window._lastResetFlag||null),
-    absentCounters: [...absentCounters]   // sync absent status to all screens
-  };
-  // If admin just marked a ticket served, clear lastCall atomically in the same write
-  if(window._clearLastCallId != null){
-    payload.lastCall = null;
-  }
-  stateRef.set(payload).catch(()=>setFbStatus('error'));
+function buildCounters(){
+  const area=document.getElementById('countersArea');
+  area.innerHTML='';
+  [1,2,3,4].forEach(id=>{
+    const p=document.createElement('div');
+    p.className='counter-panel'; p.dataset.c=id;
+    p.innerHTML=`
+      <div class="cp-absent-overlay">
+        <div class="cp-absent-icon">⚠</div>
+        <div class="cp-absent-title">NOT AVAILABLE</div>
+        <div class="cp-absent-sub">Counter temporarily unavailable</div>
+      </div>
+      <div class="counter-accent-bar"></div>
+      <div class="cp-label">
+        <div class="cp-dot"></div>
+        <div class="cp-name">${COUNTER_NAMES[id-1]}</div>
+        <div class="cp-status-pill" id="cpstatus-${id}">Idle</div>
+      </div>
+      <div class="cp-number-wrap">
+        <div class="cp-number" id="cpnum-${id}">—</div>
+        <div class="cp-info-col" id="cpinfo-${id}">
+          <div class="cp-now-lbl">Now Serving</div>
+          <div class="cp-service-tag" id="cpsvc-${id}"></div>
+          <div class="cp-customer" id="cpcust-${id}"></div>
+        </div>
+      </div>
+      <div class="cp-queue-row" id="cpqueue-${id}"><span class="cp-queue-lbl">Next:</span><span style="font-size:9px;color:var(--muted)">—</span></div>
+      <div class="cp-wave" id="cpwave-${id}">
+        <div class="wave-bars"><span></span><span></span><span></span><span></span><span></span></div>
+        <div class="cp-wave-label">Announcing</div>
+      </div>`;
+    area.appendChild(p);
+  });
 }
 
-stateRef.on('value', snap=>{
-  setFbStatus('connected');
-  const data = snap.val();
-  if(!data){
-    renderAll();
+function getQueues(){
+  const q={1:[],2:[],3:[],4:[]};
+  sharedLog.filter(t=>!t.served&&!t.compliance&&t.counter>=1).forEach(t=>{if(q[t.counter])q[t.counter].push(t);});
+  [1,2,3,4].forEach(c=>q[c].sort((a,b)=>a.priority===b.priority?a.id-b.id:a.priority==='priority'?-1:1));
+  return q;
+}
+
+let _fbFirstLoad = true;
+onValue(stateRef,snap=>{
+  document.getElementById('fbLiveIndicator').style.opacity='1';
+  const data=snap.val()||{};
+  const newReset=data.resetFlag||null;
+
+  if(_fbFirstLoad){
+    _fbFirstLoad=false;
+    lastResetFlag=newReset;
+    sharedLog=data.log||[];
+    absentCounters=new Set((data.absentCounters||[]).map(Number));
+    const lc=data.lastCall||null;
+    if(lc && lc.ts){
+      const cd=counterDisplay[lc.counter-1];
+      cd.current=lc.ticketId; cd.service=lc.service; cd.customer=lc.customer;
+      cd.nickname=lc.nickname||null; cd.priority=lc.priority; cd.calledAt=lc.ts; cd.time='';
+      lastCallTs=lc.ts;
+    }
+    renderAll(); return;
+  }
+
+  // Subsequent snapshots — only reset if resetFlag genuinely changed
+  if(newReset && newReset!==lastResetFlag){
+    lastResetFlag=newReset;
+    sharedLog=[]; activityLog=[]; lastCallTs=null;
+    absentCounters=new Set();
+    counterDisplay=[1,2,3,4].map(id=>({id,current:null,service:null,customer:null,priority:null,time:null,calledAt:0}));
+    if(flashTimer) clearTimeout(flashTimer);
+    announceQueue=[]; isAnnouncing=false; lockedCounter=null;
+    document.getElementById('callFlash').classList.remove('show');
+    [1,2,3,4].forEach(id=>{const w=document.getElementById(`cpwave-${id}`);if(w)w.classList.remove('active');});
+    renderAll(); return;
+  }
+  lastResetFlag=newReset;
+
+  // Update shared log and absent counters
+  sharedLog=data.log||[];
+  absentCounters=new Set((data.absentCounters||[]).map(Number));
+
+  // ── React to a number being CALLED (lastCall.ts changes) ──
+  const lc=data.lastCall||null;
+  if(lc && lc.ts && lc.ts!==lastCallTs){
+    // Update lastCallTs IMMEDIATELY so any re-fired snapshot can't trigger this again
+    lastCallTs=lc.ts;
+
+    const cd=counterDisplay[lc.counter-1];
+
+    // If this counter was already announcing a different number, cancel it
+    if(cd.current!==null && cd.current!==lc.ticketId){
+      // Remove old number from announce queue
+      announceQueue=announceQueue.filter(q=>q.counter!==lc.counter);
+      // Hide call flash if it was showing the old number for this counter
+      if(flashTimer) clearTimeout(flashTimer);
+      document.getElementById('callFlash').classList.remove('show');
+      dimVideo(false);
+      isAnnouncing=false;
+    }
+
+    cd.current=lc.ticketId; cd.service=lc.service; cd.customer=lc.customer;
+    cd.nickname=lc.nickname||null; cd.priority=lc.priority; cd.time=nowTime(); cd.calledAt=lc.ts;
+    activityLog.unshift({
+      num:lc.ticketId, counter:lc.counter, service:lc.service,
+      customer:lc.customer, priority:lc.priority, time:nowTime()
+    });
+    if(activityLog.length>40) activityLog.pop();
+    // Flash + enqueue speech ranked by call time
+    triggerCallFlash({
+      id:lc.ticketId, counter:lc.counter, service:lc.service,
+      customer:lc.customer, nickname:lc.nickname||null,
+      priority:lc.priority, calledAt:lc.ts
+    });
+  }
+
+  // lastCallTs already updated at top of the if-block above
+
+  // ── Clear counter panel when lastCall is nulled (ticket went to hold) ──
+  if(!lc && lastCallTs!==null){
+    lastCallTs=null; // reset so next null→null doesn't re-trigger
+    // Find which counter had its call cleared — check all counters
+    // We detect by comparing: if a counter's current ticket is no longer in active call
+    // (safe approach: just check if any counter's ticket is now on hold)
+    sharedLog.filter(t=>(t.compliance||t.paymentHold)&&!t.served).forEach(t=>{
+      const cd=counterDisplay[t.counter-1];
+      if(cd.current===t.id){
+        cd.current=null; cd.service=null; cd.customer=null; cd.priority=null; cd.time=null; cd.calledAt=0;
+        // Remove from announce queue if pending
+        announceQueue=announceQueue.filter(q=>q.id!==t.id);
+      }
+    });
+  }
+
+  // ── Clear counter panel when a ticket is marked served ──
+  const prevServedIds=new Set((window._prevLog||[]).filter(t=>t.served).map(t=>t.id));
+  const newlyServed=sharedLog.filter(t=>t.served && !prevServedIds.has(t.id));
+  newlyServed.forEach(t=>{
+    const cd=counterDisplay[t.counter-1];
+    if(cd.current===t.id){
+      cd.current=null; cd.service=null; cd.customer=null; cd.priority=null; cd.time=null; cd.calledAt=0;
+    }
+    // Remove from announce queue too (no point announcing a served ticket)
+    announceQueue=announceQueue.filter(q=>q.id!==t.id);
+  });
+
+  // ── Detect transferred tickets — counter changed on unserved tickets ──
+  const prevLog = window._prevLog || [];
+  sharedLog.forEach(t=>{
+    if(t.served || t.counter===0) return; // skip served and unassigned
+    const prev = prevLog.find(p=>p.id===t.id);
+    if(!prev || prev.counter===t.counter) return; // no change
+    if(prev.counter===0) return; // was unassigned before, not a transfer
+    // This ticket moved from prev.counter → t.counter
+    const fromName = COUNTER_NAMES[prev.counter-1] || ('Desk '+prev.counter);
+    const toName   = COUNTER_NAMES[t.counter-1]    || ('Desk '+t.counter);
+    // Add a transfer entry to activityLog
+    activityLog.unshift({
+      num: t.id,
+      counter: t.counter,
+      service: t.service||'',
+      customer: t.customer||null,
+      priority: t.priority||'normal',
+      time: nowTime(),
+      transferred: true,
+      fromName, toName
+    });
+    if(activityLog.length>40) activityLog.pop();
+  });
+
+  // ── Clear counter panel when a ticket was transferred away (counter changed) ──
+  // For each counter's currently displayed ticket, check if it still belongs to that counter
+  [1,2,3,4].forEach(counterId=>{
+    const cd=counterDisplay[counterId-1];
+    if(cd.current===null) return;
+    const ticketInLog=sharedLog.find(t=>t.id===cd.current);
+    // If ticket no longer exists, was served, or now belongs to a different counter → clear panel
+    if(!ticketInLog || ticketInLog.served || ticketInLog.counter!==counterId){
+      cd.current=null; cd.service=null; cd.customer=null; cd.priority=null; cd.time=null; cd.calledAt=0;
+      announceQueue=announceQueue.filter(q=>q.counter!==counterId);
+    }
+  });
+
+  window._prevLog=[...sharedLog];
+
+  renderAll();
+},()=>{document.getElementById('fbLiveIndicator').style.opacity='0.3';});
+
+function nowTime(){
+  const n=new Date();
+  return [n.getHours(),n.getMinutes(),n.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':');
+}
+
+// ── Unified announcement queue ──
+// Each item is announced in full (chime → flash visible → speak → hide → pause) before the next.
+// Sorted by calledAt so the counter that called first is always announced first.
+let announceQueue = [];
+let isAnnouncing  = false;
+let lockedCounter = null;   // counter currently holding the mic
+const COOLDOWN_MS = 3000;   // silence after each announcement before next starts
+
+function triggerCallFlash(ticket){
+  // If a different counter is currently announcing, queue this one and wait
+  if(isAnnouncing && lockedCounter !== ticket.counter){
+    if(!announceQueue.find(q=>q.counter===ticket.counter && q.id===ticket.id)){
+      announceQueue.push({...ticket, calledAt: ticket.calledAt||Date.now()});
+      announceQueue.sort((a,b)=>a.calledAt-b.calledAt);
+    }
     return;
   }
-  window._lastResetFlag = data.resetFlag||null;
-  ticketCounter = data.ticketCounter||0;
-  log = data.log||[];
-  // Restore absent counters from Firebase (persists across page reloads)
-  absentCounters = new Set((data.absentCounters||[]).map(Number));
-  renderAll();
-}, ()=>setFbStatus('error'));
-
-// ── Selectors ──
-function selectSvc(btn){
-  document.querySelectorAll('.svc-btn').forEach(b=>b.classList.remove('selected'));
-  btn.classList.add('selected');
-  selectedSvc = btn.dataset.svc;
+  // Same counter re-calling or nobody announcing — start immediately
+  if(!announceQueue.find(q=>q.counter===ticket.counter && q.id===ticket.id)){
+    announceQueue.push({...ticket, calledAt: ticket.calledAt||Date.now()});
+    announceQueue.sort((a,b)=>a.calledAt-b.calledAt);
+  }
+  if(!isAnnouncing) processAnnounceQueue();
 }
-window.selectSvc = selectSvc;
 
-function selectPrio(val, btn){
-  selectedPrio = val;
-  document.querySelectorAll('.prio-opt').forEach(b=>b.classList.remove('selected'));
-  btn.classList.add('selected');
+function processAnnounceQueue(){
+  if(!announceQueue.length){ isAnnouncing=false; lockedCounter=null; return; }
+  isAnnouncing=true;
+  const ticket=announceQueue.shift();
+  lockedCounter=ticket.counter;
+  runAnnouncement(ticket);
 }
-window.selectPrio = selectPrio;
 
-function setFilter(btn){
-  document.querySelectorAll('.pf-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  activeFilter = btn.dataset.f;
-  renderPool();
+function runAnnouncement(ticket){
+  const color=COLOR_HEX[ticket.counter];
+  const num=String(ticket.id).padStart(3,'0');
+  const cname=COUNTER_NAMES[ticket.counter-1];
+
+  // ── Update flash overlay ──
+  document.getElementById('cfNumber').textContent=num;
+  document.getElementById('cfNumber').style.color=color;
+  document.getElementById('cfGotoNum').textContent=`No. ${num}`;
+  document.getElementById('cfGotoNum').style.color=color;
+  document.getElementById('cfGotoCounter').textContent=cname;
+  document.getElementById('cfGotoCounter').style.color=color;
+  document.getElementById('cfCounterDot').style.background=color;
+  document.getElementById('cfCounterText').textContent=cname;
+  document.getElementById('cfCounterText').style.color=color;
+  document.getElementById('cfCounterBadge').style.background=COLOR_BG[ticket.counter];
+  document.getElementById('cfCounterBadge').style.border=`1px solid ${color}44`;
+  document.getElementById('cfService').textContent=ticket.service||'';
+  // Show nickname in cfCustomer, full name (First + Last) in cfFullname
+  const hasNickname = ticket.nickname && ticket.nickname.trim();
+  const hasFullname = ticket.customer && ticket.customer.trim();
+  document.getElementById('cfCustomer').textContent = hasNickname ? ticket.nickname : (hasFullname ? ticket.customer : '');
+  const fullnameEl = document.getElementById('cfFullname');
+  if(hasFullname && hasNickname){
+    fullnameEl.textContent = ticket.customer;
+    fullnameEl.style.display = 'block';
+  } else {
+    fullnameEl.style.display = 'none';
+  }
+  document.getElementById('cfPriority').style.display=ticket.priority==='priority'?'inline-flex':'none';
+
+  // ── Show flash ──
+  if(flashTimer) clearTimeout(flashTimer);
+  document.getElementById('callFlash').classList.add('show');
+  dimVideo(true);
+
+  // ── Counter panel effects ──
+  const numEl=document.getElementById(`cpnum-${ticket.counter}`);
+  if(numEl){numEl.classList.remove('pop');void numEl.offsetWidth;numEl.classList.add('pop');setTimeout(()=>numEl.classList.remove('pop'),700);}
+  const waveEl=document.getElementById(`cpwave-${ticket.counter}`);
+  if(waveEl){waveEl.classList.add('active');setTimeout(()=>waveEl.classList.remove('active'),5500);}
+
+  // ── Chime then speak; when speech finishes, hide flash and move to next ──
+  playChime();
+  setTimeout(()=>{
+    doSpeak(ticket, ()=>{
+      // Speech done — brief pause, then hide flash, then next item
+      setTimeout(()=>{
+        document.getElementById('callFlash').classList.remove('show');
+        dimVideo(false);
+        // Gap between announcements: cooldown gives other counters breathing room
+        setTimeout(()=>processAnnounceQueue(), announceQueue.length>0 ? COOLDOWN_MS : 0);
+      }, 400);
+    });
+  }, 350); // slight delay after chime before voice starts
 }
-window.setFilter = setFilter;
 
-// ── Issue — counter is 0 (unassigned) ──
-function issueTicket(){
-  ticketCounter++;
-  const now = new Date();
-  const timeStr = [now.getHours(),now.getMinutes(),now.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':');
-  const dateStr = now.toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'});
-  const ticket = {
-    id: ticketCounter,
-    counter: 0,            // 0 = unassigned, counter picks it up
-    service: selectedSvc,
-    firstName: document.getElementById('custFirstName').value.trim()||null,
-    lastName:  document.getElementById('custLastName').value.trim()||null,
-    nickname:  document.getElementById('custNickname').value.trim()||null,
-    customer:  [document.getElementById('custFirstName').value.trim(), document.getElementById('custLastName').value.trim()].filter(Boolean).join(' ')||null,
-    priority: selectedPrio,
-    time: timeStr, date: dateStr,
-    startTime: Date.now(),
-    served: false, compliance: false, paymentHold: false
-  };
-  log.unshift(ticket);
-  document.getElementById('custFirstName').value = '';
-  document.getElementById('custLastName').value  = '';
-  document.getElementById('custNickname').value  = '';
-  saveState();
-  showToast(`#${String(ticket.id).padStart(3,'0')} → Pool`);
+function playChime(){
+  if(!audioCtx) return;
+  try{
+    [[880,0,0.14],[660,0.18,0.22]].forEach(([freq,start,dur])=>{
+      const osc=audioCtx.createOscillator(),gain=audioCtx.createGain();
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.type='sine'; osc.frequency.setValueAtTime(freq,audioCtx.currentTime+start);
+      gain.gain.setValueAtTime(0,audioCtx.currentTime+start);
+      gain.gain.linearRampToValueAtTime(0.5,audioCtx.currentTime+start+0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+start+dur);
+      osc.start(audioCtx.currentTime+start); osc.stop(audioCtx.currentTime+start+dur+0.05);
+    });
+  }catch(e){console.warn('Chime:',e);}
 }
-window.issueTicket = issueTicket;
 
-// ── Render ──
-function renderAll(){
-  renderStats();
-  renderTally();
-  renderPool();
-  renderCounterGrid();
+function doSpeak(ticket, onDone){
+  if(!audioUnlocked||!window.speechSynthesis){ if(onDone) onDone(); return; }
+  const cnum=ticket.counter;
+  const num=ticket.id;
+  const cname=COUNTER_NAMES[cnum-1];
+  // Format: "James, please proceed to DMW Desk 1 for OEC with Appointment."
+  // Without name: "Number 001, please proceed to DMW Desk 1 for OEC with Appointment."
+  // Convert name to Title Case so TTS reads it as a word, not spelled-out letters
+  function toTitleCase(str){ return str.toLowerCase().replace(/\b\w/g,c=>c.toUpperCase()); }
+  const rawName = ticket.nickname || ticket.customer || null;
+  const spokenName = rawName ? toTitleCase(rawName.trim()) : null;
+  const subjectPart = spokenName ? spokenName : `Number ${num}`;
+  const svcPart     = ticket.service  ? ` for ${ticket.service}` : '';
+  const announcement = ticket.priority==='priority'
+    ? `Priority customer. ${subjectPart}, please proceed to ${cname}${svcPart}.`
+    : `${subjectPart}, please proceed to ${cname}${svcPart}.`;
+
+  // Play the announcement 2 times with a short pause between
+  window.speechSynthesis.cancel();
+  setTimeout(()=>{
+    const voices=window.speechSynthesis.getVoices();
+    const preferred=
+      voices.find(v=>v.lang==='en-US'&&v.name.includes('Google'))||
+      voices.find(v=>v.lang==='en-US'&&!v.localService)||
+      voices.find(v=>v.lang.startsWith('en')&&!v.localService)||
+      voices.find(v=>v.lang.startsWith('en'))||
+      (voices.length>0?voices[0]:null);
+
+    function makeUtterance(text, onEndCb){
+      const u=new SpeechSynthesisUtterance(text);
+      u.rate=0.85; u.pitch=1.0; u.volume=1; u.lang='en-US';
+      if(preferred) u.voice=preferred;
+      if(onEndCb) u.onend=onEndCb;
+      u.onerror=(e)=>{ if(e.error!=='canceled'&&onEndCb) setTimeout(onEndCb,400); };
+      return u;
+    }
+
+    let started=false;
+    // Play announcement once only
+    const u1=makeUtterance(announcement, ()=>{ if(onDone) onDone(); });
+    u1.onstart=()=>{ started=true; };
+    window.speechSynthesis.speak(u1);
+
+    // Watchdog
+    setTimeout(()=>{
+      if(!started&&audioUnlocked){
+        window.speechSynthesis.cancel();
+        setTimeout(()=>{ if(onDone) onDone(); },300);
+      }
+    },2500);
+  },200);
+}
+
+function renderCounters(){
+  const queues=getQueues();
+  [1,2,3,4].forEach(id=>{
+    const cd=counterDisplay[id-1];
+    const waiting=queues[id]||[];
+    const panel=document.querySelector(`.counter-panel[data-c="${id}"]`);
+    const numEl=document.getElementById(`cpnum-${id}`);
+    const statusEl=document.getElementById(`cpstatus-${id}`);
+    const isAbsent=absentCounters.has(id);
+
+    // Toggle absent overlay
+    if(isAbsent){
+      panel.classList.add('absent');
+      numEl.textContent='—'; numEl.className='cp-number';
+      panel.classList.remove('active');
+      statusEl.textContent='Unavailable'; statusEl.className='cp-status-pill';
+    } else {
+      panel.classList.remove('absent');
+      if(cd.current!==null){
+        numEl.textContent=String(cd.current).padStart(3,'0');
+        numEl.className='cp-number has-num';
+        panel.classList.add('active');
+        statusEl.textContent='Serving'; statusEl.className='cp-status-pill serving';
+      } else {
+        numEl.textContent='—'; numEl.className='cp-number';
+        panel.classList.remove('active');
+        statusEl.textContent=waiting.length>0?'Ready':'Idle'; statusEl.className='cp-status-pill';
+      }
+    }
+    document.getElementById(`cpsvc-${id}`).textContent=isAbsent?'':(cd.service||'');
+    document.getElementById(`cpcust-${id}`).textContent=isAbsent?'':(cd.customer||'');
+    const queueEl=document.getElementById(`cpqueue-${id}`);
+    queueEl.innerHTML=`<span class="cp-queue-lbl">Next:</span>`;
+    if(isAbsent||!waiting.length){queueEl.innerHTML+='<span style="font-size:9px;color:var(--muted)">—</span>';}
+    else{
+      waiting.slice(0,4).forEach((t,i)=>{
+        const b=document.createElement('span');b.className='q-badge'+(i===0?' up-next':'');
+        b.textContent=String(t.id).padStart(3,'0')+(t.priority==='priority'?' ⚡':'');
+        queueEl.appendChild(b);
+      });
+      if(waiting.length>4){const m=document.createElement('span');m.style.cssText='font-size:9px;color:var(--muted)';m.textContent=`+${waiting.length-4}`;queueEl.appendChild(m);}
+    }
+  });
 }
 
 function renderStats(){
-  const unassigned = log.filter(t=>!t.served&&t.counter===0).length;
-  const inQueue    = log.filter(t=>!t.served&&t.counter>0&&!t.compliance&&!t.paymentHold).length;
-  document.getElementById('stTotal').textContent      = log.length;
-  document.getElementById('stUnassigned').textContent = unassigned;
-  document.getElementById('stInQueue').textContent    = inQueue;
-  document.getElementById('stServed').textContent     = log.filter(t=>t.served).length;
+  document.getElementById('sbWaiting').textContent=sharedLog.filter(t=>!t.served&&!t.compliance&&t.counter>=1).length;
+  document.getElementById('sbServed').textContent=sharedLog.filter(t=>t.served).length;
 }
 
-function renderPool(){
-  const body  = document.getElementById('poolBody');
-  const empty = document.getElementById('poolEmpty');
-  const badge = document.getElementById('poolCountBadge');
+function renderLastCalled(){
+  const wrap=document.getElementById('lastCalledWrap');
+  if(!activityLog.length){wrap.innerHTML='<div style="font-size:9px;color:var(--muted);letter-spacing:0.14em;text-transform:uppercase;padding:10px 0">No calls yet</div>';return;}
+  const last=activityLog[0];
+  const color=COLOR_HEX[last.counter];
+  const transferBadge = last.transferred
+    ? `<div style="font-size:7px;letter-spacing:0.14em;text-transform:uppercase;color:var(--amber);border:1px solid rgba(226,160,0,0.4);background:rgba(226,160,0,0.08);padding:2px 6px;border-radius:2px;margin-top:3px;display:inline-block">↔ Transferred from ${last.fromName}</div>`
+    : '';
+  wrap.innerHTML=`<div class="last-called-card">
+    <div class="lc-num" style="color:${color}">${String(last.num).padStart(3,'0')}</div>
+    <div class="lc-info">
+      <div class="lc-counter" style="color:${color}">${COUNTER_NAMES[last.counter-1]}</div>
+      <div class="lc-svc">${last.service||''}${last.priority==='priority'?' ⚡':''}</div>
+      ${last.customer?`<div class="lc-cust">${last.customer}</div>`:''}
+      ${transferBadge}
+    </div>
+    <div class="lc-time">${last.time||''}</div>
+  </div>`;
+}
 
-  let filtered = [...log];
-  if(activeFilter==='unassigned') filtered = log.filter(t=>!t.served&&t.counter===0);
-  else if(activeFilter==='queued') filtered = log.filter(t=>!t.served&&t.counter>0&&!t.compliance&&!t.paymentHold);
-  else if(activeFilter==='hold')   filtered = log.filter(t=>!t.served&&(t.compliance||t.paymentHold));
-  else if(activeFilter==='served') filtered = log.filter(t=>t.served);
-  else if(activeFilter==='c1')     filtered = log.filter(t=>t.counter===1);
-  else if(activeFilter==='c2')     filtered = log.filter(t=>t.counter===2);
-  else if(activeFilter==='c3')     filtered = log.filter(t=>t.counter===3);
-  else if(activeFilter==='c4')     filtered = log.filter(t=>t.counter===4);
-
-  badge.textContent = `${filtered.length} client${filtered.length!==1?'s':''}`;
-  body.querySelectorAll('.client-card').forEach(e=>e.remove());
-
-  if(!filtered.length){
-    empty.style.display='block';
-    return;
-  }
-  empty.style.display='none';
-
-  filtered.forEach(t=>{
-    const card = document.createElement('div');
-    const assigned = t.counter>0;
-    card.className = `client-card${assigned?' assigned':''}`;
-    if(assigned) card.dataset.c = t.counter;
-
-    const tags = [];
-    if(!assigned)         tags.push(`<span class="tag tag-unassigned">Unassigned</span>`);
-    else                  tags.push(`<span class="tag tag-counter">C${t.counter}</span>`);
-    if(t.priority==='priority') tags.push(`<span class="tag tag-priority">⚡ Priority</span>`);
-    if(t.compliance)      tags.push(`<span class="tag tag-comply">⏸ Comply</span>`);
-    if(t.paymentHold)     tags.push(`<span class="tag tag-payment">💳 Payment</span>`);
-    if(t.served)          tags.push(`<span class="tag tag-served">✓ Served</span>`);
-
-    // Build time info with start/end/duration
-    let timeInfo = `${t.date} · ${t.time}`;
-    if(t.startTime){
-      const startFmt = new Date(t.startTime).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-      timeInfo = `▶ ${startFmt}`;
-      if(t.endTime){
-        const endFmt = new Date(t.endTime).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-        const dur = Math.round((t.endTime - t.startTime)/1000);
-        const mm = String(Math.floor(dur/60)).padStart(2,'0');
-        const ss = String(dur%60).padStart(2,'0');
-        timeInfo += ` &nbsp;■ ${endFmt} &nbsp;⏱ ${mm}:${ss}`;
-      }
-    }
-
-    // Admin action buttons — only show relevant actions per ticket state
-    const actionBtns = [];
-    if(!t.served){
-      actionBtns.push(`<button class="cc-act-btn serve-btn" onclick="adminMarkServed(${t.id})">✓ Mark Served</button>`);
-    }
-    actionBtns.push(`<button class="cc-act-btn remove-btn" onclick="adminRemoveTicket(${t.id})">✕ Remove</button>`);
-
-    card.innerHTML = `
-      <div class="cc-num">${String(t.id).padStart(3,'0')}</div>
-      <div class="cc-body">
-        <div class="cc-svc">${t.service}</div>
-        ${t.customer?`<div class="cc-cust">${t.customer}</div>`:''}
-        <div class="cc-time">${timeInfo}</div>
-      </div>
-      <div class="cc-tags">${tags.join('')}</div>
-      <div class="cc-actions">${actionBtns.join('')}</div>`;
-    body.appendChild(card);
+function renderActivityFeed(){
+  const feed=document.getElementById('activityFeed');
+  if(!activityLog.length){feed.innerHTML='<div style="font-size:9px;color:var(--muted);letter-spacing:0.14em;text-transform:uppercase">No activity yet</div>';return;}
+  feed.innerHTML='';
+  activityLog.slice(0,20).forEach(a=>{
+    const item=document.createElement('div');
+    item.className='activity-item'; item.dataset.c=a.counter;
+    const topLine = a.transferred
+      ? `<span style="color:var(--amber)">↔ ${a.fromName} → ${COUNTER_NAMES[a.counter-1]}</span>`
+      : `${COUNTER_NAMES[a.counter-1]} · ${a.service||''}`;
+    const botLine = a.transferred
+      ? `<div class="ai-bot" style="color:var(--muted)">${a.service||''}${a.customer?' · '+a.customer:''}</div>`
+      : (a.customer?`<div class="ai-bot">${a.customer}</div>`:'');
+    item.innerHTML=`<div class="ai-num">${String(a.num).padStart(3,'0')}</div>
+      <div class="ai-body"><div class="ai-top">${topLine}</div>${botLine}</div>
+      ${a.priority==='priority'&&!a.transferred?'<div class="ai-prio">⚡</div>':''}
+      <div class="ai-time">${a.time||''}</div>`;
+    feed.appendChild(item);
   });
 }
 
-// ── Admin: Mark Served ──
-function adminMarkServed(ticketId){
-  const t = log.find(x=>x.id===ticketId);
-  if(!t || t.served) return;
-  if(!confirm(`Mark ticket #${String(ticketId).padStart(3,'0')} as Served?
-This cannot be undone and the client will not be called again.`)) return;
-  t.served = true;
-  t.endTime = t.endTime || Date.now();
-  t.compliance = false;
-  t.paymentHold = false;
-  // Single atomic write — clears lastCall if it pointed to this ticket
-  window._clearLastCallId = ticketId;
-  saveState();
-  window._clearLastCallId = null;
-  showToast(`#${String(ticketId).padStart(3,'0')} marked Served`);
-}
-window.adminMarkServed = adminMarkServed;
+function renderAll(){renderCounters();renderStats();renderLastCalled();renderActivityFeed();}
 
-// ── Admin: Remove Ticket ──
-function adminRemoveTicket(ticketId){
-  const t = log.find(x=>x.id===ticketId);
-  if(!t) return;
-  const label = `#${String(ticketId).padStart(3,'0')}${t.customer?' — '+t.customer:''}`;
-  if(!confirm(`Remove ticket ${label} from the queue?
-This permanently deletes it and the queue moves on.`)) return;
-  log = log.filter(x=>x.id!==ticketId);
-  saveState();
-  showToast(`${label} removed`);
-}
-window.adminRemoveTicket = adminRemoveTicket;
-
-// ── Service definitions (for tally order & icons) ──
-const SERVICES = [
-  {key:'OEC with Appointment',    icon:'📅', short:'OEC w/ Appt'},
-  {key:'OEC without Appointment', icon:'📋', short:'OEC w/o Appt'},
-  {key:'Government to Government',icon:'🏛️', short:'Gov to Gov'},
-  {key:'Direct Hire',             icon:'🤝', short:'Direct Hire'},
-  {key:'Agency Hire',             icon:'🏢', short:'Agency Hire'},
-  {key:'OFW Records',             icon:'🗂️', short:'OFW Records'},
-  {key:'Queries',                 icon:'💬', short:'Queries'},
-];
-
-function getTally(){
-  return SERVICES.map(s=>{
-    const issued  = log.filter(t=>t.service===s.key).length;
-    const served  = log.filter(t=>t.service===s.key&&t.served).length;
-    const pending = issued - served;
-    return {...s, issued, served, pending};
-  });
-}
-
-function renderTally(){
-  const wrap = document.getElementById('tallyRows');
-  wrap.innerHTML = '';
-  const tally = getTally();
-  tally.forEach(row=>{
-    const el = document.createElement('div');
-    el.className = 'tally-row';
-    const pct = row.issued ? Math.round((row.served/row.issued)*100) : 0;
-    el.innerHTML = `
-      <div class="tally-svc-name">
-        <span class="tally-svc-icon">${row.icon}</span>
-        <span class="tally-svc-label">${row.short}</span>
-      </div>
-      <div class="tally-num ${row.issued?'total':'zero'}">${row.issued||'—'}</div>
-      <div class="tally-num ${row.pending>0?'pending':'zero'}">${row.pending||'—'}</div>
-      <div class="tally-num ${row.served>0?'served':'zero'}">${row.served||'—'}</div>
-      <div class="tally-bar-wrap" style="display:${row.issued?'block':'none'}">
-        <div class="tally-bar-fill" style="width:${pct}%"></div>
-      </div>`;
-    wrap.appendChild(el);
-  });
-}
-
-// ── Counter Status, Absent & Selective Transfer ──
-const COUNTER_LABELS = {0:'Unassigned Pool',1:'DMW Desk 2',2:'DMW Desk 3',3:'DMW Desk 4',4:'DMW Desk 5'};
-const COUNTER_COLORS = {1:'var(--c1)',2:'var(--c2)',3:'var(--c3)',4:'var(--c4)'};
-let absentCounters = new Set();
-let _stmFromCounter = null;
-let _stmSelected    = new Set();
-
-function renderCounterGrid(){
-  const grid = document.getElementById('counterStatusGrid');
-  if(!grid) return;
-  grid.innerHTML = '';
-  [1,2,3,4].forEach(id=>{
-    const tickets = log.filter(t=>!t.served && t.counter===id);
-    const inQ     = tickets.filter(t=>!t.compliance&&!t.paymentHold).length;
-    const onHold  = tickets.filter(t=>t.compliance||t.paymentHold).length;
-    const absent  = absentCounters.has(id);
-    const item    = document.createElement('div');
-    item.className = `cg-item${absent?' absent':''}`;
-    item.innerHTML = `
-      <div class="cg-item-top">
-        <div class="cg-dot" style="background:${COUNTER_COLORS[id]}"></div>
-        <div class="cg-name">${COUNTER_LABELS[id]}</div>
-        <span class="cg-absent-badge">⚠ Absent</span>
-      </div>
-      <div class="cg-count">${tickets.length} ticket${tickets.length!==1?'s':''}${inQ?' · '+inQ+' queued':''}${onHold?' · '+onHold+' hold':''}</div>
-      <div class="cg-btns">
-        <button class="cg-btn cg-btn-absent"  onclick="markAbsent(${id})">⚠ Mark Absent</button>
-        <button class="cg-btn cg-btn-restore" onclick="restoreCounter(${id})">✓ Restore</button>
-        <button class="cg-btn cg-btn-transfer" onclick="openStm(${id})">☑ Transfer Tickets…</button>
-      </div>`;
-    grid.appendChild(item);
-  });
-}
-
-function markAbsent(id){
-  absentCounters.add(id);
-  saveState();           // ← syncs absentCounters to Firebase → audience sees it instantly
-  renderCounterGrid();
-  showToast(`${COUNTER_LABELS[id]} marked Absent`);
-  const tickets = log.filter(t=>!t.served && t.counter===id);
-  if(tickets.length) openStm(id);
-}
-window.markAbsent = markAbsent;
-
-function restoreCounter(id){
-  absentCounters.delete(id);
-  saveState();           // ← syncs to Firebase → audience shows Available again
-  renderCounterGrid();
-  showToast(`${COUNTER_LABELS[id]} is back — Available`);
-}
-window.restoreCounter = restoreCounter;
-
-// ── Selective Transfer Modal ──
-function openStm(fromId){
-  _stmFromCounter = fromId;
-  _stmSelected.clear();
-  document.getElementById('stmTitle').textContent = `Transfer from ${COUNTER_LABELS[fromId]}`;
-  document.getElementById('stmSub').textContent   = absentCounters.has(fromId)
-    ? `⚠ ${COUNTER_LABELS[fromId]} is absent — reassign tickets`
-    : `Select tickets from ${COUNTER_LABELS[fromId]}`;
-  const dest = document.getElementById('stmDestSelect');
-  dest.value = '';
-  Array.from(dest.options).forEach(o=>{
-    o.disabled = (o.value!=='' && parseInt(o.value)===fromId);
-  });
-  renderStmList();
-  updateStmBtn();
-  document.getElementById('stmBackdrop').classList.add('show');
-}
-window.openStm = openStm;
-
-function closeStm(){
-  document.getElementById('stmBackdrop').classList.remove('show');
-  _stmSelected.clear();
-}
-window.closeStm = closeStm;
-
-function renderStmList(){
-  const list    = document.getElementById('stmList');
-  const tickets = log.filter(t=>!t.served && t.counter===_stmFromCounter);
-  list.innerHTML = '';
-  if(!tickets.length){
-    list.innerHTML = `<div class="stm-empty">No active tickets on ${COUNTER_LABELS[_stmFromCounter]}.</div>`;
-    updateStmCountInfo(0); return;
-  }
-  const fmtTs = ts => {
-    if(!ts) return '';
-    const d=new Date(ts);
-    return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0');
-  };
-  const fmtEl = ts => {
-    if(!ts) return '';
-    const s=Math.round((Date.now()-ts)/1000);
-    return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
-  };
-  tickets.forEach(t=>{
-    const card = document.createElement('div');
-    card.className = `stm-card${_stmSelected.has(t.id)?' checked':''}`;
-    card.dataset.c = t.counter;
-    card.onclick   = ()=>stmToggle(t.id, card);
-    const ref = t.issuedAt||t.startTime;
-    const badges = [];
-    if(t.priority==='priority') badges.push(`<span class="stm-badge stm-badge-prio">⚡ Priority</span>`);
-    if(t.compliance)            badges.push(`<span class="stm-badge stm-badge-hold">⏸ Comply</span>`);
-    if(t.paymentHold)           badges.push(`<span class="stm-badge stm-badge-pay">💳 Pay</span>`);
-    card.innerHTML = `
-      <div class="stm-checkbox">${_stmSelected.has(t.id)?'✓':''}</div>
-      <div class="stm-num">${String(t.id).padStart(3,'0')}</div>
-      <div class="stm-body">
-        <div class="stm-svc">${t.service}</div>
-        ${t.customer?`<div class="stm-cust">${t.customer}</div>`:''}
-        ${ref?`<div class="stm-time">⏳ ${fmtTs(ref)} · <span id="stel-${t.id}">${fmtEl(ref)}</span></div>`:''}
-      </div>
-      <div class="stm-badges">${badges.join('')}</div>`;
-    list.appendChild(card);
-  });
-  updateStmCountInfo(tickets.length);
-}
-
-function stmToggle(id, card){
-  if(_stmSelected.has(id)){ _stmSelected.delete(id); card.classList.remove('checked'); card.querySelector('.stm-checkbox').textContent=''; }
-  else                     { _stmSelected.add(id);    card.classList.add('checked');    card.querySelector('.stm-checkbox').textContent='✓'; }
-  const total = log.filter(t=>!t.served&&t.counter===_stmFromCounter).length;
-  updateStmCountInfo(total);
-  updateStmBtn();
-}
-
-function stmToggleAll(){
-  const tickets = log.filter(t=>!t.served&&t.counter===_stmFromCounter);
-  const allChecked = tickets.every(t=>_stmSelected.has(t.id));
-  if(allChecked) tickets.forEach(t=>_stmSelected.delete(t.id));
-  else           tickets.forEach(t=>_stmSelected.add(t.id));
-  renderStmList(); updateStmBtn();
-}
-window.stmToggleAll = stmToggleAll;
-
-function updateStmCountInfo(total){
-  document.getElementById('stmCountInfo').textContent =
-    `${_stmSelected.size} of ${total} ticket${total!==1?'s':''} selected`;
-}
-
-function updateStmBtn(){
-  const dest = document.getElementById('stmDestSelect').value;
-  document.getElementById('stmDoBtn').disabled = !_stmSelected.size || dest==='';
-}
-window.updateStmBtn = updateStmBtn;
-
-setInterval(()=>{
-  document.querySelectorAll('[id^="stel-"]').forEach(el=>{
-    const id  = parseInt(el.id.replace('stel-',''));
-    const t   = log.find(x=>x.id===id);
-    const ref = t&&(t.issuedAt||t.startTime);
-    if(!ref) return;
-    const s=Math.round((Date.now()-ref)/1000);
-    el.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
-  });
-}, 1000);
-
-function executeStmTransfer(){
-  const destVal = document.getElementById('stmDestSelect').value;
-  if(destVal===''||!_stmSelected.size) return;
-  const to      = parseInt(destVal);
-  const ids     = [..._stmSelected];
-  if(!confirm(`Transfer ${ids.length} ticket${ids.length!==1?'s':''} from ${COUNTER_LABELS[_stmFromCounter]} → ${COUNTER_LABELS[to]}?`)) return;
-  ids.forEach(id=>{
-    const t = log.find(x=>x.id===id);
-    if(!t) return;
-    t.counter=to;
-    if(to===0){ t.compliance=false; t.paymentHold=false; }
-  });
-  saveState(); closeStm(); renderCounterGrid();
-  showToast(`✓ ${ids.length} ticket${ids.length!==1?'s':''} → ${COUNTER_LABELS[to]}`);
-}
-window.executeStmTransfer = executeStmTransfer;
-
-document.getElementById('stmBackdrop').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeStm(); });
-
-// ── EOD Save Modal ──
-function openEodModal(){
-  const tally = getTally();
-  const totalIssued  = log.length;
-  const totalServed  = log.filter(t=>t.served).length;
-  const totalPending = log.filter(t=>!t.served).length;
-  const now = new Date();
-  const dateStr = now.toLocaleDateString('en-PH',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
-  const timeStr = [now.getHours(),now.getMinutes()].map(v=>String(v).padStart(2,'0')).join(':');
-
-  // Meta summary
-  document.getElementById('saveMeta').innerHTML = `
-    <div class="save-meta-item"><div class="save-meta-val" style="color:var(--accent)">${totalIssued}</div><div class="save-meta-lbl">Issued</div></div>
-    <div class="save-meta-item"><div class="save-meta-val" style="color:var(--green)">${totalServed}</div><div class="save-meta-lbl">Served</div></div>
-    <div class="save-meta-item"><div class="save-meta-val" style="color:var(--amber)">${totalPending}</div><div class="save-meta-lbl">Pending</div></div>
-    <div class="save-meta-item"><div class="save-meta-val" style="color:var(--muted)">${timeStr}</div><div class="save-meta-lbl">${dateStr}</div></div>`;
-
-  // Service breakdown
-  const svcWrap = document.getElementById('saveSvcRows');
-  svcWrap.innerHTML = '';
-  tally.filter(r=>r.issued>0).forEach(r=>{
-    const el=document.createElement('div');
-    el.className='save-svc-row';
-    el.innerHTML=`<span>${r.icon} ${r.short}</span>
-      <span class="save-svc-num p">${r.issued}</span>
-      <span class="save-svc-num s">${r.served}</span>`;
-    svcWrap.appendChild(el);
-  });
-  if(!tally.some(r=>r.issued>0)){
-    svcWrap.innerHTML='<div style="font-size:9px;color:var(--muted);padding:8px 0">No tickets issued yet.</div>';
-  }
-
-  // Session save history
-  renderSessionSaves();
-  document.getElementById('eodModal').classList.add('show');
-}
-window.openEodModal = openEodModal;
-
-function closeEodModal(){
-  document.getElementById('eodModal').classList.remove('show');
-}
-window.closeEodModal = closeEodModal;
-
-function renderSessionSaves(){
-  const wrap = document.getElementById('savesHistory');
-  const list = document.getElementById('savesHistoryList');
-  if(!sessionSaves.length){ wrap.style.display='none'; return; }
-  wrap.style.display='block';
-  list.innerHTML = sessionSaves.map(s=>`
-    <div class="save-hist-item">
-      <span class="save-hist-label">${s.label}</span>
-      <span>${s.issued} issued · ${s.served} served</span>
-    </div>`).join('');
-}
-
-function doSaveEod(){
-  const now = new Date();
-  const dateStr = now.toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'});
-  const timeStr = [now.getHours(),now.getMinutes(),now.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':');
-  const label = `${dateStr} · ${timeStr}`;
-  const tally = getTally();
-
-  const snapshot = {
-    savedAt:   Date.now(),
-    savedAtLabel: label,
-    ticketCounter,
-    totalIssued:  log.length,
-    totalServed:  log.filter(t=>t.served).length,
-    totalPending: log.filter(t=>!t.served).length,
-    serviceTally: tally.map(r=>({service:r.key,issued:r.issued,served:r.served,pending:r.pending})),
-    log: [...log],  // full ticket log archived
-  };
-
-  // Push snapshot to eodSaves (appends, never overwrites)
-  savesRef.push(snapshot)
-    .then(()=>{
-      sessionSaves.unshift({label, issued:snapshot.totalIssued, served:snapshot.totalServed});
-      renderSessionSaves();
-      showToast('✓ Session saved — downloading PDF…');
-      downloadSnapshotPdf(snapshot);
-    })
-    .catch(()=>showToast('⚠ Save failed — check connection'));
-}
-window.doSaveEod = doSaveEod;
-
-function downloadSnapshotPdf(snapshot){
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' });
-  const PW = 297, PH = 210;
-  const ML = 18, MR = 18, MT = 18;
-  let y = MT;
-
-  function setFont(size,style,color){
-    doc.setFontSize(size||10);
-    doc.setFont('helvetica', style||'normal');
-    doc.setTextColor(...(color||[24,24,15]));
-  }
-  function txt(str,x,yy,size,style,color,align){
-    setFont(size,style,color);
-    doc.text(String(str),x,yy,align?{align}:{});
-  }
-  function rect(x,yy,w,h,fillColor){
-    doc.setFillColor(...fillColor);
-    doc.rect(x,yy,w,h,'F');
-  }
-  function hline(y1,w,color){
-    doc.setDrawColor(...(color||[213,208,194]));
-    doc.setLineWidth(w||0.2);
-    doc.line(ML,y1,PW-MR,y1);
-  }
-
-  const now = new Date(snapshot.savedAt);
-  const dateLabel = now.toLocaleDateString('en-PH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  const timeLabel = now.toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  const filename  = 'DMW-Snapshot-'
-    +now.getFullYear()
-    +String(now.getMonth()+1).padStart(2,'0')
-    +String(now.getDate()).padStart(2,'0')
-    +'-'+String(now.getHours()).padStart(2,'0')
-    +String(now.getMinutes()).padStart(2,'0')
-    +'.pdf';
-
-  // Header bar
-  rect(0,0,PW,22,[24,24,15]);
-  txt('DMW DESK - SESSION SNAPSHOT',ML,10,13,'bold',[253,250,243]);
-  txt('QUEUE MANAGEMENT SYSTEM',ML,16,7,'normal',[180,175,160]);
-  txt(timeLabel,PW-MR,10,11,'bold',[240,192,64],'right');
-  txt(dateLabel,PW-MR,16,7,'normal',[180,175,160],'right');
-  y = 30;
-
-  // Summary boxes
-  const boxes=[
-    {label:'ISSUED', val:snapshot.totalIssued,  color:[176,58,46]},
-    {label:'SERVED', val:snapshot.totalServed,  color:[30,132,73]},
-    {label:'PENDING',val:snapshot.totalPending, color:[154,111,0]},
-  ];
-  const bw=(PW-ML-MR-8)/3;
-  boxes.forEach((b,i)=>{
-    const bx=ML+i*(bw+4);
-    rect(bx,y,bw,20,[248,245,238]);
-    doc.setDrawColor(...b.color); doc.setLineWidth(0.5); doc.rect(bx,y,bw,20);
-    txt(String(b.val),bx+bw/2,y+12,22,'bold',b.color,'center');
-    txt(b.label,      bx+bw/2,y+18,6.5,'normal',[133,127,114],'center');
-  });
-  y+=26;
-
-  // Service breakdown
-  rect(ML,y,PW-ML-MR,7,[24,24,15]);
-  txt('SERVICE BREAKDOWN',ML+3,y+5,8,'bold',[253,250,243]);
-  y+=9;
-  rect(ML,y,PW-ML-MR,6,[232,228,220]);
-  txt('SERVICE', ML+2, y+4.2,7,'normal',[133,127,114]);
-  txt('ISSUED',  ML+180,y+4.2,7,'normal',[133,127,114],'center');
-  txt('SERVED',  ML+210,y+4.2,7,'normal',[30,132,73],'center');
-  txt('PENDING', ML+240,y+4.2,7,'normal',[154,111,0],'center');
-  y+=7;
-  const activeSvcs=snapshot.serviceTally.filter(r=>r.issued>0);
-  activeSvcs.forEach((r,i)=>{
-    if(i%2===1) rect(ML,y,PW-ML-MR,7,[248,245,238]);
-    txt(r.service, ML+2,  y+5, 8,'normal',[24,24,15]);
-    txt(String(r.issued),  ML+180,y+5,10,'bold',[176,58,46],'center');
-    txt(String(r.served),  ML+210,y+5,10,'bold',[30,132,73],'center');
-    txt(String(r.pending), ML+240,y+5,10,'bold',[154,111,0],'center');
-    hline(y+7,0.15);
-    y+=7;
-  });
-  if(!activeSvcs.length){ txt('No tickets issued.',ML+3,y+5,8,'normal',[133,127,114]); y+=8; }
-  y+=6;
-
-  // Full ticket log
-  rect(ML,y,PW-ML-MR,7,[24,24,15]);
-  txt('FULL TICKET LOG',ML+3,y+5,8,'bold',[253,250,243]);
-  txt(snapshot.log.length+' TICKETS',PW-MR-3,y+5,7,'normal',[180,175,160],'right');
-  y+=9;
-
-  // Column positions — landscape usable width = 261mm
-  // NO=2, NAME=18, SERVICE=64, DESK=160, START=185, END=210, DUR=234, STATUS=248
-  function logHeader(){
-    rect(ML,y,PW-ML-MR,6,[232,228,220]);
-    txt('NO.',    ML+2,  y+4.2,6.5,'normal',[133,127,114]);
-    txt('NAME',   ML+18, y+4.2,6.5,'normal',[133,127,114]);
-    txt('SERVICE',ML+64, y+4.2,6.5,'normal',[133,127,114]);
-    txt('DESK',   ML+160,y+4.2,6.5,'normal',[133,127,114]);
-    txt('START',  ML+185,y+4.2,6.5,'normal',[133,127,114]);
-    txt('END',    ML+210,y+4.2,6.5,'normal',[133,127,114]);
-    txt('DUR',    ML+234,y+4.2,6.5,'normal',[133,127,114]);
-    txt('STATUS', ML+248,y+4.2,6.5,'normal',[133,127,114]);
-    y+=7;
-  }
-  logHeader();
-
-  const ROW_H=6;
-  snapshot.log.forEach((t,i)=>{
-    if(y+ROW_H>PH-14){
-      doc.addPage(); y=MT; logHeader();
-    }
-    if(i%2===1) rect(ML,y,PW-ML-MR,ROW_H,[248,245,238]);
-    const numStr  = String(t.id).padStart(3,'0')+(t.priority==='priority'?' !':'');
-    const nameStr = t.customer?(t.customer.length>30?t.customer.slice(0,29)+'...':t.customer):'--';
-    const svcStr  = t.service ?(t.service.length>40 ?t.service.slice(0,39)+'...':t.service) :'--';
-    const deskStr = t.counter ?'Desk '+t.counter:'--';
-    const status  = t.served?'Served':(t.compliance?'Comply':(t.paymentHold?'Payment':'Waiting'));
-    const stColor = t.served?[30,132,73]:(t.compliance||t.paymentHold?[154,111,0]:[133,127,114]);
-    // Time formatting - plain ASCII to avoid jsPDF font encoding issues
-    const fmtTime = (ts) => {
-      if(!ts) return '--';
-      const d = new Date(ts);
-      const h = d.getHours();
-      const mm = String(d.getMinutes()).padStart(2,'0');
-      const ss = String(d.getSeconds()).padStart(2,'0');
-      const hh = String(h).padStart(2,'0');
-      return hh + ':' + mm + ':' + ss;
-    };
-    const startStr = fmtTime(t.startTime);
-    const endStr   = fmtTime(t.endTime);
-    let durStr = '--';
-    if(t.startTime && t.endTime){
-      const sec = Math.round((t.endTime - t.startTime)/1000);
-      durStr = String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');
-    }
-    txt(numStr,  ML+2,  y+4.2,7,'normal',[24,24,15]);
-    txt(nameStr, ML+18, y+4.2,7,'normal',[24,24,15]);
-    txt(svcStr,  ML+64, y+4.2,7,'normal',[80,75,65]);
-    txt(deskStr, ML+160,y+4.2,7,'normal',[24,24,15]);
-    txt(startStr,ML+185,y+4.2,7,'normal',[80,75,65]);
-    txt(endStr,  ML+210,y+4.2,7,'normal',[80,75,65]);
-    txt(durStr,  ML+234,y+4.2,7,'bold',[14,107,138]);
-    txt(status,  ML+248,y+4.2,7,'bold',stColor);
-    hline(y+ROW_H,0.1);
-    y+=ROW_H;
-  });
-
-  // Footer on every page
-  const pages=doc.getNumberOfPages();
-  for(let p=1;p<=pages;p++){
-    doc.setPage(p);
-    hline(PH-10,0.3,[213,208,194]);
-    txt('DMW Queue System - Snapshot: '+snapshot.savedAtLabel,ML,PH-6,6.5,'normal',[133,127,114]);
-    txt('Page '+p+' of '+pages,PW-MR,PH-6,6.5,'normal',[133,127,114],'right');
-  }
-
-  doc.save(filename);
-}
-window.downloadSnapshotPdf = downloadSnapshotPdf;
-
-// Close modal on backdrop click
-document.getElementById('eodModal').addEventListener('click', function(e){
-  if(e.target===this) closeEodModal();
-});
-
-function resetNumbering(){
-  if(!confirm('Reset ticket numbering to 001?\nThis clears all tickets on ALL devices.')) return;
-  log=[]; ticketCounter=0; saveState(true);
-  showToast('✓ Reset — next ticket is 001');
-}
-window.resetNumbering = resetNumbering;
-
-function showToast(msg){
-  const el=document.getElementById('toast');
-  el.textContent=msg; el.classList.add('show');
-  setTimeout(()=>el.classList.remove('show'),2200);
+buildCounters(); renderAll();
+if(window.speechSynthesis){
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices();
 }
 </script>
 </body>
