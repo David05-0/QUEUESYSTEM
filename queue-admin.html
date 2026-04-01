@@ -171,22 +171,20 @@
   .tally-bar-fill{height:100%;background:var(--green);border-radius:2px;transition:width 0.4s ease}
   .tally-row:hover .tally-bar-wrap{display:block}
 
-  /* ── COUNTER ABSENT / TRANSFER PANEL ── */
+  /* ── COUNTER STATUS / ABSENT / TRANSFER ── */
   .transfer-card{background:var(--paper);border:1px solid var(--rule);border-radius:2px;box-shadow:0 2px 8px var(--shadow);overflow:hidden}
   .transfer-head{background:var(--ink);color:var(--bg);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
   .transfer-head-title{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:0.1em;display:flex;align-items:center;gap:8px}
   .transfer-head-sub{font-size:8px;color:rgba(244,241,234,0.45);letter-spacing:0.12em;text-transform:uppercase}
   .transfer-body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px}
-
-  /* Counter status grid */
   .counter-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  .cg-item{border:1.5px solid var(--rule);border-radius:3px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;transition:all 0.15s;background:var(--bg)}
-  .cg-item.absent{border-color:var(--accent);background:rgba(176,58,46,0.05)}
+  .cg-item{border:1.5px solid var(--rule);border-radius:3px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;background:var(--bg);transition:all 0.2s}
+  .cg-item.absent{border-color:var(--accent);background:rgba(176,58,46,0.04)}
   .cg-item-top{display:flex;align-items:center;gap:8px}
   .cg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
   .cg-name{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:0.1em;flex:1}
-  .cg-count{font-size:7.5px;letter-spacing:0.1em;color:var(--muted)}
-  .cg-absent-badge{font-size:7px;letter-spacing:0.12em;text-transform:uppercase;padding:2px 7px;border-radius:20px;color:var(--accent);border:1px solid rgba(176,58,46,0.3);background:rgba(176,58,46,0.07);display:none}
+  .cg-count{font-size:7.5px;letter-spacing:0.09em;color:var(--muted)}
+  .cg-absent-badge{font-size:7px;letter-spacing:0.12em;text-transform:uppercase;padding:2px 7px;border-radius:20px;color:var(--accent);border:1px solid rgba(176,58,46,0.3);background:rgba(176,58,46,0.07);display:none;align-items:center;gap:3px}
   .cg-item.absent .cg-absent-badge{display:inline-flex}
   .cg-btns{display:flex;gap:5px;flex-wrap:wrap}
   .cg-btn{font-family:'DM Mono',monospace;font-size:7.5px;letter-spacing:0.1em;text-transform:uppercase;padding:4px 9px;border-radius:2px;cursor:pointer;border:1px solid;transition:all 0.13s;background:transparent;white-space:nowrap}
@@ -198,10 +196,8 @@
   .cg-item.absent .cg-btn-restore{display:inline-flex}
   .cg-btn-transfer{color:var(--accent2);border-color:rgba(26,58,92,0.3)}
   .cg-btn-transfer:hover{background:rgba(26,58,92,0.1);border-color:var(--accent2)}
-  .cg-item.absent .cg-btn-transfer{color:var(--accent);border-color:rgba(176,58,46,0.4);background:rgba(176,58,46,0.06)}
-  .cg-item.absent .cg-btn-transfer:hover{background:rgba(176,58,46,0.14)}
 
-  /* Selective transfer modal */
+  /* Selective Transfer Modal */
   .stm-backdrop{position:fixed;inset:0;background:rgba(24,24,15,0.6);z-index:300;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s;backdrop-filter:blur(3px)}
   .stm-backdrop.show{opacity:1;pointer-events:all}
   .stm-modal{background:var(--paper);border:1.5px solid var(--ink);border-radius:4px;width:min(600px,95vw);max-height:88vh;box-shadow:0 12px 48px rgba(24,24,15,0.28);overflow:hidden;display:flex;flex-direction:column;transform:translateY(10px);transition:transform 0.2s}
@@ -224,9 +220,8 @@
   .stm-count-info{font-size:8px;letter-spacing:0.1em;color:var(--muted);padding:4px 14px 6px;text-align:right;flex-shrink:0}
   .stm-list{overflow-y:auto;flex:1;padding:8px 12px;display:flex;flex-direction:column;gap:5px;scrollbar-width:thin;scrollbar-color:var(--rule) transparent}
   .stm-empty{padding:28px;text-align:center;font-size:11px;color:var(--muted);letter-spacing:0.1em}
-  .stm-card{display:flex;align-items:center;gap:10px;padding:9px 12px 9px 10px;background:var(--bg);border:1.5px solid var(--rule);border-radius:3px;cursor:pointer;transition:all 0.13s;position:relative}
+  .stm-card{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg);border:1.5px solid var(--rule);border-radius:3px;cursor:pointer;transition:all 0.13s;position:relative}
   .stm-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px}
-  .stm-card[data-c="0"]::before{background:var(--rule)}
   .stm-card[data-c="1"]::before{background:var(--c1)}.stm-card[data-c="2"]::before{background:var(--c2)}
   .stm-card[data-c="3"]::before{background:var(--c3)}.stm-card[data-c="4"]::before{background:var(--c4)}
   .stm-card:hover{border-color:var(--accent2)}
@@ -239,12 +234,12 @@
   .stm-body{flex:1;overflow:hidden}
   .stm-svc{font-size:9px;letter-spacing:0.07em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .stm-cust{font-size:8px;color:var(--muted);margin-top:1px}
-  .stm-time{font-size:7.5px;color:var(--muted);margin-top:2px;font-family:'DM Mono',monospace}
+  .stm-time{font-size:7.5px;color:var(--muted);margin-top:2px}
   .stm-badges{display:flex;gap:3px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;max-width:80px}
   .stm-badge{font-size:7px;letter-spacing:0.09em;padding:1px 5px;border-radius:2px;text-transform:uppercase;white-space:nowrap;border:1px solid}
   .stm-badge-prio{color:var(--accent);border-color:rgba(176,58,46,0.3);background:rgba(176,58,46,0.06)}
   .stm-badge-hold{color:var(--amber);border-color:rgba(154,111,0,0.25);background:rgba(154,111,0,0.06)}
-  .stm-badge-payment{color:var(--teal);border-color:rgba(14,107,138,0.22);background:rgba(14,107,138,0.06)}
+  .stm-badge-pay{color:var(--teal);border-color:rgba(14,107,138,0.22);background:rgba(14,107,138,0.06)}
 
   /* ── SAVE POINT / EOD ── */
   .eod-btn{width:100%;margin-top:7px;background:transparent;color:var(--accent2);border:1.5px solid var(--accent2);border-radius:3px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;padding:9px;cursor:pointer;transition:all 0.13s;display:flex;align-items:center;justify-content:center;gap:6px}
@@ -478,9 +473,7 @@
       <button class="stm-do-btn" id="stmDoBtn" onclick="executeStmTransfer()" disabled>↔ Transfer</button>
     </div>
     <div class="stm-count-info" id="stmCountInfo">0 selected</div>
-    <div class="stm-list" id="stmList">
-      <div class="stm-empty">No tickets available.</div>
-    </div>
+    <div class="stm-list" id="stmList"></div>
   </div>
 </div>
 
@@ -574,7 +567,8 @@ function saveState(isReset=false){
   const payload = {
     ticketCounter, log,
     lastUpdate: Date.now(),
-    resetFlag: isReset ? Date.now() : (window._lastResetFlag||null)
+    resetFlag: isReset ? Date.now() : (window._lastResetFlag||null),
+    absentCounters: [...absentCounters]   // sync absent status to all screens
   };
   // If admin just marked a ticket served, clear lastCall atomically in the same write
   if(window._clearLastCallId != null){
@@ -593,6 +587,8 @@ stateRef.on('value', snap=>{
   window._lastResetFlag = data.resetFlag||null;
   ticketCounter = data.ticketCounter||0;
   log = data.log||[];
+  // Restore absent counters from Firebase (persists across page reloads)
+  absentCounters = new Set((data.absentCounters||[]).map(Number));
   renderAll();
 }, ()=>setFbStatus('error'));
 
@@ -810,31 +806,31 @@ function renderTally(){
   });
 }
 
-// ── Counter Status & Absent/Transfer ──
+// ── Counter Status, Absent & Selective Transfer ──
 const COUNTER_LABELS = {0:'Unassigned Pool',1:'DMW Desk 2',2:'DMW Desk 3',3:'DMW Desk 4',4:'DMW Desk 5'};
 const COUNTER_COLORS = {1:'var(--c1)',2:'var(--c2)',3:'var(--c3)',4:'var(--c4)'};
-let absentCounters = new Set(); // tracks which counters are marked absent
+let absentCounters = new Set();
 let _stmFromCounter = null;
 let _stmSelected    = new Set();
 
 function renderCounterGrid(){
   const grid = document.getElementById('counterStatusGrid');
+  if(!grid) return;
   grid.innerHTML = '';
   [1,2,3,4].forEach(id=>{
-    const tickets  = log.filter(t=>!t.served && t.counter===id);
-    const inQueue  = tickets.filter(t=>!t.compliance&&!t.paymentHold).length;
-    const onHold   = tickets.filter(t=>t.compliance||t.paymentHold).length;
-    const isAbsent = absentCounters.has(id);
-    const item = document.createElement('div');
-    item.className = `cg-item${isAbsent?' absent':''}`;
-    item.id = `cg-${id}`;
+    const tickets = log.filter(t=>!t.served && t.counter===id);
+    const inQ     = tickets.filter(t=>!t.compliance&&!t.paymentHold).length;
+    const onHold  = tickets.filter(t=>t.compliance||t.paymentHold).length;
+    const absent  = absentCounters.has(id);
+    const item    = document.createElement('div');
+    item.className = `cg-item${absent?' absent':''}`;
     item.innerHTML = `
       <div class="cg-item-top">
         <div class="cg-dot" style="background:${COUNTER_COLORS[id]}"></div>
         <div class="cg-name">${COUNTER_LABELS[id]}</div>
         <span class="cg-absent-badge">⚠ Absent</span>
       </div>
-      <div class="cg-count">${tickets.length} ticket${tickets.length!==1?'s':''}${inQueue?' · '+inQueue+' queued':''}${onHold?' · '+onHold+' hold':''}</div>
+      <div class="cg-count">${tickets.length} ticket${tickets.length!==1?'s':''}${inQ?' · '+inQ+' queued':''}${onHold?' · '+onHold+' hold':''}</div>
       <div class="cg-btns">
         <button class="cg-btn cg-btn-absent"  onclick="markAbsent(${id})">⚠ Mark Absent</button>
         <button class="cg-btn cg-btn-restore" onclick="restoreCounter(${id})">✓ Restore</button>
@@ -846,9 +842,9 @@ function renderCounterGrid(){
 
 function markAbsent(id){
   absentCounters.add(id);
+  saveState();           // ← syncs absentCounters to Firebase → audience sees it instantly
   renderCounterGrid();
   showToast(`${COUNTER_LABELS[id]} marked Absent`);
-  // Auto-open transfer modal if there are tickets
   const tickets = log.filter(t=>!t.served && t.counter===id);
   if(tickets.length) openStm(id);
 }
@@ -856,8 +852,9 @@ window.markAbsent = markAbsent;
 
 function restoreCounter(id){
   absentCounters.delete(id);
+  saveState();           // ← syncs to Firebase → audience shows Available again
   renderCounterGrid();
-  showToast(`${COUNTER_LABELS[id]} restored`);
+  showToast(`${COUNTER_LABELS[id]} is back — Available`);
 }
 window.restoreCounter = restoreCounter;
 
@@ -865,19 +862,15 @@ window.restoreCounter = restoreCounter;
 function openStm(fromId){
   _stmFromCounter = fromId;
   _stmSelected.clear();
-
   document.getElementById('stmTitle').textContent = `Transfer from ${COUNTER_LABELS[fromId]}`;
   document.getElementById('stmSub').textContent   = absentCounters.has(fromId)
     ? `⚠ ${COUNTER_LABELS[fromId]} is absent — reassign tickets`
-    : `Select tickets to move from ${COUNTER_LABELS[fromId]}`;
-
-  // Destination dropdown — exclude source
+    : `Select tickets from ${COUNTER_LABELS[fromId]}`;
   const dest = document.getElementById('stmDestSelect');
+  dest.value = '';
   Array.from(dest.options).forEach(o=>{
     o.disabled = (o.value!=='' && parseInt(o.value)===fromId);
-    if(o.disabled && dest.value===o.value) dest.value='';
   });
-
   renderStmList();
   updateStmBtn();
   document.getElementById('stmBackdrop').classList.add('show');
@@ -894,78 +887,64 @@ function renderStmList(){
   const list    = document.getElementById('stmList');
   const tickets = log.filter(t=>!t.served && t.counter===_stmFromCounter);
   list.innerHTML = '';
-
   if(!tickets.length){
     list.innerHTML = `<div class="stm-empty">No active tickets on ${COUNTER_LABELS[_stmFromCounter]}.</div>`;
-    updateStmCountInfo(0,0);
-    return;
+    updateStmCountInfo(0); return;
   }
-
   const fmtTs = ts => {
     if(!ts) return '';
     const d=new Date(ts);
     return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0');
   };
-  const fmtElapsed = ts => {
+  const fmtEl = ts => {
     if(!ts) return '';
-    const sec=Math.round((Date.now()-ts)/1000);
-    return String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');
+    const s=Math.round((Date.now()-ts)/1000);
+    return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
   };
-
   tickets.forEach(t=>{
     const card = document.createElement('div');
     card.className = `stm-card${_stmSelected.has(t.id)?' checked':''}`;
     card.dataset.c = t.counter;
-    card.onclick = ()=>stmToggle(t.id, card);
-
-    const ref = t.issuedAt || t.startTime;
+    card.onclick   = ()=>stmToggle(t.id, card);
+    const ref = t.issuedAt||t.startTime;
     const badges = [];
     if(t.priority==='priority') badges.push(`<span class="stm-badge stm-badge-prio">⚡ Priority</span>`);
     if(t.compliance)            badges.push(`<span class="stm-badge stm-badge-hold">⏸ Comply</span>`);
-    if(t.paymentHold)           badges.push(`<span class="stm-badge stm-badge-payment">💳 Payment</span>`);
-
+    if(t.paymentHold)           badges.push(`<span class="stm-badge stm-badge-pay">💳 Pay</span>`);
     card.innerHTML = `
       <div class="stm-checkbox">${_stmSelected.has(t.id)?'✓':''}</div>
       <div class="stm-num">${String(t.id).padStart(3,'0')}</div>
       <div class="stm-body">
         <div class="stm-svc">${t.service}</div>
         ${t.customer?`<div class="stm-cust">${t.customer}</div>`:''}
-        ${ref?`<div class="stm-time">⏳ ${fmtTs(ref)} · <span id="stel-${t.id}">${fmtElapsed(ref)}</span></div>`:''}
+        ${ref?`<div class="stm-time">⏳ ${fmtTs(ref)} · <span id="stel-${t.id}">${fmtEl(ref)}</span></div>`:''}
       </div>
       <div class="stm-badges">${badges.join('')}</div>`;
     list.appendChild(card);
   });
-  updateStmCountInfo(tickets.length, _stmSelected.size);
+  updateStmCountInfo(tickets.length);
 }
 
 function stmToggle(id, card){
-  if(_stmSelected.has(id)){
-    _stmSelected.delete(id);
-    card.classList.remove('checked');
-    card.querySelector('.stm-checkbox').textContent='';
-  } else {
-    _stmSelected.add(id);
-    card.classList.add('checked');
-    card.querySelector('.stm-checkbox').textContent='✓';
-  }
+  if(_stmSelected.has(id)){ _stmSelected.delete(id); card.classList.remove('checked'); card.querySelector('.stm-checkbox').textContent=''; }
+  else                     { _stmSelected.add(id);    card.classList.add('checked');    card.querySelector('.stm-checkbox').textContent='✓'; }
   const total = log.filter(t=>!t.served&&t.counter===_stmFromCounter).length;
-  updateStmCountInfo(total, _stmSelected.size);
+  updateStmCountInfo(total);
   updateStmBtn();
 }
 
 function stmToggleAll(){
-  const tickets = log.filter(t=>!t.served && t.counter===_stmFromCounter);
+  const tickets = log.filter(t=>!t.served&&t.counter===_stmFromCounter);
   const allChecked = tickets.every(t=>_stmSelected.has(t.id));
-  if(allChecked){ tickets.forEach(t=>_stmSelected.delete(t.id)); }
-  else           { tickets.forEach(t=>_stmSelected.add(t.id)); }
-  renderStmList();
-  updateStmBtn();
+  if(allChecked) tickets.forEach(t=>_stmSelected.delete(t.id));
+  else           tickets.forEach(t=>_stmSelected.add(t.id));
+  renderStmList(); updateStmBtn();
 }
 window.stmToggleAll = stmToggleAll;
 
-function updateStmCountInfo(total, selected){
+function updateStmCountInfo(total){
   document.getElementById('stmCountInfo').textContent =
-    `${selected} of ${total} ticket${total!==1?'s':''} selected`;
+    `${_stmSelected.size} of ${total} ticket${total!==1?'s':''} selected`;
 }
 
 function updateStmBtn(){
@@ -974,45 +953,35 @@ function updateStmBtn(){
 }
 window.updateStmBtn = updateStmBtn;
 
-// Live ticker for stm modal elapsed spans
 setInterval(()=>{
   document.querySelectorAll('[id^="stel-"]').forEach(el=>{
-    const id = parseInt(el.id.replace('stel-',''));
-    const t  = log.find(x=>x.id===id);
-    const ref = t && (t.issuedAt||t.startTime);
+    const id  = parseInt(el.id.replace('stel-',''));
+    const t   = log.find(x=>x.id===id);
+    const ref = t&&(t.issuedAt||t.startTime);
     if(!ref) return;
-    const sec=Math.round((Date.now()-ref)/1000);
-    el.textContent=String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');
+    const s=Math.round((Date.now()-ref)/1000);
+    el.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
   });
 }, 1000);
 
 function executeStmTransfer(){
   const destVal = document.getElementById('stmDestSelect').value;
-  if(destVal==='' || !_stmSelected.size) return;
-  const to        = parseInt(destVal);
-  const toLabel   = COUNTER_LABELS[to];
-  const fromLabel = COUNTER_LABELS[_stmFromCounter];
-  const ids       = [..._stmSelected];
-
-  if(!confirm(`Transfer ${ids.length} ticket${ids.length!==1?'s':''} from ${fromLabel} → ${toLabel}?`)) return;
-
+  if(destVal===''||!_stmSelected.size) return;
+  const to      = parseInt(destVal);
+  const ids     = [..._stmSelected];
+  if(!confirm(`Transfer ${ids.length} ticket${ids.length!==1?'s':''} from ${COUNTER_LABELS[_stmFromCounter]} → ${COUNTER_LABELS[to]}?`)) return;
   ids.forEach(id=>{
     const t = log.find(x=>x.id===id);
     if(!t) return;
-    t.counter = to;
+    t.counter=to;
     if(to===0){ t.compliance=false; t.paymentHold=false; }
   });
-
-  saveState();
-  closeStm();
-  renderCounterGrid();
-  showToast(`✓ ${ids.length} ticket${ids.length!==1?'s':''} → ${toLabel}`);
+  saveState(); closeStm(); renderCounterGrid();
+  showToast(`✓ ${ids.length} ticket${ids.length!==1?'s':''} → ${COUNTER_LABELS[to]}`);
 }
 window.executeStmTransfer = executeStmTransfer;
 
-document.getElementById('stmBackdrop').addEventListener('click', e=>{
-  if(e.target===e.currentTarget) closeStm();
-});
+document.getElementById('stmBackdrop').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeStm(); });
 
 // ── EOD Save Modal ──
 function openEodModal(){
