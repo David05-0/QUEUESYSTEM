@@ -171,22 +171,80 @@
   .tally-bar-fill{height:100%;background:var(--green);border-radius:2px;transition:width 0.4s ease}
   .tally-row:hover .tally-bar-wrap{display:block}
 
-  /* ── COUNTER TRANSFER PANEL ── */
+  /* ── COUNTER ABSENT / TRANSFER PANEL ── */
   .transfer-card{background:var(--paper);border:1px solid var(--rule);border-radius:2px;box-shadow:0 2px 8px var(--shadow);overflow:hidden}
   .transfer-head{background:var(--ink);color:var(--bg);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
   .transfer-head-title{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:0.1em;display:flex;align-items:center;gap:8px}
   .transfer-head-sub{font-size:8px;color:rgba(244,241,234,0.45);letter-spacing:0.12em;text-transform:uppercase}
-  .transfer-body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:12px}
-  .transfer-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-  .transfer-lbl{font-size:8px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);min-width:40px;flex-shrink:0}
-  .transfer-select{font-family:'DM Mono',monospace;font-size:11px;padding:7px 10px;background:var(--bg);border:1.5px solid var(--rule);border-radius:3px;color:var(--ink);outline:none;cursor:pointer;transition:border-color 0.13s;flex:1;min-width:120px}
-  .transfer-select:focus{border-color:var(--ink)}
-  .transfer-arrow{font-size:16px;color:var(--muted);flex-shrink:0}
-  .transfer-btn{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.1em;padding:10px 20px;border:none;border-radius:3px;cursor:pointer;transition:all 0.13s;background:var(--accent2);color:#fff;white-space:nowrap}
-  .transfer-btn:hover:not(:disabled){background:#0e2a46;transform:translateY(-1px)}
-  .transfer-btn:disabled{opacity:0.3;cursor:not-allowed;transform:none}
-  .transfer-preview{font-size:8px;letter-spacing:0.1em;color:var(--muted);padding:6px 10px;background:var(--bg);border:1px solid var(--rule);border-radius:3px;min-height:26px;line-height:1.7}
-  .transfer-preview span{color:var(--ink);font-weight:500}
+  .transfer-body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px}
+
+  /* Counter status grid */
+  .counter-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .cg-item{border:1.5px solid var(--rule);border-radius:3px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;transition:all 0.15s;background:var(--bg)}
+  .cg-item.absent{border-color:var(--accent);background:rgba(176,58,46,0.05)}
+  .cg-item-top{display:flex;align-items:center;gap:8px}
+  .cg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .cg-name{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:0.1em;flex:1}
+  .cg-count{font-size:7.5px;letter-spacing:0.1em;color:var(--muted)}
+  .cg-absent-badge{font-size:7px;letter-spacing:0.12em;text-transform:uppercase;padding:2px 7px;border-radius:20px;color:var(--accent);border:1px solid rgba(176,58,46,0.3);background:rgba(176,58,46,0.07);display:none}
+  .cg-item.absent .cg-absent-badge{display:inline-flex}
+  .cg-btns{display:flex;gap:5px;flex-wrap:wrap}
+  .cg-btn{font-family:'DM Mono',monospace;font-size:7.5px;letter-spacing:0.1em;text-transform:uppercase;padding:4px 9px;border-radius:2px;cursor:pointer;border:1px solid;transition:all 0.13s;background:transparent;white-space:nowrap}
+  .cg-btn-absent{color:var(--accent);border-color:rgba(176,58,46,0.3)}
+  .cg-btn-absent:hover{background:rgba(176,58,46,0.1);border-color:var(--accent)}
+  .cg-btn-restore{color:var(--green);border-color:rgba(30,132,73,0.3);display:none}
+  .cg-btn-restore:hover{background:rgba(30,132,73,0.1);border-color:var(--green)}
+  .cg-item.absent .cg-btn-absent{display:none}
+  .cg-item.absent .cg-btn-restore{display:inline-flex}
+  .cg-btn-transfer{color:var(--accent2);border-color:rgba(26,58,92,0.3)}
+  .cg-btn-transfer:hover{background:rgba(26,58,92,0.1);border-color:var(--accent2)}
+  .cg-item.absent .cg-btn-transfer{color:var(--accent);border-color:rgba(176,58,46,0.4);background:rgba(176,58,46,0.06)}
+  .cg-item.absent .cg-btn-transfer:hover{background:rgba(176,58,46,0.14)}
+
+  /* Selective transfer modal */
+  .stm-backdrop{position:fixed;inset:0;background:rgba(24,24,15,0.6);z-index:300;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s;backdrop-filter:blur(3px)}
+  .stm-backdrop.show{opacity:1;pointer-events:all}
+  .stm-modal{background:var(--paper);border:1.5px solid var(--ink);border-radius:4px;width:min(600px,95vw);max-height:88vh;box-shadow:0 12px 48px rgba(24,24,15,0.28);overflow:hidden;display:flex;flex-direction:column;transform:translateY(10px);transition:transform 0.2s}
+  .stm-backdrop.show .stm-modal{transform:translateY(0)}
+  .stm-hdr{background:var(--ink);color:var(--bg);padding:13px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+  .stm-hdr-left{display:flex;flex-direction:column;gap:2px}
+  .stm-hdr-title{font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:0.1em}
+  .stm-hdr-sub{font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(244,241,234,0.45)}
+  .stm-close{background:none;border:none;color:rgba(244,241,234,0.5);cursor:pointer;font-size:18px;padding:2px 6px;transition:color 0.13s}
+  .stm-close:hover{color:var(--bg)}
+  .stm-toolbar{display:flex;gap:8px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--rule);flex-wrap:wrap;flex-shrink:0;background:var(--bg)}
+  .stm-toolbar-lbl{font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);flex-shrink:0}
+  .stm-dest-select{font-family:'DM Mono',monospace;font-size:11px;padding:6px 10px;background:var(--paper);border:1.5px solid var(--rule);border-radius:3px;color:var(--ink);outline:none;cursor:pointer;transition:border-color 0.13s;flex:1;min-width:140px}
+  .stm-dest-select:focus{border-color:var(--ink)}
+  .stm-sel-all{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;padding:5px 10px;border:1px solid var(--rule);background:transparent;border-radius:3px;cursor:pointer;color:var(--muted);transition:all 0.13s;white-space:nowrap}
+  .stm-sel-all:hover{border-color:var(--ink);color:var(--ink)}
+  .stm-do-btn{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:0.1em;padding:7px 18px;border:none;border-radius:3px;cursor:pointer;transition:all 0.13s;background:var(--accent2);color:#fff;white-space:nowrap}
+  .stm-do-btn:hover:not(:disabled){background:#0e2a46}
+  .stm-do-btn:disabled{opacity:0.3;cursor:not-allowed}
+  .stm-count-info{font-size:8px;letter-spacing:0.1em;color:var(--muted);padding:4px 14px 6px;text-align:right;flex-shrink:0}
+  .stm-list{overflow-y:auto;flex:1;padding:8px 12px;display:flex;flex-direction:column;gap:5px;scrollbar-width:thin;scrollbar-color:var(--rule) transparent}
+  .stm-empty{padding:28px;text-align:center;font-size:11px;color:var(--muted);letter-spacing:0.1em}
+  .stm-card{display:flex;align-items:center;gap:10px;padding:9px 12px 9px 10px;background:var(--bg);border:1.5px solid var(--rule);border-radius:3px;cursor:pointer;transition:all 0.13s;position:relative}
+  .stm-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px}
+  .stm-card[data-c="0"]::before{background:var(--rule)}
+  .stm-card[data-c="1"]::before{background:var(--c1)}.stm-card[data-c="2"]::before{background:var(--c2)}
+  .stm-card[data-c="3"]::before{background:var(--c3)}.stm-card[data-c="4"]::before{background:var(--c4)}
+  .stm-card:hover{border-color:var(--accent2)}
+  .stm-card.checked{border-color:var(--accent2);background:rgba(26,58,92,0.05)}
+  .stm-checkbox{width:16px;height:16px;border:1.5px solid var(--rule);border-radius:2px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all 0.13s;background:var(--paper)}
+  .stm-card.checked .stm-checkbox{background:var(--accent2);border-color:var(--accent2);color:#fff}
+  .stm-num{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:0.04em;min-width:38px;flex-shrink:0;color:var(--muted)}
+  .stm-card[data-c="1"] .stm-num{color:var(--c1)}.stm-card[data-c="2"] .stm-num{color:var(--c2)}
+  .stm-card[data-c="3"] .stm-num{color:var(--c3)}.stm-card[data-c="4"] .stm-num{color:var(--c4)}
+  .stm-body{flex:1;overflow:hidden}
+  .stm-svc{font-size:9px;letter-spacing:0.07em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .stm-cust{font-size:8px;color:var(--muted);margin-top:1px}
+  .stm-time{font-size:7.5px;color:var(--muted);margin-top:2px;font-family:'DM Mono',monospace}
+  .stm-badges{display:flex;gap:3px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;max-width:80px}
+  .stm-badge{font-size:7px;letter-spacing:0.09em;padding:1px 5px;border-radius:2px;text-transform:uppercase;white-space:nowrap;border:1px solid}
+  .stm-badge-prio{color:var(--accent);border-color:rgba(176,58,46,0.3);background:rgba(176,58,46,0.06)}
+  .stm-badge-hold{color:var(--amber);border-color:rgba(154,111,0,0.25);background:rgba(154,111,0,0.06)}
+  .stm-badge-payment{color:var(--teal);border-color:rgba(14,107,138,0.22);background:rgba(14,107,138,0.06)}
 
   /* ── SAVE POINT / EOD ── */
   .eod-btn{width:100%;margin-top:7px;background:transparent;color:var(--accent2);border:1.5px solid var(--accent2);border-radius:3px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;padding:9px;cursor:pointer;transition:all 0.13s;display:flex;align-items:center;justify-content:center;gap:6px}
@@ -226,19 +284,7 @@
   .save-hist-item:last-child{border-bottom:none}
   .save-hist-label{color:var(--ink);font-weight:500}
 
-  /* ── Dual-timer rows on client cards ── */
-  .cc-time{display:flex;flex-direction:column;gap:2px;margin-top:3px}
-  .tt-row{display:flex;align-items:center;gap:4px;font-size:7.5px;letter-spacing:0.05em;color:var(--muted);flex-wrap:nowrap;white-space:nowrap}
-  .tt-icon{font-size:8px;width:12px;flex-shrink:0}
-  .tt-w{color:var(--amber)} .tt-s{color:var(--teal)} .tt-d{color:var(--green)}
-  .tt-lbl{font-size:6.5px;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);min-width:34px}
-  .tt-val{font-family:'DM Mono',monospace;color:var(--ink);font-size:7.5px}
-  .tt-arrow{color:var(--rule);font-size:8px}
-  .tt-dur{font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:0.06em;line-height:1}
-  .tt-w~.tt-dur,.tt-row:has(.tt-w) .tt-dur{color:var(--amber)}
-  .tt-s~.tt-dur,.tt-row:has(.tt-s) .tt-dur{color:var(--teal)}
-  .tt-live{animation:ttPulse 1s ease infinite}
-  @keyframes ttPulse{0%,100%{opacity:1}50%{opacity:0.5}}
+  /* Toast */
   .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(18px);background:var(--ink);color:var(--bg);padding:11px 26px;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.12em;opacity:0;transition:all 0.3s;pointer-events:none;z-index:999;white-space:nowrap}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
@@ -367,34 +413,14 @@
         </div>
       </div>
 
-      <!-- ── Counter Transfer Panel ── -->
+      <!-- ── Counter Absent / Transfer Panel ── -->
       <div class="transfer-card">
         <div class="transfer-head">
-          <div class="transfer-head-title">↔ Transfer Counter Queue</div>
-          <div class="transfer-head-sub">Reassign all tickets from one desk to another</div>
+          <div class="transfer-head-title">🖥 Counter Status &amp; Transfer</div>
+          <div class="transfer-head-sub">Mark absent · select tickets · reassign</div>
         </div>
         <div class="transfer-body">
-          <div class="transfer-row">
-            <div class="transfer-lbl">From</div>
-            <select class="transfer-select" id="transferFrom" onchange="updateTransferPreview()">
-              <option value="">— Select desk —</option>
-              <option value="1">DMW Desk 2</option>
-              <option value="2">DMW Desk 3</option>
-              <option value="3">DMW Desk 4</option>
-              <option value="4">DMW Desk 5</option>
-            </select>
-            <div class="transfer-arrow">→</div>
-            <select class="transfer-select" id="transferTo" onchange="updateTransferPreview()">
-              <option value="">— Select desk —</option>
-              <option value="0">Unassigned Pool</option>
-              <option value="1">DMW Desk 2</option>
-              <option value="2">DMW Desk 3</option>
-              <option value="3">DMW Desk 4</option>
-              <option value="4">DMW Desk 5</option>
-            </select>
-          </div>
-          <div class="transfer-preview" id="transferPreview">Select source and destination desks to preview the transfer.</div>
-          <button class="transfer-btn" id="transferBtn" onclick="executeTransfer()" disabled>↔ Transfer All Tickets</button>
+          <div class="counter-grid" id="counterStatusGrid"></div>
         </div>
       </div>
 
@@ -424,6 +450,36 @@
         </div>
       </div>
 
+    </div>
+  </div>
+</div>
+
+<!-- ── Selective Transfer Modal ── -->
+<div class="stm-backdrop" id="stmBackdrop">
+  <div class="stm-modal">
+    <div class="stm-hdr">
+      <div class="stm-hdr-left">
+        <div class="stm-hdr-title" id="stmTitle">Transfer Tickets</div>
+        <div class="stm-hdr-sub" id="stmSub">Select tickets to reassign</div>
+      </div>
+      <button class="stm-close" onclick="closeStm()">✕</button>
+    </div>
+    <div class="stm-toolbar">
+      <span class="stm-toolbar-lbl">Move to →</span>
+      <select class="stm-dest-select" id="stmDestSelect" onchange="updateStmBtn()">
+        <option value="">— Select destination —</option>
+        <option value="0">Unassigned Pool</option>
+        <option value="1">DMW Desk 2</option>
+        <option value="2">DMW Desk 3</option>
+        <option value="3">DMW Desk 4</option>
+        <option value="4">DMW Desk 5</option>
+      </select>
+      <button class="stm-sel-all" onclick="stmToggleAll()">Select All</button>
+      <button class="stm-do-btn" id="stmDoBtn" onclick="executeStmTransfer()" disabled>↔ Transfer</button>
+    </div>
+    <div class="stm-count-info" id="stmCountInfo">0 selected</div>
+    <div class="stm-list" id="stmList">
+      <div class="stm-empty">No tickets available.</div>
     </div>
   </div>
 </div>
@@ -579,9 +635,7 @@ function issueTicket(){
     customer:  [document.getElementById('custFirstName').value.trim(), document.getElementById('custLastName').value.trim()].filter(Boolean).join(' ')||null,
     priority: selectedPrio,
     time: timeStr, date: dateStr,
-    issuedAt: Date.now(),   // Timer 1 start — waiting time begins
-    calledAt: null,         // Timer 1 end / Timer 2 start — set when first called
-    endTime:  null,         // Timer 2 end — set when marked served
+    startTime: Date.now(),
     served: false, compliance: false, paymentHold: false
   };
   log.unshift(ticket);
@@ -598,6 +652,7 @@ function renderAll(){
   renderStats();
   renderTally();
   renderPool();
+  renderCounterGrid();
 }
 
 function renderStats(){
@@ -647,62 +702,18 @@ function renderPool(){
     if(t.paymentHold)     tags.push(`<span class="tag tag-payment">💳 Payment</span>`);
     if(t.served)          tags.push(`<span class="tag tag-served">✓ Served</span>`);
 
-    // ── Dual-timer display ──
-    // Timer 1: Wait time  (issuedAt → calledAt)
-    // Timer 2: Service time (calledAt → endTime)
-    const fmtTs = ts => {
-      if(!ts) return '--';
-      const d = new Date(ts);
-      return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0');
-    };
-    const fmtDur = (ms) => {
-      if(!ms || ms < 0) return '--';
-      const sec = Math.round(ms/1000);
-      return String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');
-    };
-
-    // Build time rows
-    let timeRows = '';
-    const issued = t.issuedAt || t.startTime; // backwards compat
-
-    if(issued){
-      const waitEnd   = t.calledAt || null;
-      const waitDur   = waitEnd ? waitEnd - issued : (!t.served ? null : null);
-      const svcStart  = t.calledAt || null;
-      const svcEnd    = t.endTime || null;
-
-      // Row 1 — Issued + wait time
-      const waitDurStr = waitEnd ? fmtDur(waitEnd - issued)
-                       : (!t.served && !t.calledAt ? `<span class="tt-live" data-ref="${issued}" data-type="wait">00:00</span>` : '--');
-      timeRows += `<span class="tt-row">
-        <span class="tt-icon tt-w">⏳</span>
-        <span class="tt-lbl">Issued</span>
-        <span class="tt-val">${fmtTs(issued)}</span>
-        <span class="tt-arrow">→</span>
-        <span class="tt-dur">${waitDurStr}</span>
-      </span>`;
-
-      // Row 2 — Called + service time (only if ever called)
-      if(svcStart){
-        const svcDurStr = svcEnd ? fmtDur(svcEnd - svcStart)
-                        : (!t.served ? `<span class="tt-live tt-svc-live" data-ref="${svcStart}" data-type="svc">00:00</span>` : '--');
-        timeRows += `<span class="tt-row">
-          <span class="tt-icon tt-s">▶</span>
-          <span class="tt-lbl">Called</span>
-          <span class="tt-val">${fmtTs(svcStart)}</span>
-          <span class="tt-arrow">→</span>
-          <span class="tt-dur">${svcDurStr}</span>
-        </span>`;
+    // Build time info with start/end/duration
+    let timeInfo = `${t.date} · ${t.time}`;
+    if(t.startTime){
+      const startFmt = new Date(t.startTime).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+      timeInfo = `▶ ${startFmt}`;
+      if(t.endTime){
+        const endFmt = new Date(t.endTime).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+        const dur = Math.round((t.endTime - t.startTime)/1000);
+        const mm = String(Math.floor(dur/60)).padStart(2,'0');
+        const ss = String(dur%60).padStart(2,'0');
+        timeInfo += ` &nbsp;■ ${endFmt} &nbsp;⏱ ${mm}:${ss}`;
       }
-      if(svcEnd){
-        timeRows += `<span class="tt-row">
-          <span class="tt-icon tt-d">✓</span>
-          <span class="tt-lbl">Done</span>
-          <span class="tt-val">${fmtTs(svcEnd)}</span>
-        </span>`;
-      }
-    } else {
-      timeRows = `<span class="tt-row"><span class="tt-lbl">${t.date} · ${t.time}</span></span>`;
     }
 
     // Admin action buttons — only show relevant actions per ticket state
@@ -717,7 +728,7 @@ function renderPool(){
       <div class="cc-body">
         <div class="cc-svc">${t.service}</div>
         ${t.customer?`<div class="cc-cust">${t.customer}</div>`:''}
-        <div class="cc-time">${timeRows}</div>
+        <div class="cc-time">${timeInfo}</div>
       </div>
       <div class="cc-tags">${tags.join('')}</div>
       <div class="cc-actions">${actionBtns.join('')}</div>`;
@@ -732,7 +743,7 @@ function adminMarkServed(ticketId){
   if(!confirm(`Mark ticket #${String(ticketId).padStart(3,'0')} as Served?
 This cannot be undone and the client will not be called again.`)) return;
   t.served = true;
-  t.endTime = t.endTime || Date.now();  // Timer 2 stop
+  t.endTime = t.endTime || Date.now();
   t.compliance = false;
   t.paymentHold = false;
   // Single atomic write — clears lastCall if it pointed to this ticket
@@ -799,88 +810,209 @@ function renderTally(){
   });
 }
 
-// ── Counter Transfer ──
+// ── Counter Status & Absent/Transfer ──
 const COUNTER_LABELS = {0:'Unassigned Pool',1:'DMW Desk 2',2:'DMW Desk 3',3:'DMW Desk 4',4:'DMW Desk 5'};
+const COUNTER_COLORS = {1:'var(--c1)',2:'var(--c2)',3:'var(--c3)',4:'var(--c4)'};
+let absentCounters = new Set(); // tracks which counters are marked absent
+let _stmFromCounter = null;
+let _stmSelected    = new Set();
 
-function updateTransferPreview(){
-  const fromVal = document.getElementById('transferFrom').value;
-  const toVal   = document.getElementById('transferTo').value;
-  const btn     = document.getElementById('transferBtn');
-  const preview = document.getElementById('transferPreview');
-
-  if(!fromVal || toVal===''){
-    preview.innerHTML = 'Select source and destination desks to preview the transfer.';
-    btn.disabled = true;
-    return;
-  }
-  if(fromVal === toVal){
-    preview.innerHTML = '<span style="color:var(--accent)">Source and destination cannot be the same desk.</span>';
-    btn.disabled = true;
-    return;
-  }
-
-  const from = parseInt(fromVal);
-  const to   = parseInt(toVal);
-
-  // Count tickets that would be moved
-  const toMove = log.filter(t => !t.served && t.counter === from);
-  const active = toMove.filter(t => !t.compliance && !t.paymentHold);
-  const onHold = toMove.filter(t => t.compliance || t.paymentHold);
-
-  if(!toMove.length){
-    preview.innerHTML = `<span style="color:var(--muted)">No active tickets on ${COUNTER_LABELS[from]}.</span>`;
-    btn.disabled = true;
-    return;
-  }
-
-  const destLabel = COUNTER_LABELS[to];
-  let msg = `<span>${toMove.length} ticket${toMove.length!==1?'s':''}</span> will move from <span>${COUNTER_LABELS[from]}</span> → <span>${destLabel}</span>`;
-  if(active.length)  msg += ` &nbsp;·&nbsp; <span>${active.length} in queue</span>`;
-  if(onHold.length)  msg += ` &nbsp;·&nbsp; <span>${onHold.length} on hold</span>`;
-  preview.innerHTML = msg;
-  btn.disabled = false;
+function renderCounterGrid(){
+  const grid = document.getElementById('counterStatusGrid');
+  grid.innerHTML = '';
+  [1,2,3,4].forEach(id=>{
+    const tickets  = log.filter(t=>!t.served && t.counter===id);
+    const inQueue  = tickets.filter(t=>!t.compliance&&!t.paymentHold).length;
+    const onHold   = tickets.filter(t=>t.compliance||t.paymentHold).length;
+    const isAbsent = absentCounters.has(id);
+    const item = document.createElement('div');
+    item.className = `cg-item${isAbsent?' absent':''}`;
+    item.id = `cg-${id}`;
+    item.innerHTML = `
+      <div class="cg-item-top">
+        <div class="cg-dot" style="background:${COUNTER_COLORS[id]}"></div>
+        <div class="cg-name">${COUNTER_LABELS[id]}</div>
+        <span class="cg-absent-badge">⚠ Absent</span>
+      </div>
+      <div class="cg-count">${tickets.length} ticket${tickets.length!==1?'s':''}${inQueue?' · '+inQueue+' queued':''}${onHold?' · '+onHold+' hold':''}</div>
+      <div class="cg-btns">
+        <button class="cg-btn cg-btn-absent"  onclick="markAbsent(${id})">⚠ Mark Absent</button>
+        <button class="cg-btn cg-btn-restore" onclick="restoreCounter(${id})">✓ Restore</button>
+        <button class="cg-btn cg-btn-transfer" onclick="openStm(${id})">☑ Transfer Tickets…</button>
+      </div>`;
+    grid.appendChild(item);
+  });
 }
-window.updateTransferPreview = updateTransferPreview;
 
-function executeTransfer(){
-  const fromVal = document.getElementById('transferFrom').value;
-  const toVal   = document.getElementById('transferTo').value;
-  if(!fromVal || toVal==='') return;
+function markAbsent(id){
+  absentCounters.add(id);
+  renderCounterGrid();
+  showToast(`${COUNTER_LABELS[id]} marked Absent`);
+  // Auto-open transfer modal if there are tickets
+  const tickets = log.filter(t=>!t.served && t.counter===id);
+  if(tickets.length) openStm(id);
+}
+window.markAbsent = markAbsent;
 
-  const from = parseInt(fromVal);
-  const to   = parseInt(toVal);
-  if(from === to) return;
+function restoreCounter(id){
+  absentCounters.delete(id);
+  renderCounterGrid();
+  showToast(`${COUNTER_LABELS[id]} restored`);
+}
+window.restoreCounter = restoreCounter;
 
-  const toMove = log.filter(t => !t.served && t.counter === from);
-  if(!toMove.length){ showToast('No tickets to transfer'); return; }
+// ── Selective Transfer Modal ──
+function openStm(fromId){
+  _stmFromCounter = fromId;
+  _stmSelected.clear();
 
-  const fromLabel = COUNTER_LABELS[from];
+  document.getElementById('stmTitle').textContent = `Transfer from ${COUNTER_LABELS[fromId]}`;
+  document.getElementById('stmSub').textContent   = absentCounters.has(fromId)
+    ? `⚠ ${COUNTER_LABELS[fromId]} is absent — reassign tickets`
+    : `Select tickets to move from ${COUNTER_LABELS[fromId]}`;
+
+  // Destination dropdown — exclude source
+  const dest = document.getElementById('stmDestSelect');
+  Array.from(dest.options).forEach(o=>{
+    o.disabled = (o.value!=='' && parseInt(o.value)===fromId);
+    if(o.disabled && dest.value===o.value) dest.value='';
+  });
+
+  renderStmList();
+  updateStmBtn();
+  document.getElementById('stmBackdrop').classList.add('show');
+}
+window.openStm = openStm;
+
+function closeStm(){
+  document.getElementById('stmBackdrop').classList.remove('show');
+  _stmSelected.clear();
+}
+window.closeStm = closeStm;
+
+function renderStmList(){
+  const list    = document.getElementById('stmList');
+  const tickets = log.filter(t=>!t.served && t.counter===_stmFromCounter);
+  list.innerHTML = '';
+
+  if(!tickets.length){
+    list.innerHTML = `<div class="stm-empty">No active tickets on ${COUNTER_LABELS[_stmFromCounter]}.</div>`;
+    updateStmCountInfo(0,0);
+    return;
+  }
+
+  const fmtTs = ts => {
+    if(!ts) return '';
+    const d=new Date(ts);
+    return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0');
+  };
+  const fmtElapsed = ts => {
+    if(!ts) return '';
+    const sec=Math.round((Date.now()-ts)/1000);
+    return String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');
+  };
+
+  tickets.forEach(t=>{
+    const card = document.createElement('div');
+    card.className = `stm-card${_stmSelected.has(t.id)?' checked':''}`;
+    card.dataset.c = t.counter;
+    card.onclick = ()=>stmToggle(t.id, card);
+
+    const ref = t.issuedAt || t.startTime;
+    const badges = [];
+    if(t.priority==='priority') badges.push(`<span class="stm-badge stm-badge-prio">⚡ Priority</span>`);
+    if(t.compliance)            badges.push(`<span class="stm-badge stm-badge-hold">⏸ Comply</span>`);
+    if(t.paymentHold)           badges.push(`<span class="stm-badge stm-badge-payment">💳 Payment</span>`);
+
+    card.innerHTML = `
+      <div class="stm-checkbox">${_stmSelected.has(t.id)?'✓':''}</div>
+      <div class="stm-num">${String(t.id).padStart(3,'0')}</div>
+      <div class="stm-body">
+        <div class="stm-svc">${t.service}</div>
+        ${t.customer?`<div class="stm-cust">${t.customer}</div>`:''}
+        ${ref?`<div class="stm-time">⏳ ${fmtTs(ref)} · <span id="stel-${t.id}">${fmtElapsed(ref)}</span></div>`:''}
+      </div>
+      <div class="stm-badges">${badges.join('')}</div>`;
+    list.appendChild(card);
+  });
+  updateStmCountInfo(tickets.length, _stmSelected.size);
+}
+
+function stmToggle(id, card){
+  if(_stmSelected.has(id)){
+    _stmSelected.delete(id);
+    card.classList.remove('checked');
+    card.querySelector('.stm-checkbox').textContent='';
+  } else {
+    _stmSelected.add(id);
+    card.classList.add('checked');
+    card.querySelector('.stm-checkbox').textContent='✓';
+  }
+  const total = log.filter(t=>!t.served&&t.counter===_stmFromCounter).length;
+  updateStmCountInfo(total, _stmSelected.size);
+  updateStmBtn();
+}
+
+function stmToggleAll(){
+  const tickets = log.filter(t=>!t.served && t.counter===_stmFromCounter);
+  const allChecked = tickets.every(t=>_stmSelected.has(t.id));
+  if(allChecked){ tickets.forEach(t=>_stmSelected.delete(t.id)); }
+  else           { tickets.forEach(t=>_stmSelected.add(t.id)); }
+  renderStmList();
+  updateStmBtn();
+}
+window.stmToggleAll = stmToggleAll;
+
+function updateStmCountInfo(total, selected){
+  document.getElementById('stmCountInfo').textContent =
+    `${selected} of ${total} ticket${total!==1?'s':''} selected`;
+}
+
+function updateStmBtn(){
+  const dest = document.getElementById('stmDestSelect').value;
+  document.getElementById('stmDoBtn').disabled = !_stmSelected.size || dest==='';
+}
+window.updateStmBtn = updateStmBtn;
+
+// Live ticker for stm modal elapsed spans
+setInterval(()=>{
+  document.querySelectorAll('[id^="stel-"]').forEach(el=>{
+    const id = parseInt(el.id.replace('stel-',''));
+    const t  = log.find(x=>x.id===id);
+    const ref = t && (t.issuedAt||t.startTime);
+    if(!ref) return;
+    const sec=Math.round((Date.now()-ref)/1000);
+    el.textContent=String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');
+  });
+}, 1000);
+
+function executeStmTransfer(){
+  const destVal = document.getElementById('stmDestSelect').value;
+  if(destVal==='' || !_stmSelected.size) return;
+  const to        = parseInt(destVal);
   const toLabel   = COUNTER_LABELS[to];
+  const fromLabel = COUNTER_LABELS[_stmFromCounter];
+  const ids       = [..._stmSelected];
 
-  if(!confirm(`Transfer ${toMove.length} ticket${toMove.length!==1?'s':''} from ${fromLabel} to ${toLabel}?
+  if(!confirm(`Transfer ${ids.length} ticket${ids.length!==1?'s':''} from ${fromLabel} → ${toLabel}?`)) return;
 
-The counter staff at ${fromLabel} will see their queue clear immediately.`)) return;
-
-  // Reassign all unserved tickets from source to destination
-  toMove.forEach(t => {
+  ids.forEach(id=>{
+    const t = log.find(x=>x.id===id);
+    if(!t) return;
     t.counter = to;
-    // Clear hold flags if going to unassigned pool — pool doesn't show hold state
-    if(to === 0){
-      t.compliance  = false;
-      t.paymentHold = false;
-    }
+    if(to===0){ t.compliance=false; t.paymentHold=false; }
   });
 
   saveState();
-
-  // Reset selects and preview
-  document.getElementById('transferFrom').value = '';
-  document.getElementById('transferTo').value   = '';
-  updateTransferPreview();
-
-  showToast(`✓ ${toMove.length} ticket${toMove.length!==1?'s':''} → ${toLabel}`);
+  closeStm();
+  renderCounterGrid();
+  showToast(`✓ ${ids.length} ticket${ids.length!==1?'s':''} → ${toLabel}`);
 }
-window.executeTransfer = executeTransfer;
+window.executeStmTransfer = executeStmTransfer;
+
+document.getElementById('stmBackdrop').addEventListener('click', e=>{
+  if(e.target===e.currentTarget) closeStm();
+});
 
 // ── EOD Save Modal ──
 function openEodModal(){
@@ -1095,11 +1227,11 @@ function downloadSnapshotPdf(snapshot){
       const hh = String(h).padStart(2,'0');
       return hh + ':' + mm + ':' + ss;
     };
-    const startStr = fmtTime(t.calledAt || t.startTime || t.issuedAt);
+    const startStr = fmtTime(t.startTime);
     const endStr   = fmtTime(t.endTime);
     let durStr = '--';
-    if(t.calledAt && t.endTime){
-      const sec = Math.round((t.endTime - t.calledAt)/1000);
+    if(t.startTime && t.endTime){
+      const sec = Math.round((t.endTime - t.startTime)/1000);
       durStr = String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');
     }
     txt(numStr,  ML+2,  y+4.2,7,'normal',[24,24,15]);
@@ -1138,18 +1270,6 @@ function resetNumbering(){
   showToast('✓ Reset — next ticket is 001');
 }
 window.resetNumbering = resetNumbering;
-
-// ── Live timer ticker — updates .tt-live spans every second ──
-setInterval(()=>{
-  document.querySelectorAll('.tt-live').forEach(el=>{
-    const ref = parseInt(el.dataset.ref);
-    if(!ref) return;
-    const sec = Math.round((Date.now() - ref) / 1000);
-    const mm = String(Math.floor(sec/60)).padStart(2,'0');
-    const ss = String(sec%60).padStart(2,'0');
-    el.textContent = mm+':'+ss;
-  });
-}, 1000);
 
 function showToast(msg){
   const el=document.getElementById('toast');
