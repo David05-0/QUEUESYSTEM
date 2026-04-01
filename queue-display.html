@@ -145,13 +145,30 @@
   .hold-zone.drag-over-payment{border-color:var(--teal);background:rgba(14,154,181,0.06)}
   .hz-title{font-size:7px;letter-spacing:0.18em;text-transform:uppercase;flex-shrink:0}
   .hz-title.c{color:var(--amber)} .hz-title.p{color:var(--teal)}
-  .hz-chips{display:flex;flex-wrap:wrap;gap:4px}
+  .hz-chips{display:flex;flex-direction:column;gap:4px}
   .hz-chip{font-family:'Bebas Neue',sans-serif;font-size:11px;padding:2px 7px;border-radius:2px;cursor:grab;user-select:none;animation:popIn 0.18s ease;display:inline-flex;align-items:center;gap:2px;transition:opacity 0.15s}
   .hz-chip:active{cursor:grabbing;opacity:0.6}
   .hz-chip.dragging{opacity:0.3}
   .hz-chip.c-chip{background:rgba(226,160,0,0.1);color:var(--amber);border:1px solid rgba(226,160,0,0.3)}
   .hz-chip.p-chip{background:rgba(14,154,181,0.1);color:var(--teal);border:1px solid rgba(14,154,181,0.3)}
   .hz-empty{font-size:8px;color:var(--muted);letter-spacing:0.07em}
+  /* Hold card — full info like queue card */
+  .hz-card{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:3px;cursor:grab;user-select:none;animation:popIn 0.18s ease;transition:opacity 0.15s;width:100%}
+  .hz-card:active{cursor:grabbing;opacity:0.6}
+  .hz-card.dragging{opacity:0.3}
+  .hz-card.c-card{background:rgba(226,160,0,0.08);border:1px solid rgba(226,160,0,0.3)}
+  .hz-card.p-card{background:rgba(14,154,181,0.07);border:1px solid rgba(14,154,181,0.3)}
+  .hz-card-num{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:0.04em;flex-shrink:0;min-width:36px}
+  .hz-card.c-card .hz-card-num{color:var(--amber)}
+  .hz-card.p-card .hz-card-num{color:var(--teal)}
+  .hz-card-body{flex:1;overflow:hidden}
+  .hz-card-svc{font-size:8px;letter-spacing:0.06em;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hz-card-time{display:flex;align-items:center;gap:5px;margin-top:2px}
+  .hz-card-start{font-size:7px;letter-spacing:0.05em;color:var(--muted)}
+  .hz-card-elapsed{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:0.08em;animation:waitPulse 1.8s ease infinite}
+  .hz-card.c-card .hz-card-elapsed{color:var(--amber)}
+  .hz-card.p-card .hz-card-elapsed{color:var(--teal)}
+  @keyframes waitPulse{0%,100%{opacity:1}50%{opacity:0.5}}
 
   /* Queue list */
   .cv-queue-list{display:flex;flex-direction:column;gap:5px;overflow-y:auto;flex:1;scrollbar-width:thin;scrollbar-color:var(--border) transparent;padding-bottom:6px}
@@ -792,7 +809,7 @@ function markDone(){
   if(window._lastCall && window._lastCall.ticketId===activeTicketId){
     window._lastCall=null;
   }
-  // Track in local served log — all 4 timer fields
+  // Track in local served log for display
   myServedLog.unshift({
     id: t.id, service: t.service||'', customer: t.customer||null, time: nowTime(),
     issuedAt: t.issuedAt || t.startTime || null,
@@ -803,7 +820,6 @@ function markDone(){
   if(myHistory.length>6) myHistory.pop();
   myServed++;
   showToast(`#${String(t.id).padStart(3,'0')} ✓ Served`);
-  // Clear activeTicketId BEFORE saveShared — prevents Firebase echo duplicating the entry
   activeTicketId=null;
   sessionStorage.removeItem('ssTicketId');
   stopElapsedTimer();
@@ -953,12 +969,11 @@ function renderView(){
         const elSec = Math.round((Date.now()-tRef)/1000);
         const em = String(Math.floor(elSec/60)).padStart(2,'0');
         const es = String(elSec%60).padStart(2,'0');
-        const elapsedFmt = em+':'+es;
         const elId = 'qel-'+t.id;
         qTimeHtml = `<div class="cv-q-time">
           <span class="q-start">▶ ${startFmt}</span>
           <span style="color:var(--border)">·</span>
-          <span class="q-elapsed" id="${elId}">${elapsedFmt}</span>
+          <span class="q-elapsed" id="${elId}">${em}:${es}</span>
         </div>`;
       }
       item.innerHTML=`
@@ -1059,26 +1074,34 @@ function claimWithFlash(el, id){
   setTimeout(()=>{ el.classList.remove('claiming'); claimClient(id); }, 300);
 }
 
-function renderHoldZone(tickets, chipsId, emptyId, chipCls){
+function renderHoldZone(tickets, chipsId, emptyId, cardCls){
   const wrap=document.getElementById(chipsId);
   const empty=document.getElementById(emptyId);
-  wrap.querySelectorAll('.hz-chip').forEach(e=>e.remove());
+  wrap.querySelectorAll('.hz-card').forEach(e=>e.remove());
   if(!tickets.length){ empty.style.display='inline'; return; }
   empty.style.display='none';
   tickets.forEach(t=>{
-    const chip=document.createElement('span');
-    chip.className=`hz-chip ${chipCls}`;
-    chip.setAttribute('draggable','true');
-    chip.setAttribute('ondragstart',`startHoldDrag(event,${t.id})`);
-    chip.setAttribute('ondragend','endHoldDrag(event)');
-    chip.title=`${t.service}${t.customer?' · '+t.customer:''} — drag back to queue to re-call`;
-    const chipRef = t.issuedAt || t.startTime;
-    const chipElSec = chipRef ? Math.round((Date.now()-chipRef)/1000) : 0;
-    const chipMm = String(Math.floor(chipElSec/60)).padStart(2,'0');
-    const chipSs = String(chipElSec%60).padStart(2,'0');
-    const chipTimer = chipRef ? ` ${chipMm}:${chipSs}` : '';
-    chip.innerHTML=`<span>${String(t.id).padStart(3,'0')}${t.priority==='priority'?'⚡':''}</span><span style="font-family:'DM Mono',monospace;font-size:8px;opacity:0.75;margin-left:3px" id="qel-${t.id}">${chipTimer}</span>`;
-    wrap.insertBefore(chip,empty);
+    const card=document.createElement('div');
+    card.className=`hz-card ${cardCls==='c-chip'?'c-card':'p-card'}`;
+    card.setAttribute('draggable','true');
+    card.setAttribute('ondragstart',`startHoldDrag(event,${t.id})`);
+    card.setAttribute('ondragend','endHoldDrag(event)');
+    card.title=`${t.service}${t.customer?' · '+t.customer:''} — drag back to queue to re-call`;
+    const ref = t.issuedAt || t.startTime;
+    const elSec = ref ? Math.round((Date.now()-ref)/1000) : 0;
+    const em = String(Math.floor(elSec/60)).padStart(2,'0');
+    const es = String(elSec%60).padStart(2,'0');
+    const startFmt = ref ? new Date(ref).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) : '';
+    card.innerHTML=`
+      <div class="hz-card-num">${String(t.id).padStart(3,'0')}${t.priority==='priority'?'⚡':''}</div>
+      <div class="hz-card-body">
+        <div class="hz-card-svc">${t.service||''}${t.customer?' · '+t.customer:''}</div>
+        <div class="hz-card-time">
+          <span class="hz-card-start">▶ ${startFmt}</span>
+          <span class="hz-card-elapsed" id="qel-${t.id}">${em}:${es}</span>
+        </div>
+      </div>`;
+    wrap.insertBefore(card, empty);
   });
 }
 
