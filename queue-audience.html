@@ -38,42 +38,9 @@
   @keyframes fbPulse{0%,100%{opacity:1}50%{opacity:0.4}}
 
   /* MAIN */
-  .main-content{display:grid;grid-template-columns:52px 1fr 320px;overflow:hidden}
-  .main-content.has-video{grid-template-columns:1fr 380px 320px}
-
-  /* ── VIDEO PLAYER ── */
+  .main-content{display:grid;grid-template-columns:1fr 320px;overflow:hidden}
   .counters-area{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;border-right:1px solid var(--border)}
-  /* When video is active — video pane expands, counters stack */
-  .video-pane{position:relative;display:flex;flex-direction:column;border-right:1px solid var(--border);background:#000;overflow:hidden}
-  .video-pane video{width:100%;height:100%;object-fit:contain;display:block}
-  .video-pane.empty{display:flex;align-items:center;justify-content:center;background:var(--deep);flex-direction:column;gap:6px;padding:8px 4px}
-  .video-empty-msg{text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px}
-  .video-empty-icon{font-size:48px;opacity:0.2}
-  .video-empty-lbl{font-size:9px;letter-spacing:0.24em;text-transform:uppercase;color:var(--muted)}
-  .video-upload-btn{font-family:'Bebas Neue',sans-serif;font-size:10px;letter-spacing:0.1em;padding:8px 6px;background:transparent;border:1.5px solid var(--border);color:var(--muted);border-radius:3px;cursor:pointer;transition:all 0.15s;writing-mode:vertical-lr;text-orientation:mixed;white-space:nowrap}
-  .video-upload-btn:hover{border-color:var(--gold);color:var(--gold)}
-  .video-controls{position:absolute;bottom:0;left:0;right:0;padding:8px 12px;background:linear-gradient(transparent,rgba(0,0,0,0.7));display:flex;align-items:center;gap:8px;opacity:0;transition:opacity 0.2s}
-  .video-pane:hover .video-controls{opacity:1}
-  .vc-btn{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;padding:4px 10px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:2px;cursor:pointer;transition:all 0.13s;white-space:nowrap}
-  .vc-btn:hover{background:rgba(255,255,255,0.2)}
-  .vc-btn.danger:hover{background:rgba(176,58,46,0.4);border-color:rgba(176,58,46,0.6);color:#ff8080}
-  .vc-spacer{flex:1}
-  .vc-label{font-size:7px;letter-spacing:0.16em;color:rgba(255,255,255,0.5);text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px}
-  /* Dim video when call flash is showing */
-  .video-pane.dimmed video{filter:brightness(0.25);transition:filter 0.4s}
-  /* When video active, counter panels go 1-col stacked */
-  .main-content.has-video .counters-area{grid-template-columns:1fr;grid-template-rows:repeat(4,1fr)}
-  .main-content.has-video .counter-panel{border-right:none}
-  .main-content.has-video .counter-panel:nth-child(2){border-right:none}
-  .main-content.has-video .counter-panel:last-child{border-bottom:none}
   .counter-panel{position:relative;display:flex;flex-direction:column;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:28px 32px;overflow:hidden;transition:background 0.5s}
-  /* ── ABSENT OVERLAY ── */
-  .counter-panel.absent{opacity:0.5}
-  .cp-absent-overlay{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(6,6,10,0.82);backdrop-filter:blur(2px);z-index:2}
-  .counter-panel.absent .cp-absent-overlay{display:flex}
-  .cp-absent-icon{font-size:32px;opacity:0.6}
-  .cp-absent-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(22px,3vw,36px);letter-spacing:0.2em;color:#ff5f5f}
-  .cp-absent-sub{font-size:9px;letter-spacing:0.26em;text-transform:uppercase;color:rgba(255,95,95,0.55)}
   .counter-panel:nth-child(2){border-right:none}.counter-panel:nth-child(3){border-bottom:none}.counter-panel:nth-child(4){border-right:none;border-bottom:none}
   .counter-panel::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity 0.8s;pointer-events:none}
   .counter-panel[data-c="1"]::before{background:radial-gradient(ellipse at 30% 40%,rgba(230,126,34,0.13) 0%,transparent 65%)}
@@ -248,26 +215,7 @@
     </div>
   </div>
 
-  <!-- Hidden file input for video upload -->
-  <input type="file" id="videoFileInput" accept="video/*" style="display:none" onchange="handleVideoUpload(event)">
-
   <div class="main-content" id="mainContent">
-    <div class="video-pane empty" id="videoPaneWrap">
-      <div class="video-empty-msg" id="videoEmptyMsg">
-        <div class="video-empty-icon">▶</div>
-        <div class="video-empty-lbl">No video loaded</div>
-        <button class="video-upload-btn" onclick="document.getElementById('videoFileInput').click()">+ Upload Video</button>
-      </div>
-      <video id="videoPlayer" loop muted style="display:none" playsinline></video>
-      <div class="video-controls" id="videoControls">
-        <button class="vc-btn" id="vcPlayPause" onclick="toggleVideoPlayPause()">⏸ Pause</button>
-        <button class="vc-btn" id="vcMute" onclick="toggleVideoMute()">🔊 Mute</button>
-        <span class="vc-label" id="vcLabel"></span>
-        <span class="vc-spacer"></span>
-        <button class="vc-btn" onclick="document.getElementById('videoFileInput').click()">⟳ Change</button>
-        <button class="vc-btn danger" onclick="removeVideo()">✕ Remove</button>
-      </div>
-    </div>
     <div class="counters-area" id="countersArea"></div>
     <div class="sidebar">
       <div class="last-called-section">
@@ -313,7 +261,6 @@ const COLOR_BG  = {1:'rgba(230,126,34,0.1)',2:'rgba(36,113,163,0.1)',3:'rgba(30,
 
 let sharedLog = [];
 let activityLog = [];
-let absentCounters = new Set(); // synced from admin via Firebase
 // undefined = page just loaded; first Firebase snapshot silently adopts resetFlag — no reset triggered
 let lastResetFlag = undefined;
 let lastCallTs = null;
@@ -339,85 +286,6 @@ function startDisplay() {
 }
 window.startDisplay=startDisplay;
 
-// ── Video Player ──
-let videoLoaded = false;
-
-function handleVideoUpload(e){
-  const file = e.target.files[0];
-  if(!file) return;
-  const url = URL.createObjectURL(file);
-  const vid = document.getElementById('videoPlayer');
-  const pane = document.getElementById('videoPaneWrap');
-  const emptyMsg = document.getElementById('videoEmptyMsg');
-  const mc = document.getElementById('mainContent');
-
-  vid.src = url;
-  vid.style.display = 'block';
-  emptyMsg.style.display = 'none';
-  pane.classList.remove('empty');
-  mc.classList.add('has-video');
-  videoLoaded = true;
-
-  // Show filename
-  document.getElementById('vcLabel').textContent = file.name;
-  // Unmute and play (user gesture already happened via click)
-  vid.muted = false;
-  vid.play().catch(()=>{ vid.muted=true; vid.play(); });
-  updatePlayPauseBtn();
-  updateMuteBtn();
-  // Reset file input so same file can be re-selected
-  e.target.value = '';
-}
-window.handleVideoUpload = handleVideoUpload;
-
-function toggleVideoPlayPause(){
-  const vid = document.getElementById('videoPlayer');
-  if(vid.paused) vid.play(); else vid.pause();
-  updatePlayPauseBtn();
-}
-window.toggleVideoPlayPause = toggleVideoPlayPause;
-
-function toggleVideoMute(){
-  const vid = document.getElementById('videoPlayer');
-  vid.muted = !vid.muted;
-  updateMuteBtn();
-}
-window.toggleVideoMute = toggleVideoMute;
-
-function updatePlayPauseBtn(){
-  const vid = document.getElementById('videoPlayer');
-  document.getElementById('vcPlayPause').textContent = vid.paused ? '▶ Play' : '⏸ Pause';
-}
-
-function updateMuteBtn(){
-  const vid = document.getElementById('videoPlayer');
-  document.getElementById('vcMute').textContent = vid.muted ? '🔇 Unmute' : '🔊 Mute';
-}
-
-function removeVideo(){
-  if(!confirm('Remove the video?')) return;
-  const vid = document.getElementById('videoPlayer');
-  const pane = document.getElementById('videoPaneWrap');
-  const emptyMsg = document.getElementById('videoEmptyMsg');
-  const mc = document.getElementById('mainContent');
-  vid.pause();
-  vid.src = '';
-  vid.style.display = 'none';
-  emptyMsg.style.display = '';
-  pane.classList.add('empty');
-  mc.classList.remove('has-video');
-  videoLoaded = false;
-  document.getElementById('vcLabel').textContent = '';
-}
-window.removeVideo = removeVideo;
-
-// Dim video during call flash, restore after
-function dimVideo(dim){
-  const pane = document.getElementById('videoPaneWrap');
-  if(dim) pane.classList.add('dimmed');
-  else pane.classList.remove('dimmed');
-}
-
 function updateClock(){
   const n=new Date();
   document.getElementById('clock').textContent=
@@ -432,11 +300,6 @@ function buildCounters(){
     const p=document.createElement('div');
     p.className='counter-panel'; p.dataset.c=id;
     p.innerHTML=`
-      <div class="cp-absent-overlay">
-        <div class="cp-absent-icon">⚠</div>
-        <div class="cp-absent-title">NOT AVAILABLE</div>
-        <div class="cp-absent-sub">Counter temporarily unavailable</div>
-      </div>
       <div class="counter-accent-bar"></div>
       <div class="cp-label">
         <div class="cp-dot"></div>
@@ -474,10 +337,11 @@ onValue(stateRef,snap=>{
   const newReset=data.resetFlag||null;
 
   if(_fbFirstLoad){
+    // First snapshot on page load — silently adopt resetFlag & restore display from Firebase data
     _fbFirstLoad=false;
     lastResetFlag=newReset;
     sharedLog=data.log||[];
-    absentCounters=new Set((data.absentCounters||[]).map(Number));
+    // Restore counterDisplay from lastCall if available
     const lc=data.lastCall||null;
     if(lc && lc.ts){
       const cd=counterDisplay[lc.counter-1];
@@ -492,7 +356,6 @@ onValue(stateRef,snap=>{
   if(newReset && newReset!==lastResetFlag){
     lastResetFlag=newReset;
     sharedLog=[]; activityLog=[]; lastCallTs=null;
-    absentCounters=new Set();
     counterDisplay=[1,2,3,4].map(id=>({id,current:null,service:null,customer:null,priority:null,time:null,calledAt:0}));
     if(flashTimer) clearTimeout(flashTimer);
     announceQueue=[]; isAnnouncing=false; lockedCounter=null;
@@ -502,9 +365,8 @@ onValue(stateRef,snap=>{
   }
   lastResetFlag=newReset;
 
-  // Update shared log and absent counters
+  // Update shared log for queue display counters
   sharedLog=data.log||[];
-  absentCounters=new Set((data.absentCounters||[]).map(Number));
 
   // ── React to a number being CALLED (lastCall.ts changes) ──
   const lc=data.lastCall||null;
@@ -521,7 +383,6 @@ onValue(stateRef,snap=>{
       // Hide call flash if it was showing the old number for this counter
       if(flashTimer) clearTimeout(flashTimer);
       document.getElementById('callFlash').classList.remove('show');
-      dimVideo(false);
       isAnnouncing=false;
     }
 
@@ -684,7 +545,6 @@ function runAnnouncement(ticket){
   // ── Show flash ──
   if(flashTimer) clearTimeout(flashTimer);
   document.getElementById('callFlash').classList.add('show');
-  dimVideo(true);
 
   // ── Counter panel effects ──
   const numEl=document.getElementById(`cpnum-${ticket.counter}`);
@@ -699,7 +559,6 @@ function runAnnouncement(ticket){
       // Speech done — brief pause, then hide flash, then next item
       setTimeout(()=>{
         document.getElementById('callFlash').classList.remove('show');
-        dimVideo(false);
         // Gap between announcements: cooldown gives other counters breathing room
         setTimeout(()=>processAnnounceQueue(), announceQueue.length>0 ? COOLDOWN_MS : 0);
       }, 400);
@@ -783,32 +642,21 @@ function renderCounters(){
     const panel=document.querySelector(`.counter-panel[data-c="${id}"]`);
     const numEl=document.getElementById(`cpnum-${id}`);
     const statusEl=document.getElementById(`cpstatus-${id}`);
-    const isAbsent=absentCounters.has(id);
-
-    // Toggle absent overlay
-    if(isAbsent){
-      panel.classList.add('absent');
+    if(cd.current!==null){
+      numEl.textContent=String(cd.current).padStart(3,'0');
+      numEl.className='cp-number has-num';
+      panel.classList.add('active');
+      statusEl.textContent='Serving'; statusEl.className='cp-status-pill serving';
+    } else {
       numEl.textContent='—'; numEl.className='cp-number';
       panel.classList.remove('active');
-      statusEl.textContent='Unavailable'; statusEl.className='cp-status-pill';
-    } else {
-      panel.classList.remove('absent');
-      if(cd.current!==null){
-        numEl.textContent=String(cd.current).padStart(3,'0');
-        numEl.className='cp-number has-num';
-        panel.classList.add('active');
-        statusEl.textContent='Serving'; statusEl.className='cp-status-pill serving';
-      } else {
-        numEl.textContent='—'; numEl.className='cp-number';
-        panel.classList.remove('active');
-        statusEl.textContent=waiting.length>0?'Ready':'Idle'; statusEl.className='cp-status-pill';
-      }
+      statusEl.textContent=waiting.length>0?'Ready':'Idle'; statusEl.className='cp-status-pill';
     }
-    document.getElementById(`cpsvc-${id}`).textContent=isAbsent?'':(cd.service||'');
-    document.getElementById(`cpcust-${id}`).textContent=isAbsent?'':(cd.customer||'');
+    document.getElementById(`cpsvc-${id}`).textContent=cd.service||'';
+    document.getElementById(`cpcust-${id}`).textContent=cd.customer||'';
     const queueEl=document.getElementById(`cpqueue-${id}`);
     queueEl.innerHTML=`<span class="cp-queue-lbl">Next:</span>`;
-    if(isAbsent||!waiting.length){queueEl.innerHTML+='<span style="font-size:9px;color:var(--muted)">—</span>';}
+    if(!waiting.length){queueEl.innerHTML+='<span style="font-size:9px;color:var(--muted)">—</span>';}
     else{
       waiting.slice(0,4).forEach((t,i)=>{
         const b=document.createElement('span');b.className='q-badge'+(i===0?' up-next':'');
