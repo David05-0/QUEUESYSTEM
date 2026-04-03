@@ -435,10 +435,10 @@
           <button class="pf-btn"        data-f="hold"       onclick="setFilter(this)">On Hold</button>
           <button class="pf-btn"        data-f="served"     onclick="setFilter(this)">Served</button>
           <div class="pf-sep"></div>
-          <button class="pf-btn" data-f="c1" onclick="setFilter(this)" style="color:var(--c1)">C1</button>
-          <button class="pf-btn" data-f="c2" onclick="setFilter(this)" style="color:var(--c2)">C2</button>
-          <button class="pf-btn" data-f="c3" onclick="setFilter(this)" style="color:var(--c3)">C3</button>
-          <button class="pf-btn" data-f="c4" onclick="setFilter(this)" style="color:var(--c4)">C4</button>
+          <button class="pf-btn" data-f="c1" onclick="setFilter(this)" style="color:var(--c1)">C2</button>
+          <button class="pf-btn" data-f="c2" onclick="setFilter(this)" style="color:var(--c2)">C3</button>
+          <button class="pf-btn" data-f="c3" onclick="setFilter(this)" style="color:var(--c3)">C4</button>
+          <button class="pf-btn" data-f="c4" onclick="setFilter(this)" style="color:var(--c4)">C5</button>
         </div>
         <div class="pool-body" id="poolBody">
           <div class="pool-empty" id="poolEmpty">No tickets issued yet</div>
@@ -692,7 +692,7 @@ function renderPool(){
 
     const tags = [];
     if(!assigned)         tags.push(`<span class="tag tag-unassigned">Unassigned</span>`);
-    else                  tags.push(`<span class="tag tag-counter">C${t.counter}</span>`);
+    else                  tags.push(`<span class="tag tag-counter">C${t.counter+1}</span>`);
     if(t.priority==='priority') tags.push(`<span class="tag tag-priority">⚡ Priority</span>`);
     if(t.compliance)      tags.push(`<span class="tag tag-comply">⏸ Comply</span>`);
     if(t.paymentHold)     tags.push(`<span class="tag tag-payment">💳 Payment</span>`);
@@ -1114,25 +1114,18 @@ function downloadSnapshotPdf(snapshot){
   y = 30;
 
   // Summary boxes
-  const servedTickets = snapshot.log.filter(t=>t.served && t.calledAt && t.endTime);
-  const issuedTickets = snapshot.log.filter(t=>(t.issuedAt||t.startTime) && t.calledAt);
-  const avgWaitSec  = issuedTickets.length ? Math.round(issuedTickets.reduce((s,t)=>(s+(t.calledAt-(t.issuedAt||t.startTime))),0)/issuedTickets.length/1000) : 0;
-  const avgSvcSec   = servedTickets.length  ? Math.round(servedTickets.reduce((s,t)=>(s+(t.endTime-t.calledAt)),0)/servedTickets.length/1000) : 0;
-  const fmtAvg = s => s>0 ? String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0') : '--';
   const boxes=[
-    {label:'ISSUED',       val:snapshot.totalIssued,    color:[176,58,46]},
-    {label:'SERVED',       val:snapshot.totalServed,    color:[30,132,73]},
-    {label:'PENDING',      val:snapshot.totalPending,   color:[154,111,0]},
-    {label:'AVG WAIT',     val:fmtAvg(avgWaitSec),      color:[154,111,0]},
-    {label:'AVG SERVICE',  val:fmtAvg(avgSvcSec),       color:[14,107,138]},
+    {label:'ISSUED', val:snapshot.totalIssued,  color:[176,58,46]},
+    {label:'SERVED', val:snapshot.totalServed,  color:[30,132,73]},
+    {label:'PENDING',val:snapshot.totalPending, color:[154,111,0]},
   ];
-  const bw=(PW-ML-MR-16)/5;
+  const bw=(PW-ML-MR-8)/3;
   boxes.forEach((b,i)=>{
     const bx=ML+i*(bw+4);
     rect(bx,y,bw,20,[248,245,238]);
     doc.setDrawColor(...b.color); doc.setLineWidth(0.5); doc.rect(bx,y,bw,20);
-    txt(String(b.val),bx+bw/2,y+12,typeof b.val==='number'?22:16,'bold',b.color,'center');
-    txt(b.label,      bx+bw/2,y+18,6,'normal',[133,127,114],'center');
+    txt(String(b.val),bx+bw/2,y+12,22,'bold',b.color,'center');
+    txt(b.label,      bx+bw/2,y+18,6.5,'normal',[133,127,114],'center');
   });
   y+=26;
 
@@ -1165,20 +1158,18 @@ function downloadSnapshotPdf(snapshot){
   txt(snapshot.log.length+' TICKETS',PW-MR-3,y+5,7,'normal',[180,175,160],'right');
   y+=9;
 
-  // Column positions (landscape 261mm usable)
-  // NO=2, NAME=18, SERVICE=62, DESK=140, ISSUED=158, CALLED=178, DONE=198, WAIT=218, SVC=236, STATUS=252
+  // Column positions — landscape usable width = 261mm
+  // NO=2, NAME=18, SERVICE=64, DESK=160, START=185, END=210, DUR=234, STATUS=248
   function logHeader(){
     rect(ML,y,PW-ML-MR,6,[232,228,220]);
-    txt('NO.',    ML+2,   y+4.2,6.5,'normal',[133,127,114]);
-    txt('NAME',   ML+18,  y+4.2,6.5,'normal',[133,127,114]);
-    txt('SERVICE',ML+62,  y+4.2,6.5,'normal',[133,127,114]);
-    txt('DESK',   ML+140, y+4.2,6.5,'normal',[133,127,114]);
-    txt('ISSUED', ML+158, y+4.2,6.5,'normal',[133,127,114],'center');
-    txt('CALLED', ML+178, y+4.2,6.5,'normal',[133,127,114],'center');
-    txt('DONE',   ML+198, y+4.2,6.5,'normal',[133,127,114],'center');
-    txt('WAIT',   ML+218, y+4.2,6.5,'normal',[154,111,0],'center');
-    txt('SERVICE',ML+236, y+4.2,6.5,'normal',[14,107,138],'center');
-    txt('STATUS', ML+254, y+4.2,6.5,'normal',[133,127,114]);
+    txt('NO.',    ML+2,  y+4.2,6.5,'normal',[133,127,114]);
+    txt('NAME',   ML+18, y+4.2,6.5,'normal',[133,127,114]);
+    txt('SERVICE',ML+64, y+4.2,6.5,'normal',[133,127,114]);
+    txt('DESK',   ML+160,y+4.2,6.5,'normal',[133,127,114]);
+    txt('START',  ML+185,y+4.2,6.5,'normal',[133,127,114]);
+    txt('END',    ML+210,y+4.2,6.5,'normal',[133,127,114]);
+    txt('DUR',    ML+234,y+4.2,6.5,'normal',[133,127,114]);
+    txt('STATUS', ML+248,y+4.2,6.5,'normal',[133,127,114]);
     y+=7;
   }
   logHeader();
@@ -1189,39 +1180,37 @@ function downloadSnapshotPdf(snapshot){
       doc.addPage(); y=MT; logHeader();
     }
     if(i%2===1) rect(ML,y,PW-ML-MR,ROW_H,[248,245,238]);
-
     const numStr  = String(t.id).padStart(3,'0')+(t.priority==='priority'?' !':'');
-    const nameStr = t.customer?(t.customer.length>24?t.customer.slice(0,23)+'...':t.customer):'--';
-    const svcStr  = t.service ?(t.service.length>34 ?t.service.slice(0,33)+'...':t.service) :'--';
-    const deskStr = t.counter ?'Desk '+t.counter:'--';
+    const nameStr = t.customer?(t.customer.length>30?t.customer.slice(0,29)+'...':t.customer):'--';
+    const svcStr  = t.service ?(t.service.length>40 ?t.service.slice(0,39)+'...':t.service) :'--';
+    const deskStr = t.counter ?'Desk '+(t.counter+1):'--';
     const status  = t.served?'Served':(t.compliance?'Comply':(t.paymentHold?'Payment':'Waiting'));
     const stColor = t.served?[30,132,73]:(t.compliance||t.paymentHold?[154,111,0]:[133,127,114]);
-
+    // Time formatting - plain ASCII to avoid jsPDF font encoding issues
     const fmtTime = (ts) => {
       if(!ts) return '--';
       const d = new Date(ts);
-      return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0');
+      const h = d.getHours();
+      const mm = String(d.getMinutes()).padStart(2,'0');
+      const ss = String(d.getSeconds()).padStart(2,'0');
+      const hh = String(h).padStart(2,'0');
+      return hh + ':' + mm + ':' + ss;
     };
-    const fmtDur = (a,b) => {
-      if(!a||!b) return '--';
-      const sec = Math.round((b-a)/1000);
-      return String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');
-    };
-
-    const issued  = t.issuedAt || t.startTime || null;
-    const called  = t.calledAt || null;
-    const ended   = t.endTime  || null;
-
-    txt(numStr,            ML+2,   y+4.2,7,'normal',[24,24,15]);
-    txt(nameStr,           ML+18,  y+4.2,7,'normal',[24,24,15]);
-    txt(svcStr,            ML+62,  y+4.2,7,'normal',[80,75,65]);
-    txt(deskStr,           ML+140, y+4.2,7,'normal',[24,24,15]);
-    txt(fmtTime(issued),   ML+158, y+4.2,7,'normal',[80,75,65],'center');
-    txt(fmtTime(called),   ML+178, y+4.2,7,'normal',[80,75,65],'center');
-    txt(fmtTime(ended),    ML+198, y+4.2,7,'normal',[80,75,65],'center');
-    txt(fmtDur(issued,called), ML+218, y+4.2,7,'bold',[154,111,0],'center');
-    txt(fmtDur(called,ended),  ML+236, y+4.2,7,'bold',[14,107,138],'center');
-    txt(status,            ML+254, y+4.2,7,'bold',stColor);
+    const startStr = fmtTime(t.startTime);
+    const endStr   = fmtTime(t.endTime);
+    let durStr = '--';
+    if(t.startTime && t.endTime){
+      const sec = Math.round((t.endTime - t.startTime)/1000);
+      durStr = String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');
+    }
+    txt(numStr,  ML+2,  y+4.2,7,'normal',[24,24,15]);
+    txt(nameStr, ML+18, y+4.2,7,'normal',[24,24,15]);
+    txt(svcStr,  ML+64, y+4.2,7,'normal',[80,75,65]);
+    txt(deskStr, ML+160,y+4.2,7,'normal',[24,24,15]);
+    txt(startStr,ML+185,y+4.2,7,'normal',[80,75,65]);
+    txt(endStr,  ML+210,y+4.2,7,'normal',[80,75,65]);
+    txt(durStr,  ML+234,y+4.2,7,'bold',[14,107,138]);
+    txt(status,  ML+248,y+4.2,7,'bold',stColor);
     hline(y+ROW_H,0.1);
     y+=ROW_H;
   });
