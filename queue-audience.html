@@ -38,8 +38,8 @@
   @keyframes fbPulse{0%,100%{opacity:1}50%{opacity:0.4}}
 
   /* MAIN */
-  .main-content{display:grid;grid-template-columns:1fr 320px;overflow:hidden}
-  .counters-area{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;border-right:1px solid var(--border)}
+  .main-content{display:grid;grid-template-columns:1fr;overflow:hidden}
+  .counters-area{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
   .counter-panel{position:relative;display:flex;flex-direction:column;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:28px 32px;overflow:hidden;transition:background 0.5s}
   .counter-panel:nth-child(2){border-right:none}.counter-panel:nth-child(3){border-bottom:none}.counter-panel:nth-child(4){border-right:none;border-bottom:none}
   .counter-panel::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity 0.8s;pointer-events:none}
@@ -48,14 +48,6 @@
   .counter-panel[data-c="3"]::before{background:radial-gradient(ellipse at 30% 40%,rgba(30,132,73,0.13) 0%,transparent 65%)}
   .counter-panel[data-c="4"]::before{background:radial-gradient(ellipse at 30% 40%,rgba(125,60,152,0.13) 0%,transparent 65%)}
   .counter-panel.active::before{opacity:1}
-  /* ── ABSENT OVERLAY ── */
-  .counter-panel.absent{opacity:0.55}
-  .cp-absent-overlay{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(6,6,10,0.85);backdrop-filter:blur(2px);z-index:2;pointer-events:none}
-  .counter-panel.absent .cp-absent-overlay{display:flex}
-  .cp-absent-icon{font-size:36px;opacity:0.55}
-  .cp-absent-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(24px,3.2vw,42px);letter-spacing:0.22em;color:#ff5f5f;animation:absentPulse 3s ease infinite}
-  .cp-absent-sub{font-size:9px;letter-spacing:0.26em;text-transform:uppercase;color:rgba(255,95,95,0.5)}
-  @keyframes absentPulse{0%,100%{opacity:1}50%{opacity:0.6}}
   .counter-accent-bar{position:absolute;left:0;top:0;bottom:0;width:6px}
   .counter-panel[data-c="1"] .counter-accent-bar{background:var(--c1)}.counter-panel[data-c="2"] .counter-accent-bar{background:var(--c2)}
   .counter-panel[data-c="3"] .counter-accent-bar{background:var(--c3)}.counter-panel[data-c="4"] .counter-accent-bar{background:var(--c4)}
@@ -95,34 +87,6 @@
   .cp-queue-lbl{font-size:7px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);flex-shrink:0}
   .q-badge{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:0.05em;padding:1px 7px;border-radius:2px;background:var(--panel);border:1px solid var(--border);color:var(--dim)}
   .q-badge.up-next{border-color:var(--muted);color:var(--text);opacity:0.8}
-
-  /* SIDEBAR */
-  .sidebar{display:flex;flex-direction:column;overflow:hidden}
-  .last-called-section{flex-shrink:0;padding:16px 20px 14px;border-bottom:1px solid var(--border)}
-  .section-title{font-size:8px;letter-spacing:0.28em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:7px}
-  .section-title::after{content:'';flex:1;height:1px;background:var(--border)}
-  .last-called-card{background:var(--deep);border:1px solid var(--border);border-radius:3px;padding:13px 16px;display:flex;align-items:center;gap:12px;animation:slideInRight 0.4s ease}
-  @keyframes slideInRight{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
-  .lc-num{font-family:'Bebas Neue',sans-serif;font-size:46px;line-height:1;letter-spacing:0.04em;flex-shrink:0}
-  .lc-info{flex:1;overflow:hidden}
-  .lc-counter{font-size:9px;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:2px}
-  .lc-svc{font-size:10px;letter-spacing:0.05em;color:var(--muted);white-space:normal;word-break:break-word}
-  .lc-cust{font-size:11px;letter-spacing:0.04em;color:var(--text);margin-top:1px;white-space:normal;word-break:break-word}
-  .lc-time{font-size:9px;color:var(--muted);flex-shrink:0}
-  .activity-section{flex:1;overflow:hidden;display:flex;flex-direction:column;padding:14px 20px 0}
-  .activity-feed{flex:1;overflow-y:auto;scrollbar-width:none}
-  .activity-feed::-webkit-scrollbar{display:none}
-  .activity-item{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--border);animation:feedSlide 0.35s ease}
-  @keyframes feedSlide{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
-  .activity-item:last-child{border-bottom:none}
-  .ai-num{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:0.04em;min-width:42px;flex-shrink:0}
-  .activity-item[data-c="1"] .ai-num{color:var(--c1)}.activity-item[data-c="2"] .ai-num{color:var(--c2)}
-  .activity-item[data-c="3"] .ai-num{color:var(--c3)}.activity-item[data-c="4"] .ai-num{color:var(--c4)}
-  .ai-body{flex:1;overflow:hidden}
-  .ai-top{font-size:9px;letter-spacing:0.07em;color:var(--text);opacity:0.7}
-  .ai-bot{font-size:8px;letter-spacing:0.05em;color:var(--muted);margin-top:1px}
-  .ai-time{font-size:8px;color:var(--muted);flex-shrink:0}
-  .ai-prio{font-size:7px;padding:1px 4px;border-radius:2px;color:var(--priority);border:1px solid rgba(231,76,60,0.3);background:rgba(231,76,60,0.07);flex-shrink:0}
 
   /* TICKER */
   .bottom-bar{border-top:1px solid var(--border);background:rgba(13,13,20,0.95);backdrop-filter:blur(8px);display:flex;align-items:center;height:42px;overflow:hidden}
@@ -225,16 +189,6 @@
 
   <div class="main-content" id="mainContent">
     <div class="counters-area" id="countersArea"></div>
-    <div class="sidebar">
-      <div class="last-called-section">
-        <div class="section-title">Last Called</div>
-        <div id="lastCalledWrap"><div style="font-size:9px;color:var(--muted);letter-spacing:0.14em;text-transform:uppercase;padding:10px 0">No calls yet</div></div>
-      </div>
-      <div class="activity-section">
-        <div class="section-title" style="flex-shrink:0">Recent Activity</div>
-        <div class="activity-feed" id="activityFeed"><div style="font-size:9px;color:var(--muted);letter-spacing:0.14em;text-transform:uppercase">No activity yet</div></div>
-      </div>
-    </div>
   </div>
 
   <div class="bottom-bar">
@@ -269,7 +223,6 @@ const COLOR_BG  = {1:'rgba(230,126,34,0.1)',2:'rgba(36,113,163,0.1)',3:'rgba(30,
 
 let sharedLog = [];
 let activityLog = [];
-let absentCounters = new Set(); // synced from admin via Firebase
 // undefined = page just loaded; first Firebase snapshot silently adopts resetFlag — no reset triggered
 let lastResetFlag = undefined;
 let lastCallTs = null;
@@ -309,11 +262,6 @@ function buildCounters(){
     const p=document.createElement('div');
     p.className='counter-panel'; p.dataset.c=id;
     p.innerHTML=`
-      <div class="cp-absent-overlay">
-        <div class="cp-absent-icon">⚠</div>
-        <div class="cp-absent-title">NOT AVAILABLE</div>
-        <div class="cp-absent-sub">Counter temporarily unavailable</div>
-      </div>
       <div class="counter-accent-bar"></div>
       <div class="cp-label">
         <div class="cp-dot"></div>
@@ -355,7 +303,6 @@ onValue(stateRef,snap=>{
     _fbFirstLoad=false;
     lastResetFlag=newReset;
     sharedLog=data.log||[];
-    absentCounters=new Set((data.absentCounters||[]).map(Number));
     // Restore counterDisplay from lastCall if available
     const lc=data.lastCall||null;
     if(lc && lc.ts){
@@ -371,7 +318,6 @@ onValue(stateRef,snap=>{
   if(newReset && newReset!==lastResetFlag){
     lastResetFlag=newReset;
     sharedLog=[]; activityLog=[]; lastCallTs=null;
-    absentCounters=new Set();
     counterDisplay=[1,2,3,4].map(id=>({id,current:null,service:null,customer:null,priority:null,time:null,calledAt:0}));
     if(flashTimer) clearTimeout(flashTimer);
     announceQueue=[]; isAnnouncing=false; lockedCounter=null;
@@ -381,9 +327,8 @@ onValue(stateRef,snap=>{
   }
   lastResetFlag=newReset;
 
-  // Update shared log and absent counter status
+  // Update shared log for queue display counters
   sharedLog=data.log||[];
-  absentCounters=new Set((data.absentCounters||[]).map(Number));
 
   // ── React to a number being CALLED (lastCall.ts changes) ──
   const lc=data.lastCall||null;
@@ -659,42 +604,28 @@ function renderCounters(){
     const panel=document.querySelector(`.counter-panel[data-c="${id}"]`);
     const numEl=document.getElementById(`cpnum-${id}`);
     const statusEl=document.getElementById(`cpstatus-${id}`);
-    const isAbsent=absentCounters.has(id);
-
-    if(isAbsent){
-      panel.classList.add('absent');
+    if(cd.current!==null){
+      numEl.textContent=String(cd.current).padStart(3,'0');
+      numEl.className='cp-number has-num';
+      panel.classList.add('active');
+      statusEl.textContent='Serving'; statusEl.className='cp-status-pill serving';
+    } else {
       numEl.textContent='—'; numEl.className='cp-number';
       panel.classList.remove('active');
-      statusEl.textContent='Unavailable'; statusEl.className='cp-status-pill';
-      document.getElementById(`cpsvc-${id}`).textContent='';
-      document.getElementById(`cpcust-${id}`).textContent='';
-      const queueEl=document.getElementById(`cpqueue-${id}`);
-      queueEl.innerHTML=`<span class="cp-queue-lbl">Next:</span><span style="font-size:9px;color:var(--muted)">—</span>`;
-    } else {
-      panel.classList.remove('absent');
-      if(cd.current!==null){
-        numEl.textContent=String(cd.current).padStart(3,'0');
-        numEl.className='cp-number has-num';
-        panel.classList.add('active');
-        statusEl.textContent='Serving'; statusEl.className='cp-status-pill serving';
-      } else {
-        numEl.textContent='—'; numEl.className='cp-number';
-        panel.classList.remove('active');
-        statusEl.textContent=waiting.length>0?'Ready':'Idle'; statusEl.className='cp-status-pill';
-      }
-      document.getElementById(`cpsvc-${id}`).textContent=cd.service||'';
-      document.getElementById(`cpcust-${id}`).textContent=cd.customer||'';
-      const queueEl=document.getElementById(`cpqueue-${id}`);
-      queueEl.innerHTML=`<span class="cp-queue-lbl">Next:</span>`;
-      if(!waiting.length){queueEl.innerHTML+='<span style="font-size:9px;color:var(--muted)">—</span>';}
-      else{
-        waiting.slice(0,4).forEach((t,i)=>{
-          const b=document.createElement('span');b.className='q-badge'+(i===0?' up-next':'');
-          b.textContent=String(t.id).padStart(3,'0')+(t.priority==='priority'?' ⚡':'');
-          queueEl.appendChild(b);
-        });
-        if(waiting.length>4){const m=document.createElement('span');m.style.cssText='font-size:9px;color:var(--muted)';m.textContent=`+${waiting.length-4}`;queueEl.appendChild(m);}
-      }
+      statusEl.textContent=waiting.length>0?'Ready':'Idle'; statusEl.className='cp-status-pill';
+    }
+    document.getElementById(`cpsvc-${id}`).textContent=cd.service||'';
+    document.getElementById(`cpcust-${id}`).textContent=cd.customer||'';
+    const queueEl=document.getElementById(`cpqueue-${id}`);
+    queueEl.innerHTML=`<span class="cp-queue-lbl">Next:</span>`;
+    if(!waiting.length){queueEl.innerHTML+='<span style="font-size:9px;color:var(--muted)">—</span>';}
+    else{
+      waiting.slice(0,4).forEach((t,i)=>{
+        const b=document.createElement('span');b.className='q-badge'+(i===0?' up-next':'');
+        b.textContent=String(t.id).padStart(3,'0')+(t.priority==='priority'?' ⚡':'');
+        queueEl.appendChild(b);
+      });
+      if(waiting.length>4){const m=document.createElement('span');m.style.cssText='font-size:9px;color:var(--muted)';m.textContent=`+${waiting.length-4}`;queueEl.appendChild(m);}
     }
   });
 }
@@ -704,48 +635,7 @@ function renderStats(){
   document.getElementById('sbServed').textContent=sharedLog.filter(t=>t.served).length;
 }
 
-function renderLastCalled(){
-  const wrap=document.getElementById('lastCalledWrap');
-  if(!activityLog.length){wrap.innerHTML='<div style="font-size:9px;color:var(--muted);letter-spacing:0.14em;text-transform:uppercase;padding:10px 0">No calls yet</div>';return;}
-  const last=activityLog[0];
-  const color=COLOR_HEX[last.counter];
-  const transferBadge = last.transferred
-    ? `<div style="font-size:7px;letter-spacing:0.14em;text-transform:uppercase;color:var(--amber);border:1px solid rgba(226,160,0,0.4);background:rgba(226,160,0,0.08);padding:2px 6px;border-radius:2px;margin-top:3px;display:inline-block">↔ Transferred from ${last.fromName}</div>`
-    : '';
-  wrap.innerHTML=`<div class="last-called-card">
-    <div class="lc-num" style="color:${color}">${String(last.num).padStart(3,'0')}</div>
-    <div class="lc-info">
-      <div class="lc-counter" style="color:${color}">${COUNTER_NAMES[last.counter-1]}</div>
-      <div class="lc-svc">${last.service||''}${last.priority==='priority'?' ⚡':''}</div>
-      ${last.customer?`<div class="lc-cust">${last.customer}</div>`:''}
-      ${transferBadge}
-    </div>
-    <div class="lc-time">${last.time||''}</div>
-  </div>`;
-}
-
-function renderActivityFeed(){
-  const feed=document.getElementById('activityFeed');
-  if(!activityLog.length){feed.innerHTML='<div style="font-size:9px;color:var(--muted);letter-spacing:0.14em;text-transform:uppercase">No activity yet</div>';return;}
-  feed.innerHTML='';
-  activityLog.slice(0,20).forEach(a=>{
-    const item=document.createElement('div');
-    item.className='activity-item'; item.dataset.c=a.counter;
-    const topLine = a.transferred
-      ? `<span style="color:var(--amber)">↔ ${a.fromName} → ${COUNTER_NAMES[a.counter-1]}</span>`
-      : `${COUNTER_NAMES[a.counter-1]} · ${a.service||''}`;
-    const botLine = a.transferred
-      ? `<div class="ai-bot" style="color:var(--muted)">${a.service||''}${a.customer?' · '+a.customer:''}</div>`
-      : (a.customer?`<div class="ai-bot">${a.customer}</div>`:'');
-    item.innerHTML=`<div class="ai-num">${String(a.num).padStart(3,'0')}</div>
-      <div class="ai-body"><div class="ai-top">${topLine}</div>${botLine}</div>
-      ${a.priority==='priority'&&!a.transferred?'<div class="ai-prio">⚡</div>':''}
-      <div class="ai-time">${a.time||''}</div>`;
-    feed.appendChild(item);
-  });
-}
-
-function renderAll(){renderCounters();renderStats();renderLastCalled();renderActivityFeed();}
+function renderAll(){renderCounters();renderStats();}
 
 buildCounters(); renderAll();
 if(window.speechSynthesis){
