@@ -1186,19 +1186,24 @@ function downloadSnapshotPdf(snapshot){
   txt(snapshot.log.length+' TICKETS',PW-MR-3,y+5,7,'normal',[180,175,160],'right');
   y+=9;
 
-  // Columns: NO | NAME | SERVICE | DESK | ISSUED | CALLED | DONE | WAIT | SVC | STATUS
+  // Columns fitted to 261mm usable width (ML=18 to PW-MR=279)
+  // NO(10)|NAME(38)|SERVICE(72)|DESK(18)|ISSUED(22)|CALLED(22)|DONE(22)|WAIT(16)|SVC(16)|STATUS(25) = 261
+  const C_no=ML+2, C_name=ML+12, C_svc=ML+50, C_desk=ML+122;
+  const C_issued=ML+151, C_called=ML+173, C_done=ML+195;
+  const C_wait=ML+214, C_svcT=ML+230, C_status=ML+240;
+
   function logHeader(){
     rect(ML,y,PW-ML-MR,7,[24,24,15]);
-    txt('NO.',    ML+2,   y+5, 6.5,'bold',[253,250,243]);
-    txt('NAME',   ML+18,  y+5, 6.5,'bold',[253,250,243]);
-    txt('SERVICE',ML+68,  y+5, 6.5,'bold',[253,250,243]);
-    txt('DESK',   ML+148, y+5, 6.5,'bold',[253,250,243]);
-    txt('ISSUED', ML+168, y+5, 6.5,'bold',[253,250,243],'center');
-    txt('CALLED', ML+193, y+5, 6.5,'bold',[253,250,243],'center');
-    txt('DONE',   ML+218, y+5, 6.5,'bold',[253,250,243],'center');
-    txt('WAIT',   ML+243, y+5, 6.5,'bold',[240,192,64],'center');
-    txt('SERVICE',ML+257, y+5, 6.5,'bold',[100,210,220],'center');
-    txt('STATUS', ML+270, y+5, 6.5,'bold',[253,250,243]);
+    txt('NO.',    C_no,     y+5, 6.5,'bold',[253,250,243]);
+    txt('NAME',   C_name,   y+5, 6.5,'bold',[253,250,243]);
+    txt('SERVICE',C_svc,    y+5, 6.5,'bold',[253,250,243]);
+    txt('DESK',   C_desk,   y+5, 6.5,'bold',[253,250,243]);
+    txt('ISSUED', C_issued, y+5, 6.5,'bold',[253,250,243],'center');
+    txt('CALLED', C_called, y+5, 6.5,'bold',[253,250,243],'center');
+    txt('DONE',   C_done,   y+5, 6.5,'bold',[253,250,243],'center');
+    txt('WAIT',   C_wait,   y+5, 6.5,'bold',[240,192,64],'center');
+    txt('SVC',    C_svcT,   y+5, 6.5,'bold',[100,210,220],'center');
+    txt('STATUS', C_status, y+5, 6.5,'bold',[253,250,243]);
     y+=8;
   }
   logHeader();
@@ -1215,24 +1220,24 @@ function downloadSnapshotPdf(snapshot){
     const svcDur  = fmtDur(called, ended);
 
     const numStr  = String(t.id).padStart(3,'0')+(t.priority==='priority'?' !':'');
-    const nameStr = t.customer?(t.customer.length>22?t.customer.slice(0,21)+'...':t.customer):'--';
-    const svcStr  = t.service ?(t.service.length>32 ?t.service.slice(0,31)+'...':t.service) :'--';
+    const nameStr = t.customer?(t.customer.length>18?t.customer.slice(0,17)+String.fromCharCode(8230):t.customer):'--';
+    const svcStr  = t.service ?(t.service.length>36?t.service.slice(0,35)+String.fromCharCode(8230):t.service):'--';
     const deskStr = t.counter ?'Desk '+(t.counter+1):'--';
     const status  = t.served?'Served':(t.compliance?'Comply':(t.paymentHold?'Payment':'Waiting'));
     const stColor = t.served?[30,132,73]:(t.compliance||t.paymentHold?[154,111,0]:[133,127,114]);
     const waitColor = waitDur!=='--'?[154,111,0]:[180,175,160];
     const svcColor  = svcDur !=='--'?[14,107,138]:[180,175,160];
 
-    txt(numStr,          ML+2,   y+4.8, 7,'bold',  [24,24,15]);
-    txt(nameStr,         ML+18,  y+4.8, 7,'normal',[24,24,15]);
-    txt(svcStr,          ML+68,  y+4.8, 7,'normal',[80,75,65]);
-    txt(deskStr,         ML+148, y+4.8, 7,'normal',[24,24,15]);
-    txt(fmtTime(issued), ML+168, y+4.8, 7,'normal',[80,75,65],'center');
-    txt(fmtTime(called), ML+193, y+4.8, 7,'normal',[80,75,65],'center');
-    txt(fmtTime(ended),  ML+218, y+4.8, 7,'normal',[80,75,65],'center');
-    txt(waitDur,         ML+243, y+4.8, 8,'bold',  waitColor, 'center');
-    txt(svcDur,          ML+257, y+4.8, 8,'bold',  svcColor,  'center');
-    txt(status,          ML+270, y+4.8, 7,'bold',  stColor);
+    txt(numStr,          C_no,     y+4.8, 7,'bold',  [24,24,15]);
+    txt(nameStr,         C_name,   y+4.8, 7,'normal',[24,24,15]);
+    txt(svcStr,          C_svc,    y+4.8, 7,'normal',[80,75,65]);
+    txt(deskStr,         C_desk,   y+4.8, 7,'normal',[24,24,15]);
+    txt(fmtTime(issued), C_issued, y+4.8, 7,'normal',[80,75,65],'center');
+    txt(fmtTime(called), C_called, y+4.8, 7,'normal',[80,75,65],'center');
+    txt(fmtTime(ended),  C_done,   y+4.8, 7,'normal',[80,75,65],'center');
+    txt(waitDur,         C_wait,   y+4.8, 8,'bold',  waitColor,'center');
+    txt(svcDur,          C_svcT,   y+4.8, 8,'bold',  svcColor, 'center');
+    txt(status,          C_status, y+4.8, 7,'bold',  stColor);
     hline(y+ROW_H,0.1);
     y+=ROW_H;
   });
