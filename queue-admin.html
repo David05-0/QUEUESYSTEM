@@ -1129,24 +1129,33 @@ function downloadSnapshotPdf(snapshot){
   const servedTickets = snapshot.log.filter(t=>t.served && (t.calledAt||t.startTime) && t.endTime);
   const avgWaitSec  = waitTickets.length   ? Math.round(waitTickets.reduce((s,t)  =>(s+(t.calledAt-(t.issuedAt||t.startTime))),0)/waitTickets.length/1000)  : 0;
   const avgSvcSec   = servedTickets.length ? Math.round(servedTickets.reduce((s,t)=>(s+(t.endTime-(t.calledAt||t.startTime))),0)/servedTickets.length/1000) : 0;
-  const fmtAvg = s => s>0 ? String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0') : '--';
+  const fmtAvg = s => String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
 
   const boxes=[
     {label:'ISSUED',      val:snapshot.totalIssued,  color:[176,58,46],  isNum:true},
     {label:'SERVED',      val:snapshot.totalServed,  color:[30,132,73],  isNum:true},
-    {label:'PENDING',     val:snapshot.totalPending, color:[154,111,0],  isNum:true},
-    {label:'AVG WAIT',    val:fmtAvg(avgWaitSec),    color:[154,111,0],  isNum:false},
+    {label:'PENDING',     val:snapshot.totalPending, color:[180,100,0],  isNum:true},
+    {label:'AVG WAIT',    val:fmtAvg(avgWaitSec),    color:[170,100,0],  isNum:false},
     {label:'AVG SERVICE', val:fmtAvg(avgSvcSec),     color:[14,107,138], isNum:false},
   ];
+  const BOX_H = 28;
   const bw=(PW-ML-MR-16)/5;
   boxes.forEach((b,i)=>{
     const bx=ML+i*(bw+4);
-    rect(bx,y,bw,20,[248,245,238]);
-    doc.setDrawColor(...b.color); doc.setLineWidth(0.5); doc.rect(bx,y,bw,20);
-    txt(String(b.val),bx+bw/2,y+(b.isNum?12:11),b.isNum?22:15,'bold',b.color,'center');
-    txt(b.label,      bx+bw/2,y+18,6,'normal',[133,127,114],'center');
+    // Fill background
+    rect(bx,y,bw,BOX_H,[255,253,248]);
+    // Colored top accent bar (4mm tall)
+    doc.setFillColor(...b.color); doc.rect(bx,y,bw,4,'F');
+    // Border outline
+    doc.setDrawColor(...b.color); doc.setLineWidth(0.6); doc.rect(bx,y,bw,BOX_H,'S');
+    // Main value — large and prominent
+    const valStr = String(b.val);
+    const valSize = b.isNum ? 28 : 17;
+    txt(valStr, bx+bw/2, y+18, valSize, 'bold', b.color, 'center');
+    // Label — clear and readable
+    txt(b.label, bx+bw/2, y+25, 7, 'normal', [90,85,78], 'center');
   });
-  y+=26;
+  y += BOX_H + 6;
 
   // ── Service breakdown ──
   rect(ML,y,PW-ML-MR,7,[24,24,15]);
