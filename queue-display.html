@@ -126,6 +126,9 @@
   .cv-hold-btn.payment-btn:hover{background:rgba(14,154,181,0.2);border-color:var(--teal)}
   .cv-done-btn{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:0.12em;border:none;border-radius:4px;padding:13px;cursor:pointer;transition:all 0.15s;background:rgba(61,220,132,0.12);color:var(--green);border:1px solid rgba(61,220,132,0.3)}
   .cv-done-btn:hover{background:rgba(61,220,132,0.22);border-color:var(--green);transform:translateY(-1px)}
+  /* ── NOT AVAILABLE button ── */
+  .cv-notavail-btn{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.1em;border-radius:4px;padding:11px;cursor:pointer;transition:all 0.15s;background:rgba(255,95,95,0.07);color:var(--red);border:1px solid rgba(255,95,95,0.28);width:100%}
+  .cv-notavail-btn:hover{background:rgba(255,95,95,0.18);border-color:var(--red);transform:translateY(-1px);box-shadow:0 4px 18px rgba(255,95,95,0.18)}
 
   /* ══ PANE 2: QUEUE + HOLDS ══ */
   .cv-sidebar{display:flex;flex-direction:column;overflow:hidden;background:rgba(10,10,15,0.25);border-right:1px solid var(--border)}
@@ -354,6 +357,7 @@
           <button class="cv-hold-btn comply-btn" onclick="sendToHold('comply')">⏸ Compliance</button>
           <button class="cv-hold-btn payment-btn" onclick="sendToHold('payment')">💳 Payment</button>
         </div>
+        <button class="cv-notavail-btn" onclick="markNotAvailable()">⚠ NOT AVAILABLE — RETURN TO POOL</button>
         <button class="cv-done-btn" onclick="markDone()">✓ DONE — MARK SERVED</button>
       </div>
     </div>
@@ -457,6 +461,7 @@ const COLOR_HEX = {1:'#e67e22',2:'#2471a3',3:'#1e8449',4:'#7d3c98'};
 
 let sharedLog = [];
 let sharedTicketCounter = 0;
+let sharedAbsentCounters = [];   // ← preserved across every saveShared() write
 let myHistory  = [];
 let myServed   = 0;
 // undefined = page just loaded; first Firebase snapshot silently adopts resetFlag — no reset triggered
@@ -490,6 +495,7 @@ onValue(stateRef,snap=>{
     lastResetFlag=newReset;
     sharedLog=data.log||[];
     sharedTicketCounter=data.ticketCounter||0;
+    sharedAbsentCounters=(data.absentCounters||[]).map(Number); // ← preserve on first load
     // If session was restored (tab closed accidentally), resume the counter view
     if(activeCounter){
       const view=document.getElementById('counterView');
@@ -521,6 +527,7 @@ onValue(stateRef,snap=>{
   } else {
     sharedLog=data.log||[];
     sharedTicketCounter=data.ticketCounter||0;
+    sharedAbsentCounters=(data.absentCounters||[]).map(Number); // ← keep in sync
     lastResetFlag=newReset;
     refreshLoginCounts();
     if(activeCounter){
@@ -577,7 +584,14 @@ onValue(stateRef,snap=>{
 });
 
 function saveShared(){
-  set(stateRef,{ticketCounter:sharedTicketCounter,log:sharedLog,lastUpdate:Date.now(),resetFlag:lastResetFlag,lastCall:window._lastCall||null});
+  set(stateRef,{
+    ticketCounter: sharedTicketCounter,
+    log:           sharedLog,
+    lastUpdate:    Date.now(),
+    resetFlag:     lastResetFlag,
+    lastCall:      window._lastCall||null,
+    absentCounters: sharedAbsentCounters   // ← never wipe absent desk data
+  });
 }
 
 // ── Queue helpers ──
@@ -828,6 +842,35 @@ function markDone(){
   renderView();
 }
 window.markDone=markDone;
+
+// ── Mark active ticket as Not Available — return to unassigned pool ──
+// Client was called but did not appear at the counter.
+function markNotAvailable(){
+  if(activeTicketId===null) return;
+  const t=sharedLog.find(x=>x.id===activeTicketId);
+  if(!t) return;
+  // Track how many times this client was called but not present
+  t.notAvailableCount = (t.notAvailableCount||0) + 1;
+  t.lastNotAvailableAt = Date.now();
+  // Return to unassigned pool
+  t.counter = 0;
+  t.compliance  = false;
+  t.paymentHold = false;
+  // Clear lastCall so audience removes the number from display
+  if(window._lastCall && window._lastCall.ticketId===activeTicketId){
+    window._lastCall=null;
+  }
+  const numLabel = `#${String(t.id).padStart(3,'0')}`;
+  const count = t.notAvailableCount;
+  showToast(`${numLabel} ↩ Not Available — back in pool (×${count})`);
+  activeTicketId=null;
+  sessionStorage.removeItem('ssTicketId');
+  stopElapsedTimer();
+  clearDisplay();
+  saveShared();
+  renderView();
+}
+window.markNotAvailable=markNotAvailable;
 
 // ── Drag: queue item → hold zone ──
 window.startQDrag=function(e,id){
