@@ -694,6 +694,7 @@ function renderPool(){
     if(!assigned)         tags.push(`<span class="tag tag-unassigned">Unassigned</span>`);
     else                  tags.push(`<span class="tag tag-counter">C${t.counter+1}</span>`);
     if(t.priority==='priority') tags.push(`<span class="tag tag-priority">⚡ Priority</span>`);
+    if(t.notAvailableCount)     tags.push(`<span class="tag tag-comply">⚠ N/A ×${t.notAvailableCount}</span>`);
     if(t.compliance)      tags.push(`<span class="tag tag-comply">⏸ Comply</span>`);
     if(t.paymentHold)     tags.push(`<span class="tag tag-payment">💳 Payment</span>`);
     if(t.served)          tags.push(`<span class="tag tag-served">✓ Served</span>`);
