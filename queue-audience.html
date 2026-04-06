@@ -380,18 +380,19 @@ onValue(stateRef,snap=>{
 
   // lastCallTs already updated at top of the if-block above
 
-  // ── Clear counter panel when lastCall is nulled (ticket went to hold) ──
+  // ── Clear counter panel when lastCall is nulled (hold, not-available, or admin action) ──
   if(!lc && lastCallTs!==null){
-    lastCallTs=null; // reset so next null→null doesn't re-trigger
-    // Find which counter had its call cleared — check all counters
-    // We detect by comparing: if a counter's current ticket is no longer in active call
-    // (safe approach: just check if any counter's ticket is now on hold)
-    sharedLog.filter(t=>(t.compliance||t.paymentHold)&&!t.served).forEach(t=>{
-      const cd=counterDisplay[t.counter-1];
-      if(cd.current===t.id){
-        cd.current=null; cd.service=null; cd.customer=null; cd.priority=null; cd.time=null; cd.calledAt=0;
-        // Remove from announce queue if pending
-        announceQueue=announceQueue.filter(q=>q.id!==t.id);
+    lastCallTs=null;
+    // Clear any counter whose displayed ticket is now on hold OR back in pool (counter===0)
+    [1,2,3,4].forEach(counterId=>{
+      const cd=counterDisplay[counterId-1];
+      if(cd.current===null) return;
+      const ticket=sharedLog.find(t=>t.id===cd.current);
+      // Clear if: ticket gone, served, moved to hold, or returned to pool (counter===0)
+      if(!ticket || ticket.served || ticket.compliance || ticket.paymentHold || ticket.counter===0){
+        cd.current=null; cd.service=null; cd.customer=null;
+        cd.priority=null; cd.time=null; cd.calledAt=0;
+        announceQueue=announceQueue.filter(q=>q.counter!==counterId);
       }
     });
   }
