@@ -695,6 +695,7 @@ function renderPool(){
     else                  tags.push(`<span class="tag tag-counter">C${t.counter+1}</span>`);
     if(t.priority==='priority') tags.push(`<span class="tag tag-priority">⚡ Priority</span>`);
     if(t.notAvailableCount)     tags.push(`<span class="tag tag-comply">⚠ N/A ×${t.notAvailableCount}</span>`);
+    if(t.unserved)              tags.push(`<span class="tag tag-payment">✕ Unserved</span>`);
     if(t.compliance)      tags.push(`<span class="tag tag-comply">⏸ Comply</span>`);
     if(t.paymentHold)     tags.push(`<span class="tag tag-payment">💳 Payment</span>`);
     if(t.served)          tags.push(`<span class="tag tag-served">✓ Served</span>`);
@@ -1224,8 +1225,8 @@ function downloadSnapshotPdf(snapshot){
     const nameStr = t.customer?(t.customer.length>18?t.customer.slice(0,17)+String.fromCharCode(8230):t.customer):'--';
     const svcStr  = t.service ?(t.service.length>36?t.service.slice(0,35)+String.fromCharCode(8230):t.service):'--';
     const deskStr = t.counter ?'Desk '+(t.counter+1):'--';
-    const status  = t.served?'Served':(t.compliance?'Comply':(t.paymentHold?'Payment':'Waiting'));
-    const stColor = t.served?[30,132,73]:(t.compliance||t.paymentHold?[154,111,0]:[133,127,114]);
+    const status  = t.unserved?'Unserved':(t.served?'Served':(t.compliance?'Comply':(t.paymentHold?'Payment':'Waiting')));
+    const stColor = t.unserved?[125,60,152]:(t.served?[30,132,73]:(t.compliance||t.paymentHold?[154,111,0]:[133,127,114]));
     const waitColor = waitDur!=='--'?[154,111,0]:[180,175,160];
     const svcColor  = svcDur !=='--'?[14,107,138]:[180,175,160];
 
