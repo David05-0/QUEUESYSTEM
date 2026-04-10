@@ -129,6 +129,15 @@
   /* ── NOT AVAILABLE button ── */
   .cv-notavail-btn{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.1em;border-radius:4px;padding:11px;cursor:pointer;transition:all 0.15s;background:rgba(255,95,95,0.07);color:var(--red);border:1px solid rgba(255,95,95,0.28);width:100%}
   .cv-notavail-btn:hover{background:rgba(255,95,95,0.18);border-color:var(--red);transform:translateY(-1px);box-shadow:0 4px 18px rgba(255,95,95,0.18)}
+  /* ── UNSERVED button ── */
+  .cv-unserved-btn{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.1em;border-radius:4px;padding:11px;cursor:pointer;transition:all 0.15s;background:rgba(125,60,152,0.08);color:var(--c4);border:1px solid rgba(125,60,152,0.3);width:100%}
+  .cv-unserved-btn:hover{background:rgba(125,60,152,0.18);border-color:var(--c4);transform:translateY(-1px);box-shadow:0 4px 18px rgba(125,60,152,0.18)}
+  /* ── Unserved log ── */
+  .unserved-list{display:flex;flex-direction:column;gap:5px;max-height:140px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+  .unserved-item{display:flex;flex-direction:column;padding:7px 10px 7px 12px;background:var(--panel);border:1px solid var(--border);border-left:2px solid var(--c4);border-radius:3px;animation:slideIn 0.2s ease;gap:2px}
+  .unserved-item-top{display:flex;align-items:center;gap:8px}
+  .unserved-num{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.04em;color:var(--c4);min-width:36px;flex-shrink:0}
+  .unserved-reason{font-size:7px;letter-spacing:0.14em;text-transform:uppercase;padding:2px 6px;border-radius:2px;background:rgba(125,60,152,0.1);color:var(--c4);border:1px solid rgba(125,60,152,0.25);flex-shrink:0;align-self:flex-start}
 
   /* ══ PANE 2: QUEUE + HOLDS ══ */
   .cv-sidebar{display:flex;flex-direction:column;overflow:hidden;background:rgba(10,10,15,0.25);border-right:1px solid var(--border)}
@@ -357,6 +366,7 @@
           <button class="cv-hold-btn comply-btn" onclick="sendToHold('comply')">⏸ Compliance</button>
           <button class="cv-hold-btn payment-btn" onclick="sendToHold('payment')">💳 Payment</button>
         </div>
+        <button class="cv-unserved-btn" onclick="markUnserved()">✕ UNSERVED — CLIENT DID NOT CONTINUE</button>
         <button class="cv-notavail-btn" onclick="markNotAvailable()">⚠ NOT AVAILABLE — RETURN TO POOL</button>
         <button class="cv-done-btn" onclick="markDone()">✓ DONE — MARK SERVED</button>
       </div>
@@ -403,6 +413,13 @@
       <div class="cv-sec">
         <div class="cv-sec-title">Served Today</div>
         <div class="served-list" id="cvServedLog">
+          <span style="font-size:9px;color:var(--muted)">None yet</span>
+        </div>
+      </div>
+
+      <div class="cv-sec">
+        <div class="cv-sec-title">Unserved Today</div>
+        <div class="unserved-list" id="cvUnservedLog">
           <span style="font-size:9px;color:var(--muted)">None yet</span>
         </div>
       </div>
@@ -464,6 +481,7 @@ let sharedTicketCounter = 0;
 let sharedAbsentCounters = [];   // ← preserved across every saveShared() write
 let myHistory  = [];
 let myServed   = 0;
+let myUnservedLog = [];
 // undefined = page just loaded; first Firebase snapshot silently adopts resetFlag — no reset triggered
 let lastResetFlag = undefined;
 let dragId = null;
@@ -515,7 +533,7 @@ onValue(stateRef,snap=>{
   if(newReset && newReset!==lastResetFlag){
     lastResetFlag=newReset;
     sharedLog=[]; sharedTicketCounter=0; myHistory=[]; myServed=0;
-    activeTicketId=null; myServedLog=[];
+    activeTicketId=null; myServedLog=[]; myUnservedLog=[];
     sessionStorage.removeItem('ssCounter');
     sessionStorage.removeItem('ssTicketId');
     // If logged in, kick back to login screen
@@ -643,7 +661,7 @@ function refreshLoginCounts(){
 }
 
 function login(id){
-  activeCounter=id; myHistory=[]; myServed=0; activeTicketId=null; myServedLog=[];
+  activeCounter=id; myHistory=[]; myServed=0; activeTicketId=null; myServedLog=[]; myUnservedLog=[];
   sessionStorage.setItem('ssCounter', id);
   sessionStorage.removeItem('ssTicketId');
   const view=document.getElementById('counterView');
@@ -872,6 +890,43 @@ function markNotAvailable(){
 }
 window.markNotAvailable=markNotAvailable;
 
+// ── Mark active ticket as Unserved — client came but did not continue service ──
+function markUnserved(){
+  if(activeTicketId===null) return;
+  const t=sharedLog.find(x=>x.id===activeTicketId);
+  if(!t) return;
+  // Mark as served so it leaves the queue, but flag as unserved
+  t.served    = true;
+  t.unserved  = true;   // distinguishes from a normal served ticket
+  t.endTime   = Date.now();
+  t.compliance  = false;
+  t.paymentHold = false;
+  // Clear lastCall so audience removes the number from display
+  if(window._lastCall && window._lastCall.ticketId===activeTicketId){
+    window._lastCall=null;
+  }
+  // Track in local unserved log
+  myUnservedLog.unshift({
+    id:       t.id,
+    service:  t.service||'',
+    customer: t.customer||null,
+    time:     nowTime(),
+    issuedAt: t.issuedAt || t.startTime || null,
+    calledAt: t.calledAt || null,
+    endTime:  t.endTime
+  });
+  myHistory.unshift(t.id);
+  if(myHistory.length>6) myHistory.pop();
+  showToast(`#${String(t.id).padStart(3,'0')} — Unserved`);
+  activeTicketId=null;
+  sessionStorage.removeItem('ssTicketId');
+  stopElapsedTimer();
+  clearDisplay();
+  saveShared();
+  renderView();
+}
+window.markUnserved=markUnserved;
+
 // ── Drag: queue item → hold zone ──
 window.startQDrag=function(e,id){
   dragId=id; e.dataTransfer.effectAllowed='move';
@@ -1078,6 +1133,36 @@ function renderView(){
           <div class="served-time">${s.time}</div>
         </div>
         ${durHtml}
+      </div>`;
+    }).join('');
+  }
+
+  // Unserved log
+  const unservedEl=document.getElementById('cvUnservedLog');
+  if(!myUnservedLog.length){
+    unservedEl.innerHTML='<span style="font-size:9px;color:var(--muted)">None yet</span>';
+  } else {
+    unservedEl.innerHTML=myUnservedLog.map(s=>{
+      const fmtTs = ts => {
+        if(!ts) return '--';
+        const d=new Date(ts);
+        return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0');
+      };
+      return `
+      <div class="unserved-item">
+        <div class="unserved-item-top">
+          <div class="unserved-num">${String(s.id).padStart(3,'0')}</div>
+          <div class="served-info">
+            <div class="served-svc">${s.service}</div>
+            ${s.customer?`<div class="served-cust" style="color:var(--c4);opacity:0.8">${s.customer}</div>`:''}
+          </div>
+          <div class="unserved-reason">Unserved</div>
+        </div>
+        <div class="served-dur">
+          <span class="dur-part"><span class="dur-label">▶ Called</span><span class="dur-val">${fmtTs(s.calledAt)}</span></span>
+          <span class="dur-part"><span class="dur-label">✕ Ended</span><span class="dur-val">${fmtTs(s.endTime)}</span></span>
+          <span class="dur-part" style="border-left:1px solid var(--border);padding-left:6px"><span class="dur-label">At</span><span class="dur-val">${s.time}</span></span>
+        </div>
       </div>`;
     }).join('');
   }
