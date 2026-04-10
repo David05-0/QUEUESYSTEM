@@ -596,7 +596,7 @@ function doSpeak(ticket, onDone){
 
     function makeUtterance(text, onEndCb){
       const u=new SpeechSynthesisUtterance(text);
-      u.rate=0.85; u.pitch=0.75; u.volume=1; u.lang='en-US';  // pitch < 1 = deeper/male
+      u.rate=1.05; u.pitch=0.75; u.volume=1; u.lang='en-US';  // pitch < 1 = deeper/male
       if(preferred) u.voice=preferred;
       if(onEndCb) u.onend=onEndCb;
       u.onerror=(e)=>{ if(e.error!=='canceled'&&onEndCb) setTimeout(onEndCb,400); };
