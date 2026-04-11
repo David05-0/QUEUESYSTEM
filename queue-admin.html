@@ -434,6 +434,7 @@
           <button class="pf-btn"        data-f="queued"     onclick="setFilter(this)">In Queue</button>
           <button class="pf-btn"        data-f="hold"       onclick="setFilter(this)">On Hold</button>
           <button class="pf-btn"        data-f="served"     onclick="setFilter(this)">Served</button>
+          <button class="pf-btn"        data-f="unserved"   onclick="setFilter(this)" style="color:var(--c4)">✕ Unserved</button>
           <div class="pf-sep"></div>
           <button class="pf-btn" data-f="c1" onclick="setFilter(this)" style="color:var(--c1)">C2</button>
           <button class="pf-btn" data-f="c2" onclick="setFilter(this)" style="color:var(--c2)">C3</button>
@@ -667,13 +668,14 @@ function renderPool(){
 
   let filtered = [...log];
   if(activeFilter==='unassigned') filtered = log.filter(t=>!t.served&&t.counter===0);
-  else if(activeFilter==='queued') filtered = log.filter(t=>!t.served&&t.counter>0&&!t.compliance&&!t.paymentHold);
-  else if(activeFilter==='hold')   filtered = log.filter(t=>!t.served&&(t.compliance||t.paymentHold));
-  else if(activeFilter==='served') filtered = log.filter(t=>t.served);
-  else if(activeFilter==='c1')     filtered = log.filter(t=>t.counter===1);
-  else if(activeFilter==='c2')     filtered = log.filter(t=>t.counter===2);
-  else if(activeFilter==='c3')     filtered = log.filter(t=>t.counter===3);
-  else if(activeFilter==='c4')     filtered = log.filter(t=>t.counter===4);
+  else if(activeFilter==='queued')   filtered = log.filter(t=>!t.served&&t.counter>0&&!t.compliance&&!t.paymentHold);
+  else if(activeFilter==='hold')     filtered = log.filter(t=>!t.served&&(t.compliance||t.paymentHold));
+  else if(activeFilter==='served')   filtered = log.filter(t=>t.served&&!t.unserved);
+  else if(activeFilter==='unserved') filtered = log.filter(t=>t.unserved);
+  else if(activeFilter==='c1')       filtered = log.filter(t=>t.counter===1);
+  else if(activeFilter==='c2')       filtered = log.filter(t=>t.counter===2);
+  else if(activeFilter==='c3')       filtered = log.filter(t=>t.counter===3);
+  else if(activeFilter==='c4')       filtered = log.filter(t=>t.counter===4);
 
   badge.textContent = `${filtered.length} client${filtered.length!==1?'s':''}`;
   body.querySelectorAll('.client-card').forEach(e=>e.remove());
