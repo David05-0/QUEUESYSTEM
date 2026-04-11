@@ -718,7 +718,7 @@ function renderPool(){
 
     // Admin action buttons — only show relevant actions per ticket state
     const actionBtns = [];
-    if(!t.served){
+    if(!t.served && !t.unserved){
       actionBtns.push(`<button class="cc-act-btn serve-btn" onclick="adminMarkServed(${t.id})">✓ Mark Served</button>`);
     }
     actionBtns.push(`<button class="cc-act-btn remove-btn" onclick="adminRemoveTicket(${t.id})">✕ Remove</button>`);
