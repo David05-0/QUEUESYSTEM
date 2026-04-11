@@ -698,9 +698,9 @@ function renderPool(){
     if(t.priority==='priority') tags.push(`<span class="tag tag-priority">⚡ Priority</span>`);
     if(t.notAvailableCount)     tags.push(`<span class="tag tag-comply">⚠ N/A ×${t.notAvailableCount}</span>`);
     if(t.unserved)              tags.push(`<span class="tag tag-payment">✕ Unserved</span>`);
-    if(t.compliance)      tags.push(`<span class="tag tag-comply">⏸ Comply</span>`);
-    if(t.paymentHold)     tags.push(`<span class="tag tag-payment">💳 Payment</span>`);
-    if(t.served)          tags.push(`<span class="tag tag-served">✓ Served</span>`);
+    if(t.compliance)            tags.push(`<span class="tag tag-comply">⏸ Comply</span>`);
+    if(t.paymentHold)           tags.push(`<span class="tag tag-payment">💳 Payment</span>`);
+    if(t.served && !t.unserved) tags.push(`<span class="tag tag-served">✓ Served</span>`);
 
     // Build time info with start/end/duration
     let timeInfo = `${t.date} · ${t.time}`;
