@@ -343,15 +343,15 @@
           <div class="name-grid">
             <div>
               <div class="name-input-lbl">First Name</div>
-              <input type="text" class="name-input" id="custFirstName" placeholder="First name…" maxlength="30" autocomplete="off">
+              <input type="text" class="name-input" id="custFirstName" placeholder="First name…" maxlength="30" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
             </div>
             <div>
               <div class="name-input-lbl">Last Name</div>
-              <input type="text" class="name-input" id="custLastName" placeholder="Last name…" maxlength="30" autocomplete="off">
+              <input type="text" class="name-input" id="custLastName" placeholder="Last name…" maxlength="30" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
             </div>
           </div>
           <div class="name-input-lbl">Nickname <span style="color:var(--muted);font-size:6.5px">(used in announcement)</span></div>
-          <input type="text" class="name-input" id="custNickname" placeholder="Nickname…" maxlength="20" autocomplete="off">
+          <input type="text" class="name-input" id="custNickname" placeholder="Nickname…" maxlength="20" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
         </div>
 
         <div class="field-label">3 · Priority</div>
