@@ -133,10 +133,13 @@
   .cv-unserved-btn{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.1em;border-radius:4px;padding:11px;cursor:pointer;transition:all 0.15s;background:rgba(125,60,152,0.08);color:var(--c4);border:1px solid rgba(125,60,152,0.3);width:100%}
   .cv-unserved-btn:hover{background:rgba(125,60,152,0.18);border-color:var(--c4);transform:translateY(-1px);box-shadow:0 4px 18px rgba(125,60,152,0.18)}
   /* ── TRANSFER button ── */
-  .cv-transfer-btn{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:0.1em;border-radius:4px;padding:12px;cursor:pointer;transition:all 0.15s;background:rgba(36,113,163,0.08);color:var(--c2);border:1px solid rgba(36,113,163,0.3);width:min(320px,100%);margin-top:10px;display:none}
+  .cv-transfer-btn{margin-top:10px;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:0.12em;border:none;border-radius:6px;padding:15px 40px;cursor:pointer;transition:all 0.15s;width:min(320px,100%);display:none;color:#fff}
   .cv-transfer-btn.visible{display:block}
-  .cv-transfer-btn:hover{background:rgba(36,113,163,0.18);border-color:var(--c2);transform:translateY(-1px);box-shadow:0 4px 18px rgba(36,113,163,0.18)}
-  /* ── Transfer Modal ── */
+  .cv-transfer-btn:hover{filter:brightness(1.14);transform:translateY(-2px);box-shadow:0 10px 40px rgba(0,0,0,0.5)}
+  #counterView.c1 .cv-transfer-btn{background:var(--c1);color:#fff}
+  #counterView.c2 .cv-transfer-btn{background:var(--c2);color:#fff}
+  #counterView.c3 .cv-transfer-btn{background:var(--c3);color:#fff}
+  #counterView.c4 .cv-transfer-btn{background:var(--c4);color:#fff}
   .tr-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:300;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s;backdrop-filter:blur(4px)}
   .tr-backdrop.show{opacity:1;pointer-events:all}
   .tr-modal{background:#111118;border:1.5px solid var(--border);border-radius:6px;width:min(480px,95vw);max-height:85vh;box-shadow:0 16px 60px rgba(0,0,0,0.6);overflow:hidden;display:flex;flex-direction:column;transform:translateY(12px);transition:transform 0.2s}
