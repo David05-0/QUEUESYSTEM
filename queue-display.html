@@ -993,9 +993,17 @@ const COUNTER_LABELS_D = {1:'DMW Desk 2',2:'DMW Desk 3',3:'DMW Desk 4',4:'DMW De
 const COUNTER_COLORS_D = {1:'var(--c1)',2:'var(--c2)',3:'var(--c3)',4:'var(--c4)'};
 
 function openTransferModal(){
-  if(activeTicketId===null) return;
-  const t = sharedLog.find(x=>x.id===activeTicketId);
+  // Transfer the active ticket if serving, otherwise transfer the next queued ticket
+  const targetId = activeTicketId !== null
+    ? activeTicketId
+    : (myQueue()[0] ? myQueue()[0].id : null);
+
+  if(targetId===null) return;
+  const t = sharedLog.find(x=>x.id===targetId);
   if(!t) return;
+
+  // Store which ticket we're transferring
+  window._transferTargetId = targetId;
 
   // Populate ticket info
   document.getElementById('trTicketNum').textContent = String(t.id).padStart(3,'0');
@@ -1030,27 +1038,31 @@ function closeTransferModal(){
 window.closeTransferModal=closeTransferModal;
 
 function executeTransfer(toCounter){
-  if(activeTicketId===null) return;
-  const t = sharedLog.find(x=>x.id===activeTicketId);
+  const targetId = window._transferTargetId;
+  if(targetId==null) return;
+  const t = sharedLog.find(x=>x.id===targetId);
   if(!t) return;
 
   const destName = toCounter===0 ? 'Unassigned Pool' : COUNTER_LABELS_D[toCounter];
   const numLabel = `#${String(t.id).padStart(3,'0')}`;
 
-  // Move ticket to destination — keep hold flags if present, clear if going to pool
+  // Move ticket to destination — clear hold flags if going to pool
   t.counter = toCounter;
   if(toCounter===0){ t.compliance=false; t.paymentHold=false; }
 
-  // Clear lastCall so audience removes the number — receiving desk will announce when they call
-  if(window._lastCall && window._lastCall.ticketId===activeTicketId){
-    window._lastCall=null;
+  // If this was the active ticket, clear it so counter is free
+  if(activeTicketId===targetId){
+    if(window._lastCall && window._lastCall.ticketId===activeTicketId){
+      window._lastCall=null;
+    }
+    activeTicketId=null;
+    sessionStorage.removeItem('ssTicketId');
+    stopElapsedTimer();
+    clearDisplay();
   }
 
+  window._transferTargetId = null;
   showToast(`${numLabel} → ${destName}`);
-  activeTicketId=null;
-  sessionStorage.removeItem('ssTicketId');
-  stopElapsedTimer();
-  clearDisplay();
   closeTransferModal();
   saveShared();
   renderView();
@@ -1156,6 +1168,10 @@ function renderView(){
     document.getElementById('cvActionPanel').classList.remove('visible');
     document.getElementById('cvTransferBtn').classList.remove('visible');
     btn.disabled=q.length===0;
+    // Show transfer button below call whenever there are tickets to transfer
+    if(q.length>0){
+      document.getElementById('cvTransferBtn').classList.add('visible');
+    }
     btn.textContent=q.length>0
       ?`▶ CALL #${String(q[0].id).padStart(3,'0')}${q[0].priority==='priority'?' ⚡':''}`
       :'▶ CALL NEXT';
