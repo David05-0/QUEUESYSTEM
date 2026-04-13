@@ -41,7 +41,7 @@
   @media(max-width:820px){.layout{grid-template-columns:1fr}}
 
   /* ── ISSUE PANEL ── */
-  .issue-panel{background:var(--paper);border:1px solid var(--rule);border-radius:2px;box-shadow:0 2px 12px var(--shadow);overflow:hidden;position:sticky;top:20px}
+  .issue-panel{background:var(--paper);border:1px solid var(--rule);border-radius:2px;box-shadow:0 2px 12px var(--shadow);overflow:hidden}
   .panel-head{background:var(--ink);color:var(--bg);padding:12px 20px;display:flex;align-items:center;justify-content:space-between}
   .panel-head-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:0.1em}
   .panel-head-sub{font-size:8px;letter-spacing:0.18em;color:rgba(244,241,234,0.4);text-transform:uppercase}
@@ -305,7 +305,9 @@
 
   <div class="layout">
 
-    <!-- ── LEFT: Issue form ── -->
+    <!-- ── LEFT: Issue form + Counter Transfer ── -->
+    <div style="display:flex;flex-direction:column;gap:16px;position:sticky;top:20px;align-self:start">
+
     <div class="issue-panel">
       <div class="panel-head">
         <div class="panel-head-title">Issue Ticket</div>
@@ -369,6 +371,19 @@
       </div>
     </div>
 
+    <!-- ── Counter Status & Transfer (below Issue panel) ── -->
+    <div class="transfer-card">
+      <div class="transfer-head">
+        <div class="transfer-head-title">🖥 Counter Status &amp; Transfer</div>
+        <div class="transfer-head-sub">Mark absent · select tickets · reassign</div>
+      </div>
+      <div class="transfer-body">
+        <div class="counter-grid" id="counterStatusGrid"></div>
+      </div>
+    </div>
+
+    </div><!-- end left column -->
+
     <!-- ── RIGHT: Stats + Pool ── -->
     <div class="right-side">
 
@@ -405,17 +420,6 @@
             <div class="tally-col-lbl">Served</div>
           </div>
           <div id="tallyRows"></div>
-        </div>
-      </div>
-
-      <!-- ── Counter Absent / Transfer Panel ── -->
-      <div class="transfer-card">
-        <div class="transfer-head">
-          <div class="transfer-head-title">🖥 Counter Status &amp; Transfer</div>
-          <div class="transfer-head-sub">Mark absent · select tickets · reassign</div>
-        </div>
-        <div class="transfer-body">
-          <div class="counter-grid" id="counterStatusGrid"></div>
         </div>
       </div>
 
@@ -839,7 +843,6 @@ function renderCounterGrid(){
       <div class="cg-btns">
         <button class="cg-btn cg-btn-absent"  onclick="markAbsent(${id})">⚠ Mark Absent</button>
         <button class="cg-btn cg-btn-restore" onclick="restoreCounter(${id})">✓ Restore</button>
-        <button class="cg-btn cg-btn-transfer" onclick="openStm(${id})">☑ Transfer Tickets…</button>
       </div>`;
     grid.appendChild(item);
   });
