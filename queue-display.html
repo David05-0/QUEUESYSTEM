@@ -132,6 +132,37 @@
   /* ── UNSERVED button ── */
   .cv-unserved-btn{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.1em;border-radius:4px;padding:11px;cursor:pointer;transition:all 0.15s;background:rgba(125,60,152,0.08);color:var(--c4);border:1px solid rgba(125,60,152,0.3);width:100%}
   .cv-unserved-btn:hover{background:rgba(125,60,152,0.18);border-color:var(--c4);transform:translateY(-1px);box-shadow:0 4px 18px rgba(125,60,152,0.18)}
+  /* ── TRANSFER button ── */
+  .cv-transfer-btn{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:0.1em;border-radius:4px;padding:12px;cursor:pointer;transition:all 0.15s;background:rgba(36,113,163,0.08);color:var(--c2);border:1px solid rgba(36,113,163,0.3);width:min(320px,100%);margin-top:10px;display:none}
+  .cv-transfer-btn.visible{display:block}
+  .cv-transfer-btn:hover{background:rgba(36,113,163,0.18);border-color:var(--c2);transform:translateY(-1px);box-shadow:0 4px 18px rgba(36,113,163,0.18)}
+  /* ── Transfer Modal ── */
+  .tr-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:300;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s;backdrop-filter:blur(4px)}
+  .tr-backdrop.show{opacity:1;pointer-events:all}
+  .tr-modal{background:#111118;border:1.5px solid var(--border);border-radius:6px;width:min(480px,95vw);max-height:85vh;box-shadow:0 16px 60px rgba(0,0,0,0.6);overflow:hidden;display:flex;flex-direction:column;transform:translateY(12px);transition:transform 0.2s}
+  .tr-backdrop.show .tr-modal{transform:translateY(0)}
+  .tr-hdr{background:rgba(255,255,255,0.04);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0}
+  .tr-hdr-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:0.1em;color:var(--c2)}
+  .tr-hdr-sub{font-size:8px;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);margin-top:2px}
+  .tr-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:2px 8px;transition:color 0.13s}
+  .tr-close:hover{color:var(--text)}
+  .tr-ticket-info{padding:14px 18px;border-bottom:1px solid var(--border);background:rgba(36,113,163,0.05);flex-shrink:0}
+  .tr-ticket-num{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:0.04em;color:var(--c2);line-height:1}
+  .tr-ticket-svc{font-size:10px;letter-spacing:0.08em;color:var(--muted);margin-top:2px}
+  .tr-ticket-cust{font-size:14px;letter-spacing:0.04em;color:var(--text);margin-top:2px}
+  .tr-dest-section{padding:16px 18px;flex-shrink:0}
+  .tr-dest-lbl{font-size:8px;letter-spacing:0.24em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+  .tr-desk-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .tr-desk-btn{padding:14px 12px;border-radius:4px;border:1.5px solid var(--border);background:var(--panel);cursor:pointer;transition:all 0.15s;display:flex;flex-direction:column;gap:4px;align-items:flex-start;position:relative;overflow:hidden}
+  .tr-desk-btn:hover:not(:disabled){border-color:var(--c2);background:rgba(36,113,163,0.08);transform:translateY(-1px)}
+  .tr-desk-btn:disabled{opacity:0.35;cursor:not-allowed}
+  .tr-desk-btn.absent-desk{border-color:rgba(255,95,95,0.3);background:rgba(255,95,95,0.04)}
+  .tr-desk-num{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:0.06em;line-height:1}
+  .tr-desk-name{font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted)}
+  .tr-desk-count{font-size:7px;letter-spacing:0.1em;color:var(--muted);margin-top:2px}
+  .tr-desk-absent-badge{font-size:7px;letter-spacing:0.14em;text-transform:uppercase;color:var(--red);border:1px solid rgba(255,95,95,0.35);background:rgba(255,95,95,0.08);padding:2px 7px;border-radius:20px;margin-top:2px;display:inline-flex;align-items:center;gap:3px}
+  .tr-pool-btn{width:100%;margin-top:8px;padding:11px;border-radius:4px;border:1.5px dashed var(--border);background:transparent;color:var(--muted);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;transition:all 0.15s}
+  .tr-pool-btn:hover{border-color:var(--muted);color:var(--text)}
   /* ── Unserved log ── */
   .unserved-list{display:flex;flex-direction:column;gap:5px;max-height:140px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
   .unserved-item{display:flex;flex-direction:column;padding:7px 10px 7px 12px;background:var(--panel);border:1px solid var(--border);border-left:2px solid var(--c4);border-radius:3px;animation:slideIn 0.2s ease;gap:2px}
@@ -359,6 +390,9 @@
       <!-- Call next button (shown when idle / no active ticket) -->
       <button class="cv-call-btn" id="cvCallBtn" onclick="callNext()" disabled>▶ CALL NEXT</button>
 
+      <!-- Transfer ticket button (shown when active ticket is being served) -->
+      <button class="cv-transfer-btn" id="cvTransferBtn" onclick="openTransferModal()">↔ TRANSFER TO ANOTHER DESK</button>
+
       <!-- Action panel (shown while a ticket is actively being served) -->
       <div class="cv-action-panel" id="cvActionPanel">
         <div class="cv-action-lbl">What's next for this client?</div>
@@ -450,6 +484,29 @@
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- ── Transfer Modal ── -->
+<div class="tr-backdrop" id="trBackdrop">
+  <div class="tr-modal">
+    <div class="tr-hdr">
+      <div>
+        <div class="tr-hdr-title">↔ Transfer Ticket</div>
+        <div class="tr-hdr-sub">Select destination desk — client will be called by receiving counter</div>
+      </div>
+      <button class="tr-close" onclick="closeTransferModal()">✕</button>
+    </div>
+    <div class="tr-ticket-info">
+      <div class="tr-ticket-num" id="trTicketNum">—</div>
+      <div class="tr-ticket-svc" id="trTicketSvc"></div>
+      <div class="tr-ticket-cust" id="trTicketCust"></div>
+    </div>
+    <div class="tr-dest-section">
+      <div class="tr-dest-lbl">Transfer to which desk?</div>
+      <div class="tr-desk-grid" id="trDeskGrid"></div>
+      <button class="tr-pool-btn" onclick="executeTransfer(0)">↩ Return to Unassigned Pool</button>
+    </div>
   </div>
 </div>
 
@@ -695,6 +752,7 @@ function clearDisplay(){
   document.getElementById('cvWave').classList.remove('active');
   document.getElementById('cvCallBtn').style.display='';
   document.getElementById('cvActionPanel').classList.remove('visible');
+  document.getElementById('cvTransferBtn').classList.remove('visible');
   document.getElementById('cvElapsed').classList.remove('active');
 }
 
@@ -927,6 +985,80 @@ function markUnserved(){
 }
 window.markUnserved=markUnserved;
 
+// ── Transfer Modal ──
+const COUNTER_LABELS_D = {1:'DMW Desk 2',2:'DMW Desk 3',3:'DMW Desk 4',4:'DMW Desk 5'};
+const COUNTER_COLORS_D = {1:'var(--c1)',2:'var(--c2)',3:'var(--c3)',4:'var(--c4)'};
+
+function openTransferModal(){
+  if(activeTicketId===null) return;
+  const t = sharedLog.find(x=>x.id===activeTicketId);
+  if(!t) return;
+
+  // Populate ticket info
+  document.getElementById('trTicketNum').textContent = String(t.id).padStart(3,'0');
+  document.getElementById('trTicketSvc').textContent = t.service||'';
+  document.getElementById('trTicketCust').textContent = t.customer||'';
+
+  // Build desk grid — show all other desks, mark absent ones
+  const grid = document.getElementById('trDeskGrid');
+  grid.innerHTML = '';
+  [1,2,3,4].forEach(id=>{
+    if(id===activeCounter) return; // skip own desk
+    const absent  = sharedAbsentCounters.includes(id);
+    const inQueue = sharedLog.filter(x=>!x.served&&x.counter===id&&!x.compliance&&!x.paymentHold).length;
+    const btn = document.createElement('button');
+    btn.className = `tr-desk-btn${absent?' absent-desk':''}`;
+    btn.onclick   = ()=>executeTransfer(id);
+    btn.innerHTML = `
+      <div class="tr-desk-num" style="color:${COUNTER_COLORS_D[id]}">${id+1}</div>
+      <div class="tr-desk-name">${COUNTER_LABELS_D[id]}</div>
+      <div class="tr-desk-count">${inQueue} in queue</div>
+      ${absent?'<span class="tr-desk-absent-badge">⚠ Absent</span>':''}`;
+    grid.appendChild(btn);
+  });
+
+  document.getElementById('trBackdrop').classList.add('show');
+}
+window.openTransferModal=openTransferModal;
+
+function closeTransferModal(){
+  document.getElementById('trBackdrop').classList.remove('show');
+}
+window.closeTransferModal=closeTransferModal;
+
+function executeTransfer(toCounter){
+  if(activeTicketId===null) return;
+  const t = sharedLog.find(x=>x.id===activeTicketId);
+  if(!t) return;
+
+  const destName = toCounter===0 ? 'Unassigned Pool' : COUNTER_LABELS_D[toCounter];
+  const numLabel = `#${String(t.id).padStart(3,'0')}`;
+
+  // Move ticket to destination — keep hold flags if present, clear if going to pool
+  t.counter = toCounter;
+  if(toCounter===0){ t.compliance=false; t.paymentHold=false; }
+
+  // Clear lastCall so audience removes the number — receiving desk will announce when they call
+  if(window._lastCall && window._lastCall.ticketId===activeTicketId){
+    window._lastCall=null;
+  }
+
+  showToast(`${numLabel} → ${destName}`);
+  activeTicketId=null;
+  sessionStorage.removeItem('ssTicketId');
+  stopElapsedTimer();
+  clearDisplay();
+  closeTransferModal();
+  saveShared();
+  renderView();
+}
+window.executeTransfer=executeTransfer;
+
+// Close transfer modal on backdrop click
+document.getElementById('trBackdrop').addEventListener('click',function(e){
+  if(e.target===this) closeTransferModal();
+});
+
 // ── Drag: queue item → hold zone ──
 window.startQDrag=function(e,id){
   dragId=id; e.dataTransfer.effectAllowed='move';
@@ -1009,6 +1141,7 @@ function renderView(){
       ?'<div class="cv-prio-tag">⚡ Priority</div>':'';
     document.getElementById('cvCallBtn').style.display='none';
     document.getElementById('cvActionPanel').classList.add('visible');
+    document.getElementById('cvTransferBtn').classList.add('visible');
     document.getElementById('cvPill').textContent='Serving';
     document.getElementById('cvPill').className='cv-pill serving';
     // Keep elapsed timer running (start if not already)
@@ -1018,6 +1151,7 @@ function renderView(){
     const btn=document.getElementById('cvCallBtn');
     btn.style.display='';
     document.getElementById('cvActionPanel').classList.remove('visible');
+    document.getElementById('cvTransferBtn').classList.remove('visible');
     btn.disabled=q.length===0;
     btn.textContent=q.length>0
       ?`▶ CALL #${String(q[0].id).padStart(3,'0')}${q[0].priority==='priority'?' ⚡':''}`
