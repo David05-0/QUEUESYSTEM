@@ -300,8 +300,12 @@ function buildCounters(){
 }
 
 function getQueues(){
+  // Exclude tickets currently being served (shown as cd.current) from the Next: row
+  const currentIds=new Set(counterDisplay.map(cd=>cd.current).filter(x=>x!==null));
   const q={1:[],2:[],3:[],4:[]};
-  sharedLog.filter(t=>!t.served&&!t.compliance&&t.counter>=1).forEach(t=>{if(q[t.counter])q[t.counter].push(t);});
+  sharedLog
+    .filter(t=>!t.served&&!t.compliance&&t.counter>=1&&!currentIds.has(t.id))
+    .forEach(t=>{if(q[t.counter])q[t.counter].push(t);});
   [1,2,3,4].forEach(c=>q[c].sort((a,b)=>a.priority===b.priority?a.id-b.id:a.priority==='priority'?-1:1));
   return q;
 }
@@ -355,12 +359,13 @@ onValue(stateRef,snap=>{
 
     // If this counter was already announcing a different number, cancel it
     if(cd.current!==null && cd.current!==lc.ticketId){
-      // Remove old number from announce queue
+      // Stop speech immediately and wipe queue for this counter
+      window.speechSynthesis.cancel();
       announceQueue=announceQueue.filter(q=>q.counter!==lc.counter);
-      // Hide call flash if it was showing the old number for this counter
-      if(flashTimer) clearTimeout(flashTimer);
+      if(flashTimer){ clearTimeout(flashTimer); flashTimer=null; }
       document.getElementById('callFlash').classList.remove('show');
       isAnnouncing=false;
+      lockedCounter=null;
     }
 
     cd.current=lc.ticketId; cd.service=lc.service; cd.customer=lc.customer;
@@ -383,16 +388,24 @@ onValue(stateRef,snap=>{
   // ── Clear counter panel when lastCall is nulled (hold, not-available, or admin action) ──
   if(!lc && lastCallTs!==null){
     lastCallTs=null;
-    // Clear any counter whose displayed ticket is now on hold OR back in pool (counter===0)
     [1,2,3,4].forEach(counterId=>{
       const cd=counterDisplay[counterId-1];
       if(cd.current===null) return;
       const ticket=sharedLog.find(t=>t.id===cd.current);
       // Clear if: ticket gone, served, moved to hold, or returned to pool (counter===0)
       if(!ticket || ticket.served || ticket.compliance || ticket.paymentHold || ticket.counter===0){
+        const clearedId=cd.current;
         cd.current=null; cd.service=null; cd.customer=null;
         cd.priority=null; cd.time=null; cd.calledAt=0;
-        announceQueue=announceQueue.filter(q=>q.counter!==counterId);
+        // Only remove this specific ticket — don't wipe other queued calls for this counter
+        announceQueue=announceQueue.filter(q=>q.id!==clearedId);
+        // Stop speech if it's announcing the cleared ticket
+        if(isAnnouncing && lockedCounter===counterId){
+          window.speechSynthesis.cancel();
+          isAnnouncing=false; lockedCounter=null;
+          if(flashTimer){ clearTimeout(flashTimer); flashTimer=null; }
+          document.getElementById('callFlash').classList.remove('show');
+        }
       }
     });
   }
@@ -459,13 +472,10 @@ function nowTime(){
 // ── Unified announcement queue ──
 // Each item is announced in full (chime → flash visible → speak → hide → pause) before the next.
 // Sorted by calledAt so the counter that called first is always announced first.
-let announceQueue = [];
-let isAnnouncing  = false;
-let lockedCounter = null;   // counter currently holding the mic
-const COOLDOWN_MS = 3000;   // silence after each announcement before next starts
+const COOLDOWN_MS = 600;   // short gap between different-counter announcements
 
 function triggerCallFlash(ticket){
-  // If a different counter is currently announcing, queue this one and wait
+  // Different counter announcing — queue and wait
   if(isAnnouncing && lockedCounter !== ticket.counter){
     if(!announceQueue.find(q=>q.counter===ticket.counter && q.id===ticket.id)){
       announceQueue.push({...ticket, calledAt: ticket.calledAt||Date.now()});
@@ -473,11 +483,22 @@ function triggerCallFlash(ticket){
     }
     return;
   }
-  // Same counter re-calling or nobody announcing — start immediately
-  if(!announceQueue.find(q=>q.counter===ticket.counter && q.id===ticket.id)){
-    announceQueue.push({...ticket, calledAt: ticket.calledAt||Date.now()});
-    announceQueue.sort((a,b)=>a.calledAt-b.calledAt);
+
+  // Same counter re-calling (or nobody announcing):
+  // Cancel any in-progress speech for this counter and restart immediately
+  if(isAnnouncing && lockedCounter===ticket.counter){
+    window.speechSynthesis.cancel();
+    isAnnouncing=false;
+    lockedCounter=null;
+    if(flashTimer){ clearTimeout(flashTimer); flashTimer=null; }
+    document.getElementById('callFlash').classList.remove('show');
   }
+
+  // Replace any stale entry for this counter with the latest ticket
+  announceQueue=announceQueue.filter(q=>q.counter!==ticket.counter);
+  announceQueue.push({...ticket, calledAt: ticket.calledAt||Date.now()});
+  announceQueue.sort((a,b)=>a.calledAt-b.calledAt);
+
   if(!isAnnouncing) processAnnounceQueue();
 }
 
@@ -520,9 +541,13 @@ function runAnnouncement(ticket){
   }
   document.getElementById('cfPriority').style.display=ticket.priority==='priority'?'inline-flex':'none';
 
-  // ── Show flash ──
-  if(flashTimer) clearTimeout(flashTimer);
+  // ── Show flash — with safety auto-hide so it can never get permanently stuck ──
+  if(flashTimer){ clearTimeout(flashTimer); flashTimer=null; }
   document.getElementById('callFlash').classList.add('show');
+  flashTimer=setTimeout(()=>{
+    document.getElementById('callFlash').classList.remove('show');
+    flashTimer=null;
+  }, 12000); // max 12s visible regardless of speech state
 
   // ── Counter panel effects ──
   const numEl=document.getElementById(`cpnum-${ticket.counter}`);
@@ -534,14 +559,15 @@ function runAnnouncement(ticket){
   playChime();
   setTimeout(()=>{
     doSpeak(ticket, ()=>{
-      // Speech done — brief pause, then hide flash, then next item
+      // Speech done — clear safety timer, hide flash, then next item
+      if(flashTimer){ clearTimeout(flashTimer); flashTimer=null; }
       setTimeout(()=>{
         document.getElementById('callFlash').classList.remove('show');
         // Gap between announcements: cooldown gives other counters breathing room
         setTimeout(()=>processAnnounceQueue(), announceQueue.length>0 ? COOLDOWN_MS : 0);
       }, 400);
     });
-  }, 350); // slight delay after chime before voice starts
+  }, 350);
 }
 
 function playChime(){
@@ -668,7 +694,7 @@ function renderCounters(){
 
 function renderStats(){
   document.getElementById('sbWaiting').textContent=sharedLog.filter(t=>!t.served&&!t.compliance&&t.counter>=1).length;
-  document.getElementById('sbServed').textContent=sharedLog.filter(t=>t.served).length;
+  document.getElementById('sbServed').textContent=sharedLog.filter(t=>t.served&&!t.unserved).length;
 }
 
 function renderAll(){renderCounters();renderStats();}
