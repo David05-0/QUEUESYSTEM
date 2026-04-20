@@ -568,17 +568,35 @@ function updateClock(){
 setInterval(updateClock,1000); updateClock();
 
 // ── Firebase ──
+// Track lastCall locally so admin never accidentally wipes it
+let _lastCallCache = null;
+
 function saveState(isReset=false){
+  // Determine lastCall value for this write
+  let lastCallVal;
+  if(window._clearLastCallId != null){
+    // Admin explicitly clearing a call (mark served / hold)
+    lastCallVal = null;
+    _lastCallCache = null;
+    window._clearLastCallId = null;
+  } else {
+    // Preserve whatever lastCall is currently in Firebase
+    lastCallVal = _lastCallCache;
+  }
+
   const payload = {
     ticketCounter, log,
     lastUpdate: Date.now(),
     resetFlag: isReset ? Date.now() : (window._lastResetFlag||null),
-    absentCounters: [...absentCounters]   // sync absent status to all screens
+    absentCounters: [...absentCounters],
+    lastCall: lastCallVal !== undefined ? lastCallVal : null
   };
-  // If admin just marked a ticket served, clear lastCall atomically in the same write
-  if(window._clearLastCallId != null){
+
+  if(isReset){
     payload.lastCall = null;
+    _lastCallCache = null;
   }
+
   stateRef.set(payload).catch(()=>setFbStatus('error'));
 }
 
@@ -592,6 +610,8 @@ stateRef.on('value', snap=>{
   window._lastResetFlag = data.resetFlag||null;
   ticketCounter = data.ticketCounter||0;
   log = data.log||[];
+  // Cache lastCall so saveState can preserve it
+  _lastCallCache = data.lastCall || null;
   // Restore absent counters from Firebase (persists across page reloads)
   absentCounters = new Set((data.absentCounters||[]).map(Number));
   renderAll();
@@ -753,7 +773,6 @@ This cannot be undone and the client will not be called again.`)) return;
   // Single atomic write — clears lastCall if it pointed to this ticket
   window._clearLastCallId = ticketId;
   saveState();
-  window._clearLastCallId = null;
   showToast(`#${String(ticketId).padStart(3,'0')} marked Served`);
 }
 window.adminMarkServed = adminMarkServed;
