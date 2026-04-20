@@ -325,12 +325,7 @@ onValue(stateRef,snap=>{
     sharedLog=data.log||[];
     absentCounters=new Set((data.absentCounters||[]).map(Number));
     const lc=data.lastCall||null;
-    if(lc && lc.ts){
-      const cd=counterDisplay[lc.counter-1];
-      cd.current=lc.ticketId; cd.service=lc.service; cd.customer=lc.customer;
-      cd.nickname=lc.nickname||null; cd.priority=lc.priority; cd.calledAt=lc.ts; cd.time='';
-      lastCallTs=lc.ts;
-    }
+    if(lc && lc.ts) lastCallTs=lc.ts;
     renderAll(); return;
   }
 
