@@ -349,16 +349,18 @@ onValue(stateRef,snap=>{
       lastCallTs=lc.ts;
     }
 
-    // Also restore any other counters that have tickets actively assigned
-    // (covers cases where lastCall points to only one counter but others are mid-serve)
-    sharedLog.forEach(t=>{
-      if(t.served||t.compliance||t.paymentHold||!t.counter||t.counter<1) return;
+    // Also restore any other counters that have tickets actively being served.
+    // A ticket is "being served" if it has a calledAt stamp (set by desk when Call is pressed).
+    // Sort descending so the most recently called ticket wins per counter.
+    const calledTickets=sharedLog
+      .filter(t=>!t.served&&!t.compliance&&!t.paymentHold&&t.counter>=1&&t.calledAt)
+      .sort((a,b)=>(b.calledAt||0)-(a.calledAt||0));
+    calledTickets.forEach(t=>{
       const cd=counterDisplay[t.counter-1];
-      // Only set if not already populated by lastCall
       if(cd.current===null){
         cd.current=t.id; cd.service=t.service||null; cd.customer=t.customer||null;
         cd.nickname=t.nickname||null; cd.priority=t.priority||'normal';
-        cd.time=nowTime(); cd.calledAt=t.calledAt||0;
+        cd.time=nowTime(); cd.calledAt=t.calledAt;
       }
     });
 
