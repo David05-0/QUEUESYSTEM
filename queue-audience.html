@@ -239,6 +239,9 @@ let flashTimer = null;
 let audioUnlocked = false;
 let audioCtx = null;
 let counterDisplay = [1,2,3,4].map(id=>({id,current:null,service:null,customer:null,priority:null,time:null,calledAt:0}));
+let announceQueue = [];
+let isAnnouncing = false;
+let lockedCounter = null;
 
 function startDisplay() {
   audioUnlocked = true;
