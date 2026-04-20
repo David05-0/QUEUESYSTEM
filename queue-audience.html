@@ -242,6 +242,8 @@ let counterDisplay = [1,2,3,4].map(id=>({id,current:null,service:null,customer:n
 let announceQueue = [];
 let isAnnouncing = false;
 let lockedCounter = null;
+// Per-counter persistent serving record — survives Firebase overwrites by other desks
+const perCounterLastCall = {};
 
 function startDisplay() {
   audioUnlocked = true;
@@ -309,21 +311,11 @@ function buildCounters(){
 }
 
 function getQueues(){
-  // For each counter, find the "now serving" ticket from sharedLog directly
-  // and exclude it from the Next: row so it doesn't appear twice.
-  const currentIds=new Set();
-  [1,2,3,4].forEach(counterId=>{
-    const candidates=sharedLog.filter(t=>
-      t.counter===counterId && !t.served && !t.compliance && !t.paymentHold
-    );
-    if(candidates.length){
-      candidates.sort((a,b)=>(b.calledAt||b.id)-(a.calledAt||a.id));
-      currentIds.add(candidates[0].id);
-    }
-  });
-  // Also include counterDisplay.current in case it's ahead of sharedLog
-  counterDisplay.forEach(cd=>{ if(cd.current!==null) currentIds.add(cd.current); });
-
+  // Exclude tickets currently being served from the Next: row.
+  // Use both counterDisplay AND perCounterLastCall as sources so the serving
+  // ticket is always excluded even when counterDisplay temporarily lags.
+  const currentIds=new Set(counterDisplay.map(cd=>cd.current).filter(x=>x!==null));
+  Object.values(perCounterLastCall).forEach(lc=>{ if(lc.ticketId) currentIds.add(lc.ticketId); });
   const q={1:[],2:[],3:[],4:[]};
   sharedLog
     .filter(t=>!t.served&&!t.compliance&&!t.paymentHold&&t.counter>=1&&!currentIds.has(t.id))
@@ -351,7 +343,19 @@ onValue(stateRef,snap=>{
       const age = Date.now() - lc.ts;
       const ticket = (data.log||[]).find(t=>t.id===lc.ticketId);
       const isStale = age > 30000 || !ticket || ticket.served || ticket.compliance || ticket.paymentHold;
-      if(!isStale) lastCallTs=lc.ts;
+      if(!isStale){
+        lastCallTs=lc.ts;
+        // Populate perCounterLastCall so the panel shows the right ticket on load
+        perCounterLastCall[lc.counter]={
+          ticketId:lc.ticketId, counter:lc.counter,
+          service:lc.service, customer:lc.customer,
+          nickname:lc.nickname||null, priority:lc.priority, ts:lc.ts
+        };
+        // Sync counterDisplay immediately
+        const cd=counterDisplay[lc.counter-1];
+        cd.current=lc.ticketId; cd.service=lc.service; cd.customer=lc.customer;
+        cd.nickname=lc.nickname||null; cd.priority=lc.priority; cd.calledAt=lc.ts;
+      }
       // If stale: leave lastCallTs=null so a genuine new call will still be detected
     }
     renderAll(); return;
@@ -365,6 +369,7 @@ onValue(stateRef,snap=>{
     counterDisplay=[1,2,3,4].map(id=>({id,current:null,service:null,customer:null,priority:null,time:null,calledAt:0}));
     if(flashTimer) clearTimeout(flashTimer);
     announceQueue=[]; isAnnouncing=false; lockedCounter=null;
+    [1,2,3,4].forEach(id=>delete perCounterLastCall[id]);
     document.getElementById('callFlash').classList.remove('show');
     [1,2,3,4].forEach(id=>{const w=document.getElementById(`cpwave-${id}`);if(w)w.classList.remove('active');});
     renderAll(); return;
@@ -399,6 +404,15 @@ onValue(stateRef,snap=>{
 
     cd.current=lc.ticketId; cd.service=lc.service; cd.customer=lc.customer;
     cd.nickname=lc.nickname||null; cd.priority=lc.priority; cd.time=nowTime(); cd.calledAt=lc.ts;
+
+    // ── Save to perCounterLastCall so it persists even when Firebase lastCall
+    //    gets overwritten by a different desk's saveShared() call ──
+    perCounterLastCall[lc.counter] = {
+      ticketId: lc.ticketId, counter: lc.counter,
+      service: lc.service, customer: lc.customer,
+      nickname: lc.nickname||null, priority: lc.priority, ts: lc.ts
+    };
+
     activityLog.unshift({
       num:lc.ticketId, counter:lc.counter, service:lc.service,
       customer:lc.customer, priority:lc.priority, time:nowTime()
@@ -411,6 +425,30 @@ onValue(stateRef,snap=>{
       priority:lc.priority, calledAt:lc.ts
     });
   }
+
+  // ── On EVERY snapshot: sync counterDisplay from perCounterLastCall,
+  //    then clear any counters whose ticket is now served/held/gone ──
+  [1,2,3,4].forEach(counterId=>{
+    const cd = counterDisplay[counterId-1];
+    const saved = perCounterLastCall[counterId];
+    if(!saved) return;
+    // Check if the saved ticket is still active in sharedLog
+    const t = sharedLog.find(x=>x.id===saved.ticketId);
+    if(!t || t.served || t.compliance || t.paymentHold){
+      // Ticket is gone/served — clear this counter
+      delete perCounterLastCall[counterId];
+      cd.current=null; cd.service=null; cd.customer=null;
+      cd.nickname=null; cd.priority=null; cd.time=null; cd.calledAt=0;
+    } else {
+      // Ticket still active — ensure counterDisplay is in sync
+      cd.current   = saved.ticketId;
+      cd.service   = saved.service   || null;
+      cd.customer  = saved.customer  || null;
+      cd.nickname  = saved.nickname  || null;
+      cd.priority  = saved.priority  || null;
+      cd.calledAt  = saved.ts;
+    }
+  });
 
   // lastCallTs already updated at top of the if-block above
 
@@ -425,7 +463,8 @@ onValue(stateRef,snap=>{
       if(!ticket || ticket.served || ticket.compliance || ticket.paymentHold || ticket.counter===0){
         const clearedId=cd.current;
         cd.current=null; cd.service=null; cd.customer=null;
-        cd.priority=null; cd.time=null; cd.calledAt=0;
+        cd.nickname=null; cd.priority=null; cd.time=null; cd.calledAt=0;
+        delete perCounterLastCall[counterId];
         // Only remove this specific ticket — don't wipe other queued calls for this counter
         announceQueue=announceQueue.filter(q=>q.id!==clearedId);
         // Stop speech if it's announcing the cleared ticket
@@ -445,7 +484,8 @@ onValue(stateRef,snap=>{
   newlyServed.forEach(t=>{
     const cd=counterDisplay[t.counter-1];
     if(cd.current===t.id){
-      cd.current=null; cd.service=null; cd.customer=null; cd.priority=null; cd.time=null; cd.calledAt=0;
+      cd.current=null; cd.service=null; cd.customer=null; cd.nickname=null; cd.priority=null; cd.time=null; cd.calledAt=0;
+      delete perCounterLastCall[t.counter];
     }
     // Remove from announce queue too (no point announcing a served ticket)
     announceQueue=announceQueue.filter(q=>q.id!==t.id);
@@ -483,7 +523,8 @@ onValue(stateRef,snap=>{
     const ticketInLog=sharedLog.find(t=>t.id===cd.current);
     // If ticket no longer exists, was served, or now belongs to a different counter → clear panel
     if(!ticketInLog || ticketInLog.served || ticketInLog.counter!==counterId){
-      cd.current=null; cd.service=null; cd.customer=null; cd.priority=null; cd.time=null; cd.calledAt=0;
+      cd.current=null; cd.service=null; cd.customer=null; cd.nickname=null; cd.priority=null; cd.time=null; cd.calledAt=0;
+      delete perCounterLastCall[counterId];
       announceQueue=announceQueue.filter(q=>q.counter!==counterId);
     }
   });
@@ -700,22 +741,6 @@ setInterval(()=>{
   }
 }, 5000);
 
-function getServedTicketForCounter(counterId){
-  // Find the most-recently-called (highest calledAt / id) unserved ticket
-  // assigned to this counter that is NOT in a hold state.
-  // This is the ground-truth "now serving" derived purely from sharedLog.
-  const candidates = sharedLog.filter(t =>
-    t.counter === counterId &&
-    !t.served &&
-    !t.compliance &&
-    !t.paymentHold
-  );
-  if(!candidates.length) return null;
-  // Prefer calledAt timestamp if present, otherwise fall back to ticket id
-  candidates.sort((a,b)=> (b.calledAt||b.id) - (a.calledAt||a.id));
-  return candidates[0];
-}
-
 function renderCounters(){
   const queues=getQueues();
   [1,2,3,4].forEach(id=>{
@@ -736,27 +761,6 @@ function renderCounters(){
       document.getElementById(`cpqueue-${id}`).innerHTML=`<span class="cp-queue-lbl">Next:</span><span style="font-size:9px;color:var(--muted)">—</span>`;
     } else {
       panel.classList.remove('absent');
-
-      // ── Ground-truth: derive serving ticket from sharedLog ──
-      // counterDisplay is updated by lastCall events, but may lag if Firebase
-      // fires without a lastCall change. sharedLog is always fresh from Firebase.
-      const logTicket = getServedTicketForCounter(id);
-
-      // Sync counterDisplay from sharedLog so it stays accurate
-      if(logTicket){
-        cd.current   = logTicket.id;
-        cd.service   = logTicket.service   || cd.service   || null;
-        cd.customer  = logTicket.customer  || cd.customer  || null;
-        cd.nickname  = logTicket.nickname  || cd.nickname  || null;
-        cd.priority  = logTicket.priority  || cd.priority  || null;
-      } else {
-        // No active ticket for this counter in sharedLog — clear if not already
-        if(cd.current !== null){
-          cd.current=null; cd.service=null; cd.customer=null;
-          cd.nickname=null; cd.priority=null; cd.time=null; cd.calledAt=0;
-        }
-      }
-
       if(cd.current!==null){
         numEl.textContent=String(cd.current).padStart(3,'0');
         numEl.className='cp-number has-num';
@@ -768,28 +772,17 @@ function renderCounters(){
         statusEl.textContent=waiting.length>0?'Ready':'Idle'; statusEl.className='cp-status-pill';
       }
       document.getElementById(`cpsvc-${id}`).textContent=cd.service||'';
-      // Show nickname if available, else full customer name
-      const displayName = cd.nickname && cd.nickname.trim() ? cd.nickname : (cd.customer||'');
-      document.getElementById(`cpcust-${id}`).textContent=displayName;
-
-      // ── Next: row — shows upcoming tickets in queue order ──
+      document.getElementById(`cpcust-${id}`).textContent=(cd.nickname&&cd.nickname.trim())?cd.nickname:(cd.customer||'');
       const queueEl=document.getElementById(`cpqueue-${id}`);
       queueEl.innerHTML=`<span class="cp-queue-lbl">Next:</span>`;
-      if(!waiting.length){
-        queueEl.innerHTML+='<span style="font-size:9px;color:var(--muted)">—</span>';
-      } else {
+      if(!waiting.length){queueEl.innerHTML+='<span style="font-size:9px;color:var(--muted)">—</span>';}
+      else{
         waiting.slice(0,4).forEach((t,i)=>{
-          const b=document.createElement('span');
-          b.className='q-badge'+(i===0?' up-next':'');
+          const b=document.createElement('span');b.className='q-badge'+(i===0?' up-next':'');
           b.textContent=String(t.id).padStart(3,'0')+(t.priority==='priority'?' ⚡':'');
           queueEl.appendChild(b);
         });
-        if(waiting.length>4){
-          const m=document.createElement('span');
-          m.style.cssText='font-size:9px;color:var(--muted)';
-          m.textContent=`+${waiting.length-4}`;
-          queueEl.appendChild(m);
-        }
+        if(waiting.length>4){const m=document.createElement('span');m.style.cssText='font-size:9px;color:var(--muted)';m.textContent=`+${waiting.length-4}`;queueEl.appendChild(m);}
       }
     }
   });
