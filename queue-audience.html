@@ -500,6 +500,17 @@ onValue(stateRef,snap=>{
 
   window._prevLog=[...sharedLog];
 
+  // ── Always sync counterDisplay from log for any counter still null ──
+  // Catches page loads where calls were made before the audience screen opened.
+  [1,2,3,4].forEach(function(counterId){
+    var cd=counterDisplay[counterId-1];
+    if(cd.current!==null) return;
+    var candidates=sharedLog.filter(function(t){ return !t.served&&!t.compliance&&!t.paymentHold&&t.counter===counterId&&t.calledAt; });
+    candidates.sort(function(a,b){ return (b.calledAt||0)-(a.calledAt||0); });
+    var best=candidates[0];
+    if(best){ cd.current=best.id; cd.service=best.service||null; cd.customer=best.customer||null; cd.nickname=best.nickname||null; cd.priority=best.priority||"normal"; cd.time=nowTime(); cd.calledAt=best.calledAt; }
+  });
+
   renderAll();
 },()=>{document.getElementById('fbLiveIndicator').style.opacity='0.3';});
 
