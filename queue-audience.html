@@ -324,8 +324,17 @@ onValue(stateRef,snap=>{
     lastResetFlag=newReset;
     sharedLog=data.log||[];
     absentCounters=new Set((data.absentCounters||[]).map(Number));
+    // Adopt lastCallTs so we don't re-announce a call that already happened.
+    // But only if the call is recent (< 30s) AND the ticket isn't already served —
+    // otherwise treat it as stale so it never shows on this fresh page load.
     const lc=data.lastCall||null;
-    if(lc && lc.ts) lastCallTs=lc.ts;
+    if(lc && lc.ts){
+      const age = Date.now() - lc.ts;
+      const ticket = (data.log||[]).find(t=>t.id===lc.ticketId);
+      const isStale = age > 30000 || !ticket || ticket.served || ticket.compliance || ticket.paymentHold;
+      if(!isStale) lastCallTs=lc.ts;
+      // If stale: leave lastCallTs=null so a genuine new call will still be detected
+    }
     renderAll(); return;
   }
 
@@ -349,7 +358,10 @@ onValue(stateRef,snap=>{
 
   // ── React to a number being CALLED (lastCall.ts changes) ──
   const lc=data.lastCall||null;
-  if(lc && lc.ts && lc.ts!==lastCallTs){
+  // Validate: ignore lastCall if the ticket is already served/held/gone
+  const lcTicket = lc ? sharedLog.find(t=>t.id===lc.ticketId) : null;
+  const lcIsValid = lc && lc.ts && (!lcTicket || (!lcTicket.served && !lcTicket.compliance && !lcTicket.paymentHold));
+  if(lcIsValid && lc.ts!==lastCallTs){
     // Update lastCallTs IMMEDIATELY so any re-fired snapshot can't trigger this again
     lastCallTs=lc.ts;
 
