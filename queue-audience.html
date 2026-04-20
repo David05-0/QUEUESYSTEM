@@ -590,9 +590,6 @@ function doSpeak(ticket, onDone){
   const cnum=ticket.counter;
   const num=ticket.id;
   const cname=COUNTER_NAMES[cnum-1];
-  // Format: "James, please proceed to DMW Desk 1 for OEC with Appointment."
-  // Without name: "Number 001, please proceed to DMW Desk 1 for OEC with Appointment."
-  // Convert name to Title Case so TTS reads it as a word, not spelled-out letters
   function toTitleCase(str){ return str.toLowerCase().replace(/\b\w/g,c=>c.toUpperCase()); }
   const rawName = ticket.nickname || ticket.customer || null;
   const spokenName = rawName ? toTitleCase(rawName.trim()) : null;
@@ -602,14 +599,22 @@ function doSpeak(ticket, onDone){
     ? `Priority customer. ${subjectPart}, please proceed to ${cname}${svcPart}.`
     : `${subjectPart}, please proceed to ${cname}${svcPart}.`;
 
-  // Play the announcement 2 times with a short pause between
+  // Resume in case Chrome paused synthesis, then cancel any leftover
+  if(window.speechSynthesis.paused) window.speechSynthesis.resume();
   window.speechSynthesis.cancel();
-  setTimeout(()=>{
+
+  // Wait for voices AND for cancel to fully clear
+  function trySpeak(attemptsLeft){
     const voices=window.speechSynthesis.getVoices();
 
+    // If voices not loaded yet, retry up to 5 times with 300ms gap
+    if(!voices.length && attemptsLeft>0){
+      setTimeout(()=>trySpeak(attemptsLeft-1), 300);
+      return;
+    }
+
     // ── Prefer a MALE English voice ──
-    // Try well-known male voice names first, then fall back by gender hints, then any English
-    const MALE_NAMES = ['Google UK English Male','Microsoft David','Microsoft Mark','David','Daniel','Alex','Fred','Ralph','Thomas','Google US English'];
+    const MALE_NAMES=['Google UK English Male','Microsoft David','Microsoft Mark','David','Daniel','Alex','Fred','Ralph','Thomas','Google US English'];
     const preferred =
       MALE_NAMES.map(n=>voices.find(v=>v.name===n)).find(Boolean) ||
       voices.find(v=>v.lang==='en-US' && /male|david|mark|james|guy|man/i.test(v.name)) ||
@@ -618,32 +623,52 @@ function doSpeak(ticket, onDone){
       voices.find(v=>v.lang==='en-US' && !v.localService) ||
       voices.find(v=>v.lang.startsWith('en') && !v.localService) ||
       voices.find(v=>v.lang.startsWith('en')) ||
-      (voices.length>0?voices[0]:null);
+      (voices.length>0 ? voices[0] : null);
 
-    function makeUtterance(text, onEndCb){
-      const u=new SpeechSynthesisUtterance(text);
-      u.rate=1.05; u.pitch=0.75; u.volume=1; u.lang='en-US';  // pitch < 1 = deeper/male
-      if(preferred) u.voice=preferred;
-      if(onEndCb) u.onend=onEndCb;
-      u.onerror=(e)=>{ if(e.error!=='canceled'&&onEndCb) setTimeout(onEndCb,400); };
-      return u;
+    const u=new SpeechSynthesisUtterance(announcement);
+    u.rate=1.05; u.pitch=0.75; u.volume=1; u.lang='en-US';
+    if(preferred) u.voice=preferred;
+
+    let done=false;
+    function finish(){
+      if(done) return;
+      done=true;
+      if(onDone) onDone();
     }
 
-    let started=false;
-    // Play announcement once only
-    const u1=makeUtterance(announcement, ()=>{ if(onDone) onDone(); });
-    u1.onstart=()=>{ started=true; };
-    window.speechSynthesis.speak(u1);
+    u.onend  = ()=>finish();
+    u.onerror= (e)=>{ if(e.error!=='canceled') finish(); };
 
-    // Watchdog
+    // Watchdog 1 — speech never started (2.5s)
+    let started=false;
+    u.onstart=()=>{ started=true; };
     setTimeout(()=>{
-      if(!started&&audioUnlocked){
-        window.speechSynthesis.cancel();
-        setTimeout(()=>{ if(onDone) onDone(); },300);
-      }
-    },2500);
-  },200);
+      if(!started){ window.speechSynthesis.cancel(); finish(); }
+    }, 2500);
+
+    // Watchdog 2 — speech started but onend never fired (15s max)
+    setTimeout(()=>{ finish(); }, 15000);
+
+    window.speechSynthesis.speak(u);
+
+    // Chrome pause-resume fix — if Chrome pauses mid-speech, kick it back
+    const resumeInterval=setInterval(()=>{
+      if(done){ clearInterval(resumeInterval); return; }
+      if(window.speechSynthesis.paused) window.speechSynthesis.resume();
+    }, 2000);
+  }
+
+  setTimeout(()=>trySpeak(5), 250);
 }
+
+// ── Chrome TTS heartbeat — prevents Chrome from silently pausing speech synthesis ──
+// Chrome pauses TTS when tab is not focused; this keeps it alive
+setInterval(()=>{
+  if(!audioUnlocked) return;
+  if(window.speechSynthesis && window.speechSynthesis.paused && !window.speechSynthesis.speaking){
+    window.speechSynthesis.resume();
+  }
+}, 5000);
 
 function renderCounters(){
   const queues=getQueues();
