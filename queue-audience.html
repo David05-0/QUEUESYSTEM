@@ -550,6 +550,12 @@ function runAnnouncement(ticket){
   flashTimer=setTimeout(()=>{
     document.getElementById('callFlash').classList.remove('show');
     flashTimer=null;
+    // Also clear counter panel if speech never fired (safety fallback)
+    const cd=counterDisplay[ticket.counter-1];
+    if(cd.current===ticket.id){
+      cd.current=null; cd.service=null; cd.customer=null; cd.priority=null; cd.time=null;
+      renderAll();
+    }
   }, 12000); // max 12s visible regardless of speech state
 
   // ── Counter panel effects ──
@@ -566,6 +572,12 @@ function runAnnouncement(ticket){
       if(flashTimer){ clearTimeout(flashTimer); flashTimer=null; }
       setTimeout(()=>{
         document.getElementById('callFlash').classList.remove('show');
+        // Clear counter panel display after announcement is done
+        const cd=counterDisplay[ticket.counter-1];
+        if(cd.current===ticket.id){
+          cd.current=null; cd.service=null; cd.customer=null; cd.priority=null; cd.time=null;
+          renderAll();
+        }
         // Gap between announcements: cooldown gives other counters breathing room
         setTimeout(()=>processAnnounceQueue(), announceQueue.length>0 ? COOLDOWN_MS : 0);
       }, 400);
