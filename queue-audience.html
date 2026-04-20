@@ -753,4 +753,759 @@ if(window.speechSynthesis){
 }
 </script>
 </body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Queue Display — Audience Screen</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#06060a;--deep:#0d0d14;--panel:#10101a;--border:#1c1c2e;
+    --text:#eeeef6;--muted:#44445a;--dim:#2a2a3e;
+    --c1:#e67e22;--c2:#2471a3;--c3:#1e8449;--c4:#7d3c98;
+    --gold:#f0c040;--priority:#e74c3c;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;overflow:hidden}
+  .bg-grid{position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,0.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.012) 1px,transparent 1px);background-size:64px 64px;z-index:0;animation:gridDrift 40s linear infinite}
+  @keyframes gridDrift{from{background-position:0 0,0 0}to{background-position:64px 64px,64px 64px}}
+  .bg-vignette{position:fixed;inset:0;background:radial-gradient(ellipse at center,transparent 25%,rgba(6,6,10,0.9) 100%);z-index:0}
+  .shell{position:relative;z-index:1;width:100vw;height:100vh;display:grid;grid-template-rows:auto 1fr auto}
+
+  /* TOP BAR */
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 36px 12px;border-bottom:1px solid var(--border);background:rgba(13,13,20,0.9);backdrop-filter:blur(8px)}
+  .topbar-left{display:flex;align-items:center;gap:16px}
+  .logo-mark{width:34px;height:34px;border:2px solid var(--gold);border-radius:3px;display:flex;align-items:center;justify-content:center}
+  .logo-mark svg{width:18px;height:18px;fill:var(--gold)}
+  .brand-title{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:0.1em;line-height:1}
+  .brand-title span{color:var(--gold)}
+  .brand-sub{font-size:8px;letter-spacing:0.26em;color:var(--muted);text-transform:uppercase;margin-top:1px}
+  .topbar-center{font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:0.28em;color:var(--muted);text-transform:uppercase;border:1px solid var(--border);padding:5px 14px;border-radius:2px}
+  .topbar-right{display:flex;align-items:center;gap:24px}
+  .stat-badge{text-align:center}
+  .stat-badge-val{font-family:'Bebas Neue',sans-serif;font-size:24px;line-height:1;letter-spacing:0.04em}
+  .stat-badge-lbl{font-size:7px;letter-spacing:0.2em;color:var(--muted);text-transform:uppercase;margin-top:1px}
+  .clock-display{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:0.1em;color:var(--text);border-left:1px solid var(--border);padding-left:24px}
+  .fb-live{font-size:7px;letter-spacing:0.18em;text-transform:uppercase;padding:3px 9px;border-radius:20px;color:#3ddc84;border:1px solid rgba(61,220,132,0.35);background:rgba(61,220,132,0.07);display:flex;align-items:center;gap:4px}
+  .fb-live-dot{width:5px;height:5px;border-radius:50%;background:#3ddc84;animation:fbPulse 2s ease infinite}
+  @keyframes fbPulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+  /* MAIN */
+  .main-content{display:grid;grid-template-columns:1fr;overflow:hidden}
+  .counters-area{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
+  .counter-panel{position:relative;display:flex;flex-direction:column;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:28px 32px;overflow:hidden;transition:background 0.5s}
+  .counter-panel:nth-child(2){border-right:none}.counter-panel:nth-child(3){border-bottom:none}.counter-panel:nth-child(4){border-right:none;border-bottom:none}
+  .counter-panel::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity 0.8s;pointer-events:none}
+  .counter-panel[data-c="1"]::before{background:radial-gradient(ellipse at 30% 40%,rgba(230,126,34,0.13) 0%,transparent 65%)}
+  .counter-panel[data-c="2"]::before{background:radial-gradient(ellipse at 30% 40%,rgba(36,113,163,0.13) 0%,transparent 65%)}
+  .counter-panel[data-c="3"]::before{background:radial-gradient(ellipse at 30% 40%,rgba(30,132,73,0.13) 0%,transparent 65%)}
+  .counter-panel[data-c="4"]::before{background:radial-gradient(ellipse at 30% 40%,rgba(125,60,152,0.13) 0%,transparent 65%)}
+  .counter-panel.active::before{opacity:1}
+  /* ── ABSENT OVERLAY ── */
+  .counter-panel.absent{opacity:0.55}
+  .cp-absent-overlay{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(6,6,10,0.85);backdrop-filter:blur(2px);z-index:2;pointer-events:none}
+  .counter-panel.absent .cp-absent-overlay{display:flex}
+  .cp-absent-icon{font-size:36px;opacity:0.55}
+  .cp-absent-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(24px,3.2vw,42px);letter-spacing:0.22em;color:#ff5f5f;animation:absentPulse 3s ease infinite}
+  .cp-absent-sub{font-size:9px;letter-spacing:0.26em;text-transform:uppercase;color:rgba(255,95,95,0.5)}
+  @keyframes absentPulse{0%,100%{opacity:1}50%{opacity:0.6}}
+  .counter-accent-bar{position:absolute;left:0;top:0;bottom:0;width:6px}
+  .counter-panel[data-c="1"] .counter-accent-bar{background:var(--c1)}.counter-panel[data-c="2"] .counter-accent-bar{background:var(--c2)}
+  .counter-panel[data-c="3"] .counter-accent-bar{background:var(--c3)}.counter-panel[data-c="4"] .counter-accent-bar{background:var(--c4)}
+  .cp-label{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .cp-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+  .counter-panel[data-c="1"] .cp-dot{background:var(--c1)}.counter-panel[data-c="2"] .cp-dot{background:var(--c2)}
+  .counter-panel[data-c="3"] .cp-dot{background:var(--c3)}.counter-panel[data-c="4"] .cp-dot{background:var(--c4)}
+  .cp-name{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:0.18em;color:#ffffff}
+  .cp-status-pill{margin-left:auto;font-size:8px;letter-spacing:0.16em;text-transform:uppercase;padding:3px 10px;border-radius:20px;border:1px solid var(--border);color:var(--muted);transition:all 0.4s}
+  .cp-status-pill.serving{color:#3ddc84;border-color:rgba(61,220,132,0.4);background:rgba(61,220,132,0.07);animation:pillPulse 2s ease infinite}
+  @keyframes pillPulse{0%,100%{opacity:1}50%{opacity:0.6}}
+  .cp-number-wrap{flex:1;display:flex;align-items:center;gap:20px}
+  .cp-number{font-family:'Bebas Neue',sans-serif;font-size:clamp(80px,11vw,160px);line-height:0.9;letter-spacing:0.02em;color:var(--muted);transition:color 0.4s,text-shadow 0.4s}
+  .counter-panel[data-c="1"] .cp-number.has-num{color:var(--c1);text-shadow:0 0 80px rgba(230,126,34,0.45)}
+  .counter-panel[data-c="2"] .cp-number.has-num{color:var(--c2);text-shadow:0 0 80px rgba(36,113,163,0.45)}
+  .counter-panel[data-c="3"] .cp-number.has-num{color:var(--c3);text-shadow:0 0 80px rgba(30,132,73,0.45)}
+  .counter-panel[data-c="4"] .cp-number.has-num{color:var(--c4);text-shadow:0 0 80px rgba(125,60,152,0.45)}
+  .cp-number.pop{animation:numPop 0.55s cubic-bezier(0.34,1.56,0.64,1)}
+  @keyframes numPop{0%{transform:scale(0.6) translateY(20px);opacity:0}60%{transform:scale(1.08) translateY(-4px);opacity:1}100%{transform:scale(1) translateY(0)}}
+  .cp-info-col{display:flex;flex-direction:column;gap:5px}
+  .cp-now-lbl{font-size:9px;letter-spacing:0.22em;text-transform:uppercase;color:var(--muted)}
+  .cp-service-tag{font-size:13px;letter-spacing:0.05em;color:var(--text);opacity:0.8;white-space:normal;line-height:1.3}
+  .cp-customer{font-size:16px;letter-spacing:0.05em;font-weight:500;white-space:normal;line-height:1.3}
+  .priority-tag{display:inline-flex;align-items:center;gap:3px;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--priority);border:1px solid rgba(231,76,60,0.35);background:rgba(231,76,60,0.08);padding:3px 8px;border-radius:2px;margin-top:2px}
+  .cp-wave{position:absolute;bottom:14px;right:22px;display:flex;align-items:center;gap:4px;opacity:0;transition:opacity 0.3s}
+  .cp-wave.active{opacity:1}
+  .cp-wave-label{font-size:7px;letter-spacing:0.18em;text-transform:uppercase}
+  .counter-panel[data-c="1"] .cp-wave-label{color:var(--c1)}.counter-panel[data-c="2"] .cp-wave-label{color:var(--c2)}
+  .counter-panel[data-c="3"] .cp-wave-label{color:var(--c3)}.counter-panel[data-c="4"] .cp-wave-label{color:var(--c4)}
+  .wave-bars{display:flex;gap:2px;align-items:flex-end}
+  .wave-bars span{display:block;width:2px;border-radius:1px;animation:barWave 0.9s ease infinite}
+  .counter-panel[data-c="1"] .wave-bars span{background:var(--c1)}.counter-panel[data-c="2"] .wave-bars span{background:var(--c2)}
+  .counter-panel[data-c="3"] .wave-bars span{background:var(--c3)}.counter-panel[data-c="4"] .wave-bars span{background:var(--c4)}
+  .wave-bars span:nth-child(1){height:5px}.wave-bars span:nth-child(2){height:11px;animation-delay:0.14s}.wave-bars span:nth-child(3){height:17px;animation-delay:0.26s}.wave-bars span:nth-child(4){height:9px;animation-delay:0.09s}.wave-bars span:nth-child(5){height:7px;animation-delay:0.2s}
+  @keyframes barWave{0%,100%{transform:scaleY(0.3)}50%{transform:scaleY(1)}}
+  .cp-queue-row{display:flex;align-items:center;gap:7px;margin-top:10px;flex-wrap:wrap}
+  .cp-queue-lbl{font-size:7px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);flex-shrink:0}
+  .q-badge{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:0.05em;padding:1px 7px;border-radius:2px;background:var(--panel);border:1px solid var(--border);color:var(--dim)}
+  .q-badge.up-next{border-color:var(--muted);color:var(--text);opacity:0.8}
+
+  /* TICKER */
+  .bottom-bar{border-top:1px solid var(--border);background:rgba(13,13,20,0.95);backdrop-filter:blur(8px);display:flex;align-items:center;height:42px;overflow:hidden}
+  .ticker-label{flex-shrink:0;background:var(--gold);color:#06060a;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:0.14em;padding:0 16px;height:100%;display:flex;align-items:center}
+  .ticker-track{flex:1;overflow:hidden;height:100%;display:flex;align-items:center}
+  .ticker-inner{display:inline-block;white-space:nowrap;animation:tickerScroll 32s linear infinite;font-size:10px;letter-spacing:0.2em;color:var(--muted);text-transform:uppercase}
+  @keyframes tickerScroll{from{transform:translateX(100vw)}to{transform:translateX(-100%)}}
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     PROJECTED CALL FLASH — the big audience text
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .call-flash{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;flex-direction:column;background:rgba(6,6,10,0.95);opacity:0;pointer-events:none;transition:opacity 0.35s;backdrop-filter:blur(3px)}
+  .call-flash.show{opacity:1;pointer-events:all}
+
+  /* "NOW SERVING" label */
+  .cf-now-lbl{font-size:clamp(14px,2vw,20px);letter-spacing:0.42em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;animation:cfFadeIn 0.4s ease}
+
+  /* Giant ticket number */
+  .cf-number{font-family:'Bebas Neue',sans-serif;font-size:clamp(140px,28vw,300px);line-height:0.85;letter-spacing:0.04em;animation:cfZoomIn 0.5s cubic-bezier(0.34,1.56,0.64,1)}
+
+  /* "GO TO COUNTER X" — this is the projected instruction */
+  .cf-goto{font-family:'Bebas Neue',sans-serif;font-size:clamp(32px,5vw,64px);letter-spacing:0.14em;text-transform:uppercase;margin-top:14px;animation:cfFadeIn 0.5s ease 0.12s both;display:flex;align-items:center;gap:14px}
+  .cf-goto-num{font-family:'Bebas Neue',sans-serif}
+  .cf-goto-arrow{font-size:0.75em;opacity:0.65}
+
+  /* Counter name badge */
+  .cf-counter-badge{display:inline-flex;align-items:center;gap:10px;padding:8px 22px;border-radius:4px;margin-top:6px;animation:cfFadeIn 0.5s ease 0.2s both}
+  .cf-counter-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+  .cf-counter-text{font-family:'Bebas Neue',sans-serif;font-size:clamp(18px,3vw,32px);letter-spacing:0.16em}
+
+  .cf-service{font-size:clamp(13px,1.8vw,18px);letter-spacing:0.14em;color:var(--muted);margin-top:10px;animation:cfFadeIn 0.5s ease 0.25s both}
+  .cf-customer{font-family:'Bebas Neue',sans-serif;font-size:clamp(42px,6.5vw,90px);letter-spacing:0.06em;color:#fff;margin-top:8px;animation:cfFadeIn 0.5s ease 0.3s both}
+  .cf-fullname{font-family:'Bebas Neue',sans-serif;font-size:clamp(52px,8vw,110px);letter-spacing:0.04em;color:var(--gold);margin-top:4px;animation:cfFadeIn 0.5s ease 0.35s both;text-align:center}
+  .cf-priority{display:inline-flex;align-items:center;gap:5px;font-size:clamp(12px,1.4vw,15px);letter-spacing:0.14em;text-transform:uppercase;color:var(--priority);border:1px solid rgba(231,76,60,0.4);background:rgba(231,76,60,0.08);padding:5px 14px;border-radius:3px;margin-top:6px;animation:cfFadeIn 0.5s ease 0.32s both}
+
+  @keyframes cfZoomIn{from{transform:scale(0.5);opacity:0}to{transform:scale(1);opacity:1}}
+  @keyframes cfFadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+  /* START OVERLAY */
+  #startOverlay{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;background:var(--bg)}
+  #startOverlay.hidden{display:none}
+  .start-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,8vw,96px);letter-spacing:0.06em;line-height:1;text-align:center}
+  .start-title span{color:var(--gold)}
+  .start-sub{font-size:11px;letter-spacing:0.26em;text-transform:uppercase;color:var(--muted);text-align:center}
+  .start-btn{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:0.16em;background:var(--gold);color:#06060a;border:none;border-radius:6px;padding:22px 68px;cursor:pointer;transition:all 0.15s;animation:startPulse 2s ease infinite}
+  .start-btn:hover{filter:brightness(1.1);transform:scale(1.03)}
+  @keyframes startPulse{0%,100%{box-shadow:0 0 0 0 rgba(240,192,64,0.4)}50%{box-shadow:0 0 0 20px rgba(240,192,64,0)}}
+  .start-note{font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);text-align:center;max-width:400px;line-height:1.8}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-vignette"></div>
+
+<!-- START OVERLAY -->
+<div id="startOverlay">
+  <div class="start-title">QUEUE<span>SYS</span></div>
+  <div class="start-sub">Audience Display · Voice Announcements</div>
+  <button class="start-btn" onclick="startDisplay()">▶ TAP TO START</button>
+  <div class="start-note">Tap once to enable voice announcements.<br>This screen will announce numbers automatically.</div>
+</div>
+
+<!-- CALL FLASH — projected announcement -->
+<div class="call-flash" id="callFlash">
+  <div class="cf-now-lbl">NOW SERVING</div>
+  <div class="cf-number" id="cfNumber" style="color:var(--gold)">000</div>
+  <div class="cf-goto" id="cfGoto">
+    <span class="cf-goto-num" id="cfGotoNum" style="color:var(--gold)">No. 000</span>
+    <span class="cf-goto-arrow">→</span>
+    <span style="font-size:0.6em;opacity:0.7;letter-spacing:0.2em">PROCEED TO</span>
+    <span id="cfGotoCounter" style="color:var(--gold)">Counter 1</span>
+  </div>
+  <div class="cf-counter-badge" id="cfCounterBadge">
+    <div class="cf-counter-dot" id="cfCounterDot"></div>
+    <div class="cf-counter-text" id="cfCounterText">Counter 1</div>
+  </div>
+  <div class="cf-service" id="cfService"></div>
+  <div class="cf-customer" id="cfCustomer"></div>
+  <div class="cf-fullname" id="cfFullname" style="display:none"></div>
+  <div class="cf-priority" id="cfPriority" style="display:none">⚡ PRIORITY CUSTOMER</div>
+</div>
+
+<div class="shell">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M4 4h6v6H4V4zm0 10h6v6H4v-6zm10-10h6v6h-6V4zm0 10h6v6h-6v-6z"/></svg></div>
+      <div>
+        <div class="brand-title">QUEUE<span>SYS</span></div>
+        <div class="brand-sub">Audience Display</div>
+      </div>
+    </div>
+    <div class="topbar-center">PLEASE WAIT FOR YOUR NUMBER TO BE CALLED</div>
+    <div class="topbar-right">
+      <div id="fbLiveIndicator" class="fb-live" style="opacity:0.4"><span class="fb-live-dot"></span>Firebase</div>
+      <div class="stat-badge"><div class="stat-badge-val" id="sbWaiting" style="color:var(--gold)">0</div><div class="stat-badge-lbl">Waiting</div></div>
+      <div class="stat-badge"><div class="stat-badge-val" id="sbServed" style="color:var(--c3)">0</div><div class="stat-badge-lbl">Served</div></div>
+      <div class="clock-display" id="clock">00:00:00</div>
+    </div>
+  </div>
+
+  <div class="main-content" id="mainContent">
+    <div class="counters-area" id="countersArea"></div>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="ticker-label">NOTICE</div>
+    <div class="ticker-track">
+      <div class="ticker-inner">PLEASE KEEP YOUR TICKET SAFE &nbsp;·&nbsp; LISTEN FOR YOUR NUMBER TO BE ANNOUNCED &nbsp;·&nbsp; PROCEED IMMEDIATELY TO YOUR ASSIGNED COUNTER &nbsp;·&nbsp; PRIORITY LANE: SENIORS, PWD &amp; PREGNANT WOMEN &nbsp;·&nbsp; GOVERNMENT TO GOVERNMENT TRANSACTIONS — PLEASE HAVE YOUR DOCUMENTS READY &nbsp;·&nbsp; DIRECT HIRE APPLICANTS — PAYMENT AT DESIGNATED COUNTER &nbsp;·&nbsp; THANK YOU FOR YOUR PATIENCE &nbsp;·&nbsp;</div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey:"AIzaSyD1jlmo6pdJhqwjbRDMby9cTBHzazRejcE",
+  authDomain:"queuesystem-fe374.firebaseapp.com",
+  databaseURL:"https://queuesystem-fe374-default-rtdb.firebaseio.com",
+  projectId:"queuesystem-fe374",
+  storageBucket:"queuesystem-fe374.firebasestorage.app",
+  messagingSenderId:"314957208142",
+  appId:"1:314957208142:web:51f960c760f8682e77811f"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+const stateRef = ref(db,'queueState');
+
+const COUNTER_NAMES = ['DMW Desk 2','DMW Desk 3','DMW Desk 4','DMW Desk 5'];
+const COLOR_HEX = {1:'#e67e22',2:'#2471a3',3:'#1e8449',4:'#7d3c98'};
+const COLOR_BG  = {1:'rgba(230,126,34,0.1)',2:'rgba(36,113,163,0.1)',3:'rgba(30,132,73,0.1)',4:'rgba(125,60,152,0.1)'};
+
+let sharedLog = [];
+let activityLog = [];
+let absentCounters = new Set();
+// undefined = page just loaded; first Firebase snapshot silently adopts resetFlag — no reset triggered
+let lastResetFlag = undefined;
+let lastCallTs = null;
+let flashTimer = null;
+let audioUnlocked = false;
+let audioCtx = null;
+let counterDisplay = [1,2,3,4].map(id=>({id,current:null,service:null,customer:null,priority:null,time:null,calledAt:0}));
+let announceQueue = [];
+let isAnnouncing = false;
+let lockedCounter = null;
+
+function startDisplay() {
+  audioUnlocked = true;
+  document.getElementById('startOverlay').classList.add('hidden');
+  try {
+    audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    const buf = audioCtx.createBuffer(1,1,22050);
+    const src = audioCtx.createBufferSource();
+    src.buffer=buf; src.connect(audioCtx.destination); src.start(0);
+  } catch(e){ console.warn('AudioContext:',e); }
+  if(window.speechSynthesis){
+    window.speechSynthesis.cancel();
+    const w=new SpeechSynthesisUtterance(' ');
+    w.volume=0.01; window.speechSynthesis.speak(w);
+  }
+}
+window.startDisplay=startDisplay;
+
+function updateClock(){
+  const n=new Date();
+  document.getElementById('clock').textContent=
+    [n.getHours(),n.getMinutes(),n.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':');
+}
+setInterval(updateClock,1000); updateClock();
+
+function buildCounters(){
+  const area=document.getElementById('countersArea');
+  area.innerHTML='';
+  [1,2,3,4].forEach(id=>{
+    const p=document.createElement('div');
+    p.className='counter-panel'; p.dataset.c=id;
+    p.innerHTML=`
+      <div class="cp-absent-overlay">
+        <div class="cp-absent-icon">⚠</div>
+        <div class="cp-absent-title">NOT AVAILABLE</div>
+        <div class="cp-absent-sub">Counter temporarily unavailable</div>
+      </div>
+      <div class="counter-accent-bar"></div>
+      <div class="cp-label">
+        <div class="cp-dot"></div>
+        <div class="cp-name">${COUNTER_NAMES[id-1]}</div>
+        <div class="cp-status-pill" id="cpstatus-${id}">Idle</div>
+      </div>
+      <div class="cp-number-wrap">
+        <div class="cp-number" id="cpnum-${id}">—</div>
+        <div class="cp-info-col" id="cpinfo-${id}">
+          <div class="cp-now-lbl">Now Serving</div>
+          <div class="cp-service-tag" id="cpsvc-${id}"></div>
+          <div class="cp-customer" id="cpcust-${id}"></div>
+        </div>
+      </div>
+      <div class="cp-queue-row" id="cpqueue-${id}"><span class="cp-queue-lbl">Next:</span><span style="font-size:9px;color:var(--muted)">—</span></div>
+      <div class="cp-wave" id="cpwave-${id}">
+        <div class="wave-bars"><span></span><span></span><span></span><span></span><span></span></div>
+        <div class="cp-wave-label">Announcing</div>
+      </div>`;
+    area.appendChild(p);
+  });
+}
+
+function getQueues(){
+  // Exclude tickets currently being served (shown as cd.current) from the Next: row
+  const currentIds=new Set(counterDisplay.map(cd=>cd.current).filter(x=>x!==null));
+  const q={1:[],2:[],3:[],4:[]};
+  sharedLog
+    .filter(t=>!t.served&&!t.compliance&&t.counter>=1&&!currentIds.has(t.id))
+    .forEach(t=>{if(q[t.counter])q[t.counter].push(t);});
+  [1,2,3,4].forEach(c=>q[c].sort((a,b)=>a.priority===b.priority?a.id-b.id:a.priority==='priority'?-1:1));
+  return q;
+}
+
+let _fbFirstLoad = true;
+onValue(stateRef,snap=>{
+  document.getElementById('fbLiveIndicator').style.opacity='1';
+  const data=snap.val()||{};
+  const newReset=data.resetFlag||null;
+
+  if(_fbFirstLoad){
+    _fbFirstLoad=false;
+    lastResetFlag=newReset;
+    sharedLog=data.log||[];
+    absentCounters=new Set((data.absentCounters||[]).map(Number));
+    // Adopt lastCallTs so we don't re-announce a call that already happened.
+    // But only if the call is recent (< 30s) AND the ticket isn't already served —
+    // otherwise treat it as stale so it never shows on this fresh page load.
+    const lc=data.lastCall||null;
+    if(lc && lc.ts){
+      const age = Date.now() - lc.ts;
+      const ticket = (data.log||[]).find(t=>t.id===lc.ticketId);
+      const isStale = age > 30000 || !ticket || ticket.served || ticket.compliance || ticket.paymentHold;
+      if(!isStale) lastCallTs=lc.ts;
+      // If stale: leave lastCallTs=null so a genuine new call will still be detected
+    }
+    renderAll(); return;
+  }
+
+  // Subsequent snapshots — only reset if resetFlag genuinely changed
+  if(newReset && newReset!==lastResetFlag){
+    lastResetFlag=newReset;
+    sharedLog=[]; activityLog=[]; lastCallTs=null;
+    absentCounters=new Set();
+    counterDisplay=[1,2,3,4].map(id=>({id,current:null,service:null,customer:null,priority:null,time:null,calledAt:0}));
+    if(flashTimer) clearTimeout(flashTimer);
+    announceQueue=[]; isAnnouncing=false; lockedCounter=null;
+    document.getElementById('callFlash').classList.remove('show');
+    [1,2,3,4].forEach(id=>{const w=document.getElementById(`cpwave-${id}`);if(w)w.classList.remove('active');});
+    renderAll(); return;
+  }
+  lastResetFlag=newReset;
+
+  // Update shared log and absent counters
+  sharedLog=data.log||[];
+  absentCounters=new Set((data.absentCounters||[]).map(Number));
+
+  // ── React to a number being CALLED (lastCall.ts changes) ──
+  const lc=data.lastCall||null;
+  // Validate: ignore lastCall if the ticket is already served/held/gone
+  const lcTicket = lc ? sharedLog.find(t=>t.id===lc.ticketId) : null;
+  const lcIsValid = lc && lc.ts && (!lcTicket || (!lcTicket.served && !lcTicket.compliance && !lcTicket.paymentHold));
+  if(lcIsValid && lc.ts!==lastCallTs){
+    // Update lastCallTs IMMEDIATELY so any re-fired snapshot can't trigger this again
+    lastCallTs=lc.ts;
+
+    const cd=counterDisplay[lc.counter-1];
+
+    // If this counter was already announcing a different number, cancel it
+    if(cd.current!==null && cd.current!==lc.ticketId){
+      // Stop speech immediately and wipe queue for this counter
+      window.speechSynthesis.cancel();
+      announceQueue=announceQueue.filter(q=>q.counter!==lc.counter);
+      if(flashTimer){ clearTimeout(flashTimer); flashTimer=null; }
+      document.getElementById('callFlash').classList.remove('show');
+      isAnnouncing=false;
+      lockedCounter=null;
+    }
+
+    cd.current=lc.ticketId; cd.service=lc.service; cd.customer=lc.customer;
+    cd.nickname=lc.nickname||null; cd.priority=lc.priority; cd.time=nowTime(); cd.calledAt=lc.ts;
+    activityLog.unshift({
+      num:lc.ticketId, counter:lc.counter, service:lc.service,
+      customer:lc.customer, priority:lc.priority, time:nowTime()
+    });
+    if(activityLog.length>40) activityLog.pop();
+    // Flash + enqueue speech ranked by call time
+    triggerCallFlash({
+      id:lc.ticketId, counter:lc.counter, service:lc.service,
+      customer:lc.customer, nickname:lc.nickname||null,
+      priority:lc.priority, calledAt:lc.ts
+    });
+  }
+
+  // lastCallTs already updated at top of the if-block above
+
+  // ── Clear counter panel when lastCall is nulled (hold, not-available, or admin action) ──
+  if(!lc && lastCallTs!==null){
+    lastCallTs=null;
+    [1,2,3,4].forEach(counterId=>{
+      const cd=counterDisplay[counterId-1];
+      if(cd.current===null) return;
+      const ticket=sharedLog.find(t=>t.id===cd.current);
+      // Clear if: ticket gone, served, moved to hold, or returned to pool (counter===0)
+      if(!ticket || ticket.served || ticket.compliance || ticket.paymentHold || ticket.counter===0){
+        const clearedId=cd.current;
+        cd.current=null; cd.service=null; cd.customer=null;
+        cd.priority=null; cd.time=null; cd.calledAt=0;
+        // Only remove this specific ticket — don't wipe other queued calls for this counter
+        announceQueue=announceQueue.filter(q=>q.id!==clearedId);
+        // Stop speech if it's announcing the cleared ticket
+        if(isAnnouncing && lockedCounter===counterId){
+          window.speechSynthesis.cancel();
+          isAnnouncing=false; lockedCounter=null;
+          if(flashTimer){ clearTimeout(flashTimer); flashTimer=null; }
+          document.getElementById('callFlash').classList.remove('show');
+        }
+      }
+    });
+  }
+
+  // ── Clear counter panel when a ticket is marked served ──
+  const prevServedIds=new Set((window._prevLog||[]).filter(t=>t.served).map(t=>t.id));
+  const newlyServed=sharedLog.filter(t=>t.served && !prevServedIds.has(t.id));
+  newlyServed.forEach(t=>{
+    const cd=counterDisplay[t.counter-1];
+    if(cd.current===t.id){
+      cd.current=null; cd.service=null; cd.customer=null; cd.priority=null; cd.time=null; cd.calledAt=0;
+    }
+    // Remove from announce queue too (no point announcing a served ticket)
+    announceQueue=announceQueue.filter(q=>q.id!==t.id);
+  });
+
+  // ── Detect transferred tickets — counter changed on unserved tickets ──
+  const prevLog = window._prevLog || [];
+  sharedLog.forEach(t=>{
+    if(t.served || t.counter===0) return; // skip served and unassigned
+    const prev = prevLog.find(p=>p.id===t.id);
+    if(!prev || prev.counter===t.counter) return; // no change
+    if(prev.counter===0) return; // was unassigned before, not a transfer
+    // This ticket moved from prev.counter → t.counter
+    const fromName = COUNTER_NAMES[prev.counter-1] || ('Desk '+prev.counter);
+    const toName   = COUNTER_NAMES[t.counter-1]    || ('Desk '+t.counter);
+    // Add a transfer entry to activityLog
+    activityLog.unshift({
+      num: t.id,
+      counter: t.counter,
+      service: t.service||'',
+      customer: t.customer||null,
+      priority: t.priority||'normal',
+      time: nowTime(),
+      transferred: true,
+      fromName, toName
+    });
+    if(activityLog.length>40) activityLog.pop();
+  });
+
+  // ── Clear counter panel when a ticket was transferred away (counter changed) ──
+  // For each counter's currently displayed ticket, check if it still belongs to that counter
+  [1,2,3,4].forEach(counterId=>{
+    const cd=counterDisplay[counterId-1];
+    if(cd.current===null) return;
+    const ticketInLog=sharedLog.find(t=>t.id===cd.current);
+    // If ticket no longer exists, was served, or now belongs to a different counter → clear panel
+    if(!ticketInLog || ticketInLog.served || ticketInLog.counter!==counterId){
+      cd.current=null; cd.service=null; cd.customer=null; cd.priority=null; cd.time=null; cd.calledAt=0;
+      announceQueue=announceQueue.filter(q=>q.counter!==counterId);
+    }
+  });
+
+  window._prevLog=[...sharedLog];
+
+  renderAll();
+},()=>{document.getElementById('fbLiveIndicator').style.opacity='0.3';});
+
+function nowTime(){
+  const n=new Date();
+  return [n.getHours(),n.getMinutes(),n.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':');
+}
+
+// ── Unified announcement queue ──
+// Each item is announced in full (chime → flash visible → speak → hide → pause) before the next.
+// Sorted by calledAt so the counter that called first is always announced first.
+const COOLDOWN_MS = 600;   // short gap between different-counter announcements
+
+function triggerCallFlash(ticket){
+  // Different counter announcing — queue and wait
+  if(isAnnouncing && lockedCounter !== ticket.counter){
+    if(!announceQueue.find(q=>q.counter===ticket.counter && q.id===ticket.id)){
+      announceQueue.push({...ticket, calledAt: ticket.calledAt||Date.now()});
+      announceQueue.sort((a,b)=>a.calledAt-b.calledAt);
+    }
+    return;
+  }
+
+  // Same counter re-calling (or nobody announcing):
+  // Cancel any in-progress speech for this counter and restart immediately
+  if(isAnnouncing && lockedCounter===ticket.counter){
+    window.speechSynthesis.cancel();
+    isAnnouncing=false;
+    lockedCounter=null;
+    if(flashTimer){ clearTimeout(flashTimer); flashTimer=null; }
+    document.getElementById('callFlash').classList.remove('show');
+  }
+
+  // Replace any stale entry for this counter with the latest ticket
+  announceQueue=announceQueue.filter(q=>q.counter!==ticket.counter);
+  announceQueue.push({...ticket, calledAt: ticket.calledAt||Date.now()});
+  announceQueue.sort((a,b)=>a.calledAt-b.calledAt);
+
+  if(!isAnnouncing) processAnnounceQueue();
+}
+
+function processAnnounceQueue(){
+  if(!announceQueue.length){ isAnnouncing=false; lockedCounter=null; return; }
+  isAnnouncing=true;
+  const ticket=announceQueue.shift();
+  lockedCounter=ticket.counter;
+  runAnnouncement(ticket);
+}
+
+function runAnnouncement(ticket){
+  const color=COLOR_HEX[ticket.counter];
+  const num=String(ticket.id).padStart(3,'0');
+  const cname=COUNTER_NAMES[ticket.counter-1];
+
+  // ── Update flash overlay ──
+  document.getElementById('cfNumber').textContent=num;
+  document.getElementById('cfNumber').style.color=color;
+  document.getElementById('cfGotoNum').textContent=`No. ${num}`;
+  document.getElementById('cfGotoNum').style.color=color;
+  document.getElementById('cfGotoCounter').textContent=cname;
+  document.getElementById('cfGotoCounter').style.color=color;
+  document.getElementById('cfCounterDot').style.background=color;
+  document.getElementById('cfCounterText').textContent=cname;
+  document.getElementById('cfCounterText').style.color=color;
+  document.getElementById('cfCounterBadge').style.background=COLOR_BG[ticket.counter];
+  document.getElementById('cfCounterBadge').style.border=`1px solid ${color}44`;
+  document.getElementById('cfService').textContent=ticket.service||'';
+  // Show nickname in cfCustomer, full name (First + Last) in cfFullname
+  const hasNickname = ticket.nickname && ticket.nickname.trim();
+  const hasFullname = ticket.customer && ticket.customer.trim();
+  document.getElementById('cfCustomer').textContent = hasNickname ? ticket.nickname : (hasFullname ? ticket.customer : '');
+  const fullnameEl = document.getElementById('cfFullname');
+  if(hasFullname && hasNickname){
+    fullnameEl.textContent = ticket.customer;
+    fullnameEl.style.display = 'block';
+  } else {
+    fullnameEl.style.display = 'none';
+  }
+  document.getElementById('cfPriority').style.display=ticket.priority==='priority'?'inline-flex':'none';
+
+  // ── Show flash — with safety auto-hide so it can never get permanently stuck ──
+  if(flashTimer){ clearTimeout(flashTimer); flashTimer=null; }
+  document.getElementById('callFlash').classList.add('show');
+  flashTimer=setTimeout(()=>{
+    document.getElementById('callFlash').classList.remove('show');
+    flashTimer=null;
+    // Also clear counter panel if speech never fired (safety fallback)
+    const cd=counterDisplay[ticket.counter-1];
+    if(cd.current===ticket.id){
+      cd.current=null; cd.service=null; cd.customer=null; cd.priority=null; cd.time=null;
+      renderAll();
+    }
+  }, 12000); // max 12s visible regardless of speech state
+
+  // ── Counter panel effects ──
+  const numEl=document.getElementById(`cpnum-${ticket.counter}`);
+  if(numEl){numEl.classList.remove('pop');void numEl.offsetWidth;numEl.classList.add('pop');setTimeout(()=>numEl.classList.remove('pop'),700);}
+  const waveEl=document.getElementById(`cpwave-${ticket.counter}`);
+  if(waveEl){waveEl.classList.add('active');setTimeout(()=>waveEl.classList.remove('active'),5500);}
+
+  // ── Chime then speak; when speech finishes, hide flash and move to next ──
+  playChime();
+  setTimeout(()=>{
+    doSpeak(ticket, ()=>{
+      // Speech done — clear safety timer, hide flash, then next item
+      if(flashTimer){ clearTimeout(flashTimer); flashTimer=null; }
+      setTimeout(()=>{
+        document.getElementById('callFlash').classList.remove('show');
+        // Clear counter panel display after announcement is done
+        const cd=counterDisplay[ticket.counter-1];
+        if(cd.current===ticket.id){
+          cd.current=null; cd.service=null; cd.customer=null; cd.priority=null; cd.time=null;
+          renderAll();
+        }
+        // Gap between announcements: cooldown gives other counters breathing room
+        setTimeout(()=>processAnnounceQueue(), announceQueue.length>0 ? COOLDOWN_MS : 0);
+      }, 400);
+    });
+  }, 350);
+}
+
+function playChime(){
+  if(!audioCtx) return;
+  try{
+    [[880,0,0.14],[660,0.18,0.22]].forEach(([freq,start,dur])=>{
+      const osc=audioCtx.createOscillator(),gain=audioCtx.createGain();
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.type='sine'; osc.frequency.setValueAtTime(freq,audioCtx.currentTime+start);
+      gain.gain.setValueAtTime(0,audioCtx.currentTime+start);
+      gain.gain.linearRampToValueAtTime(0.5,audioCtx.currentTime+start+0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+start+dur);
+      osc.start(audioCtx.currentTime+start); osc.stop(audioCtx.currentTime+start+dur+0.05);
+    });
+  }catch(e){console.warn('Chime:',e);}
+}
+
+function doSpeak(ticket, onDone){
+  if(!audioUnlocked||!window.speechSynthesis){ if(onDone) onDone(); return; }
+  const cnum=ticket.counter;
+  const num=ticket.id;
+  const cname=COUNTER_NAMES[cnum-1];
+  function toTitleCase(str){ return str.toLowerCase().replace(/\b\w/g,c=>c.toUpperCase()); }
+  const rawName = ticket.nickname || ticket.customer || null;
+  const spokenName = rawName ? toTitleCase(rawName.trim()) : null;
+  const subjectPart = spokenName ? spokenName : `Number ${num}`;
+  const svcPart     = ticket.service  ? ` for ${ticket.service}` : '';
+  const announcement = ticket.priority==='priority'
+    ? `Priority customer. ${subjectPart}, please proceed to ${cname}${svcPart}.`
+    : `${subjectPart}, please proceed to ${cname}${svcPart}.`;
+
+  // Resume in case Chrome paused synthesis, then cancel any leftover
+  if(window.speechSynthesis.paused) window.speechSynthesis.resume();
+  window.speechSynthesis.cancel();
+
+  // Wait for voices AND for cancel to fully clear
+  function trySpeak(attemptsLeft){
+    const voices=window.speechSynthesis.getVoices();
+
+    // If voices not loaded yet, retry up to 5 times with 300ms gap
+    if(!voices.length && attemptsLeft>0){
+      setTimeout(()=>trySpeak(attemptsLeft-1), 300);
+      return;
+    }
+
+    // ── Prefer a MALE English voice ──
+    const MALE_NAMES=['Google UK English Male','Microsoft David','Microsoft Mark','David','Daniel','Alex','Fred','Ralph','Thomas','Google US English'];
+    const preferred =
+      MALE_NAMES.map(n=>voices.find(v=>v.name===n)).find(Boolean) ||
+      voices.find(v=>v.lang==='en-US' && /male|david|mark|james|guy|man/i.test(v.name)) ||
+      voices.find(v=>v.lang.startsWith('en') && /male|david|mark|james|guy|man/i.test(v.name)) ||
+      voices.find(v=>v.lang==='en-US' && v.name.includes('Google')) ||
+      voices.find(v=>v.lang==='en-US' && !v.localService) ||
+      voices.find(v=>v.lang.startsWith('en') && !v.localService) ||
+      voices.find(v=>v.lang.startsWith('en')) ||
+      (voices.length>0 ? voices[0] : null);
+
+    const u=new SpeechSynthesisUtterance(announcement);
+    u.rate=1.05; u.pitch=0.75; u.volume=1; u.lang='en-US';
+    if(preferred) u.voice=preferred;
+
+    let done=false;
+    function finish(){
+      if(done) return;
+      done=true;
+      if(onDone) onDone();
+    }
+
+    u.onend  = ()=>finish();
+    u.onerror= (e)=>{ if(e.error!=='canceled') finish(); };
+
+    // Watchdog 1 — speech never started (2.5s)
+    let started=false;
+    u.onstart=()=>{ started=true; };
+    setTimeout(()=>{
+      if(!started){ window.speechSynthesis.cancel(); finish(); }
+    }, 2500);
+
+    // Watchdog 2 — speech started but onend never fired (15s max)
+    setTimeout(()=>{ finish(); }, 15000);
+
+    window.speechSynthesis.speak(u);
+
+    // Chrome pause-resume fix — if Chrome pauses mid-speech, kick it back
+    const resumeInterval=setInterval(()=>{
+      if(done){ clearInterval(resumeInterval); return; }
+      if(window.speechSynthesis.paused) window.speechSynthesis.resume();
+    }, 2000);
+  }
+
+  setTimeout(()=>trySpeak(5), 250);
+}
+
+// ── Chrome TTS heartbeat — prevents Chrome from silently pausing speech synthesis ──
+// Chrome pauses TTS when tab is not focused; this keeps it alive
+setInterval(()=>{
+  if(!audioUnlocked) return;
+  if(window.speechSynthesis && window.speechSynthesis.paused && !window.speechSynthesis.speaking){
+    window.speechSynthesis.resume();
+  }
+}, 5000);
+
+function renderCounters(){
+  const queues=getQueues();
+  [1,2,3,4].forEach(id=>{
+    const cd=counterDisplay[id-1];
+    const waiting=queues[id]||[];
+    const panel=document.querySelector(`.counter-panel[data-c="${id}"]`);
+    const numEl=document.getElementById(`cpnum-${id}`);
+    const statusEl=document.getElementById(`cpstatus-${id}`);
+    const isAbsent=absentCounters.has(id);
+
+    if(isAbsent){
+      panel.classList.add('absent');
+      numEl.textContent='—'; numEl.className='cp-number';
+      panel.classList.remove('active');
+      statusEl.textContent='Unavailable'; statusEl.className='cp-status-pill';
+      document.getElementById(`cpsvc-${id}`).textContent='';
+      document.getElementById(`cpcust-${id}`).textContent='';
+      document.getElementById(`cpqueue-${id}`).innerHTML=`<span class="cp-queue-lbl">Next:</span><span style="font-size:9px;color:var(--muted)">—</span>`;
+    } else {
+      panel.classList.remove('absent');
+      if(cd.current!==null){
+        numEl.textContent=String(cd.current).padStart(3,'0');
+        numEl.className='cp-number has-num';
+        panel.classList.add('active');
+        statusEl.textContent='Serving'; statusEl.className='cp-status-pill serving';
+      } else {
+        numEl.textContent='—'; numEl.className='cp-number';
+        panel.classList.remove('active');
+        statusEl.textContent=waiting.length>0?'Ready':'Idle'; statusEl.className='cp-status-pill';
+      }
+      document.getElementById(`cpsvc-${id}`).textContent=cd.service||'';
+      document.getElementById(`cpcust-${id}`).textContent=cd.customer||'';
+      const queueEl=document.getElementById(`cpqueue-${id}`);
+      queueEl.innerHTML=`<span class="cp-queue-lbl">Next:</span>`;
+      if(!waiting.length){queueEl.innerHTML+='<span style="font-size:9px;color:var(--muted)">—</span>';}
+      else{
+        waiting.slice(0,4).forEach((t,i)=>{
+          const b=document.createElement('span');b.className='q-badge'+(i===0?' up-next':'');
+          b.textContent=String(t.id).padStart(3,'0')+(t.priority==='priority'?' ⚡':'');
+          queueEl.appendChild(b);
+        });
+        if(waiting.length>4){const m=document.createElement('span');m.style.cssText='font-size:9px;color:var(--muted)';m.textContent=`+${waiting.length-4}`;queueEl.appendChild(m);}
+      }
+    }
+  });
+}
+
+function renderStats(){
+  document.getElementById('sbWaiting').textContent=sharedLog.filter(t=>!t.served&&!t.compliance&&t.counter>=1).length;
+  document.getElementById('sbServed').textContent=sharedLog.filter(t=>t.served&&!t.unserved).length;
+}
+
+function renderAll(){renderCounters();renderStats();}
+
+buildCounters(); renderAll();
+if(window.speechSynthesis){
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices();
+}
+</script>
+</body>
 </html>
