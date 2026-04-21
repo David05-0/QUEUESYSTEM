@@ -302,6 +302,26 @@
   #counterView.c3 .pool-item:hover .pi-hint{color:var(--c3)}
   #counterView.c4 .pool-item:hover .pi-hint{color:var(--c4)}
   .pool-empty{font-size:10px;color:var(--muted);letter-spacing:0.1em;text-align:center;padding:28px 12px}
+
+  /* Pool filter tabs */
+  .pool-filters{display:flex;gap:5px;padding:8px 12px;border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
+  .pool-filter-btn{font-family:'DM Mono',monospace;font-size:7.5px;letter-spacing:0.14em;text-transform:uppercase;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:20px;padding:3px 9px;cursor:pointer;transition:all 0.15s;white-space:nowrap}
+  .pool-filter-btn:hover{border-color:var(--muted);color:var(--text)}
+  .pool-filter-btn.active{border-color:currentColor;background:rgba(255,255,255,0.06)}
+  #counterView.c1 .pool-filter-btn.active{color:var(--c1);border-color:var(--c1b)}
+  #counterView.c2 .pool-filter-btn.active{color:var(--c2);border-color:var(--c2b)}
+  #counterView.c3 .pool-filter-btn.active{color:var(--c3);border-color:var(--c3b)}
+  #counterView.c4 .pool-filter-btn.active{color:var(--c4);border-color:var(--c4b)}
+
+  /* Pool service group headers */
+  .pool-group-header{display:flex;align-items:center;justify-content:space-between;padding:5px 4px 4px;cursor:pointer;user-select:none;flex-shrink:0}
+  .pool-group-header:hover .pool-group-label{opacity:1}
+  .pool-group-label{font-size:7.5px;letter-spacing:0.22em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:6px;opacity:0.75;transition:opacity 0.15s;flex:1}
+  .pool-group-label::after{content:'';flex:1;height:1px;background:var(--border)}
+  .pool-group-count{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:0.06em;color:var(--muted);margin-left:6px;flex-shrink:0}
+  .pool-group-toggle{font-size:8px;color:var(--muted);transition:transform 0.2s;flex-shrink:0;margin-left:4px}
+  .pool-group-toggle.collapsed{transform:rotate(-90deg)}
+  .pool-group-items{display:flex;flex-direction:column;gap:5px;overflow:hidden;transition:all 0.2s}
   .claim-flash{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:0.1em;opacity:0;pointer-events:none;transition:opacity 0.2s}
   .pool-item.claiming .claim-flash{opacity:1}
   #counterView.c1 .claim-flash{background:rgba(230,126,34,0.18);color:var(--c1)}
@@ -481,6 +501,9 @@
           <span class="pool-badge" id="poolBadge">0</span>
         </div>
         <div class="pool-hint">Tap a client to add to your queue</div>
+      </div>
+      <div class="pool-filters" id="poolFilters">
+        <button class="pool-filter-btn active" data-svc="__all__" onclick="setPoolFilter(this)">All</button>
       </div>
       <div class="pool-list" id="poolList">
         <div class="pool-empty" id="poolEmpty">No clients waiting</div>
@@ -1320,34 +1343,132 @@ function renderView(){
     }).join('');
   }
 
-  // Pool
-  const poolList=document.getElementById('poolList');
-  const poolEmpty=document.getElementById('poolEmpty');
-  document.getElementById('poolBadge').textContent=pool.length;
-  poolList.querySelectorAll('.pool-item').forEach(e=>e.remove());
-  if(!pool.length){
-    poolEmpty.style.display='block';
-  } else {
-    poolEmpty.style.display='none';
-    pool.forEach(t=>{
-      const item=document.createElement('div');
-      item.className='pool-item';
-      item.onclick=()=>claimWithFlash(item,t.id);
-      item.innerHTML=`
-        <div class="pi-num">${String(t.id).padStart(3,'0')}</div>
-        <div class="pi-info">
-          <div class="pi-svc">${t.service}</div>
-          ${t.customer?`<div class="pi-cust">${t.customer}</div>`:''}
-          <div class="pi-time">${t.time}</div>
-        </div>
-        <div class="pi-badges">
-          ${t.priority==='priority'?'<span class="pi-badge pi-badge-prio">⚡</span>':''}
-          <span class="pi-hint">Tap to claim</span>
-        </div>
-        <div class="claim-flash">✓ Added</div>`;
-      poolList.insertBefore(item, poolEmpty);
-    });
+  // Pool — grouped by service type with filter tabs
+  renderPool(pool);
+}
+
+// ── Pool state ──
+let _poolFilter = '__all__';
+let _collapsedGroups = new Set();
+
+function setPoolFilter(btn){
+  _poolFilter = btn.dataset.svc;
+  document.querySelectorAll('.pool-filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const pool = unassigned();
+  renderPool(pool);
+}
+window.setPoolFilter = setPoolFilter;
+
+function toggleGroup(svc){
+  if(_collapsedGroups.has(svc)) _collapsedGroups.delete(svc);
+  else _collapsedGroups.add(svc);
+  const pool = unassigned();
+  renderPool(pool);
+}
+window.toggleGroup = toggleGroup;
+
+function buildPoolItem(t){
+  const item = document.createElement('div');
+  item.className = 'pool-item';
+  item.onclick = ()=>claimWithFlash(item, t.id);
+  item.innerHTML = `
+    <div class="pi-num">${String(t.id).padStart(3,'0')}</div>
+    <div class="pi-info">
+      <div class="pi-svc">${t.service||'—'}</div>
+      ${t.customer?`<div class="pi-cust">${t.customer}</div>`:''}
+      <div class="pi-time">${t.time||''}</div>
+    </div>
+    <div class="pi-badges">
+      ${t.priority==='priority'?'<span class="pi-badge pi-badge-prio">⚡</span>':''}
+      <span class="pi-hint">Tap to claim</span>
+    </div>
+    <div class="claim-flash">✓ Added</div>`;
+  return item;
+}
+
+function renderPool(pool){
+  const poolList   = document.getElementById('poolList');
+  const poolEmpty  = document.getElementById('poolEmpty');
+  const poolFilters= document.getElementById('poolFilters');
+
+  document.getElementById('poolBadge').textContent = pool.length;
+
+  // ── Build / sync filter tabs ──
+  const allSvcs = [...new Set(pool.map(t=>t.service||'—'))].sort();
+  // Keep existing buttons, add missing, remove stale
+  const existingBtns = [...poolFilters.querySelectorAll('.pool-filter-btn[data-svc]')];
+  const existingSvcs = existingBtns.filter(b=>b.dataset.svc!=='__all__').map(b=>b.dataset.svc);
+  // Add new service tabs
+  allSvcs.forEach(svc=>{
+    if(!existingSvcs.includes(svc)){
+      const btn = document.createElement('button');
+      btn.className = 'pool-filter-btn';
+      btn.dataset.svc = svc;
+      btn.textContent = svc;
+      btn.onclick = ()=>setPoolFilter(btn);
+      poolFilters.appendChild(btn);
+    }
+  });
+  // Remove stale tabs
+  existingBtns.forEach(btn=>{
+    if(btn.dataset.svc!=='__all__' && !allSvcs.includes(btn.dataset.svc)){
+      if(_poolFilter===btn.dataset.svc){ _poolFilter='__all__'; }
+      btn.remove();
+    }
+  });
+  // Sync active state
+  poolFilters.querySelectorAll('.pool-filter-btn').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.svc===_poolFilter);
+  });
+
+  // ── Filter tickets ──
+  const filtered = _poolFilter==='__all__' ? pool : pool.filter(t=>(t.service||'—')===_poolFilter);
+
+  // ── Clear old pool items & groups ──
+  poolList.querySelectorAll('.pool-item, .pool-group-header, .pool-group-items').forEach(e=>e.remove());
+
+  if(!filtered.length){
+    poolEmpty.style.display = 'block';
+    return;
   }
+  poolEmpty.style.display = 'none';
+
+  // ── If filtered to one service, flat list ──
+  if(_poolFilter !== '__all__'){
+    filtered.forEach(t=> poolList.insertBefore(buildPoolItem(t), poolEmpty));
+    return;
+  }
+
+  // ── Group by service ──
+  const groups = {};
+  filtered.forEach(t=>{
+    const svc = t.service||'—';
+    if(!groups[svc]) groups[svc]=[];
+    groups[svc].push(t);
+  });
+
+  Object.keys(groups).sort().forEach(svc=>{
+    const tickets = groups[svc];
+    const isCollapsed = _collapsedGroups.has(svc);
+
+    // Header
+    const hdr = document.createElement('div');
+    hdr.className = 'pool-group-header';
+    hdr.onclick = ()=>toggleGroup(svc);
+    hdr.innerHTML = `
+      <div class="pool-group-label">${svc}</div>
+      <div class="pool-group-count">${tickets.length}</div>
+      <div class="pool-group-toggle${isCollapsed?' collapsed':''}">▾</div>`;
+    poolList.insertBefore(hdr, poolEmpty);
+
+    // Items wrapper
+    const wrap = document.createElement('div');
+    wrap.className = 'pool-group-items';
+    if(isCollapsed) wrap.style.display = 'none';
+    tickets.forEach(t=> wrap.appendChild(buildPoolItem(t)));
+    poolList.insertBefore(wrap, poolEmpty);
+  });
 }
 
 function claimWithFlash(el, id){
