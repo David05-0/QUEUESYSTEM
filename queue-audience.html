@@ -554,9 +554,29 @@ function playChime(){
 function doSpeak(ticket, onDone){
   if(!audioUnlocked || !window.speechSynthesis){ if(onDone) onDone(); return; }
   var cname = COUNTER_NAMES[ticket.counter-1];
-  function toTitleCase(str){ return str.toLowerCase().replace(/\b\w/g, function(c){ return c.toUpperCase(); }); }
+  function toTitleCase(str){
+    // Roman numeral suffixes (I, II, III, IV, V, VI etc.) must stay fully uppercase
+    // and be spoken as letters, not as a word.
+    var ROMAN = /\b(I{1,3}|IV|VI{0,3}|IX|XI{0,2}|XII)\b/gi;
+    return str.toLowerCase()
+      .replace(/\b\w/g, function(c){ return c.toUpperCase(); })
+      .replace(ROMAN, function(m){ return m.toUpperCase(); });
+  }
   var rawName = ticket.nickname || ticket.customer || null;
-  var spokenName = rawName ? toTitleCase(rawName.trim()) : null;
+  // Convert Roman numeral suffixes to phonetic form so TTS speaks them correctly.
+  // e.g. "Juan II" → "Juan the Second", "Jose III" → "Jose the Third"
+  function romanToPhonetic(str){
+    var map = {
+      'XII':'the Twelfth','XI':'the Eleventh','IX':'the Ninth','VIII':'the Eighth',
+      'VII':'the Seventh','VI':'the Sixth','IV':'the Fourth','V':'the Fifth',
+      'III':'the Third','II':'the Second','I':'the First'
+    };
+    // Only match Roman numerals that appear as a standalone suffix (at end or before comma/space)
+    return str.replace(/\b(XII|XI|IX|VIII|VII|VI|IV|V|III|II|I)\b/g, function(m){
+      return map[m.toUpperCase()] || m;
+    });
+  }
+  var spokenName = rawName ? romanToPhonetic(toTitleCase(rawName.trim())) : null;
   var subjectPart = spokenName ? spokenName : ('Number ' + ticket.id);
   var svcPart = ticket.service ? (' for ' + ticket.service) : '';
   var announcement = ticket.priority === 'priority'
