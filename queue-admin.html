@@ -886,8 +886,16 @@ function adminComplianceDone(ticketId){
   if(!confirm(`Mark compliance done for ${label}?\nThe client will be returned to the counter queue and the desk will be notified.`)) return;
   t.compliance = false;
   t.complianceDoneAt = Date.now();
+  // Write a notification that the display file will detect
+  db.ref('complianceNotify').set({
+    ticketId:  t.id,
+    counter:   t.counter,
+    customer:  t.customer || null,
+    service:   t.service  || null,
+    ts:        Date.now()
+  });
   saveState();
-  showToast(`${label} ✓ Compliance done — returned to queue`);
+  showToast(`${label} ✓ Compliance done — desk notified`);
   renderAll();
 }
 window.adminComplianceDone = adminComplianceDone;
