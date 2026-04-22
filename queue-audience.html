@@ -342,7 +342,10 @@ function renderCounters(){
         statusEl.textContent = waiting.length > 0 ? 'Ready' : 'Idle'; statusEl.className = 'cp-status-pill';
       }
       document.getElementById('cpsvc-' + id).textContent = cd.service || '';
-      document.getElementById('cpcust-' + id).textContent = cd.customer || '';
+      // Hide customer name if ticket is on compliance or payment hold
+      var ticketInLog = cd.current !== null ? sharedLog.find(function(t){ return t.id === cd.current; }) : null;
+      var onHold = ticketInLog && (ticketInLog.compliance || ticketInLog.paymentHold);
+      document.getElementById('cpcust-' + id).textContent = onHold ? '' : (cd.customer || '');
       var queueEl = document.getElementById('cpqueue-' + id);
       queueEl.innerHTML = '<span class="cp-queue-lbl">Next:</span>';
       if(!waiting.length){
