@@ -705,6 +705,15 @@ stateRef.on('value',snap=>{
           }
         }
       }
+      // ── Check for compliance-done notification from admin ──
+      const cn = data.complianceNotify || null;
+      if(cn && cn.ts && cn.ts !== _lastComplyNotifyTs){
+        _lastComplyNotifyTs = cn.ts;
+        if(cn.counter === activeCounter && (Date.now() - cn.ts) < 120000){
+          showComplyNotify(cn);
+        }
+      }
+
       renderView();
     }
   }
@@ -726,33 +735,6 @@ function saveShared(){
 
 // ── Compliance Done Notification ──
 let _lastComplyNotifyTs = null;
-
-// Listen for complianceNotify from admin
-const complyNotifyRef = db.ref('complianceNotify');
-complyNotifyRef.on('value', snap => {
-  const data = snap.val();
-  if(!data || !data.ts) return;
-  // Already seen this exact notification — skip
-  if(data.ts === _lastComplyNotifyTs) return;
-  _lastComplyNotifyTs = data.ts;
-  // Stale — older than 2 minutes, ignore
-  if(Date.now() - data.ts > 120000) return;
-  // Not for this counter — ignore
-  if(data.counter !== activeCounter) return;
-  // Show the notification
-  showComplyNotify(data);
-});
-
-// Also check when staff logs in — in case notification fired before login
-function checkPendingComplyNotify(){
-  complyNotifyRef.once('value', snap => {
-    const data = snap.val();
-    if(!data || !data.ts) return;
-    if(Date.now() - data.ts > 120000) return;
-    if(data.counter !== activeCounter) return;
-    showComplyNotify(data);
-  });
-}
 
 function showComplyNotify(data){
   const num = String(data.ticketId).padStart(3, '0');
@@ -831,8 +813,6 @@ function login(id){
   document.getElementById('loginScreen').classList.add('hidden');
   clearDisplay();
   renderView();
-  // Check if a compliance-done notification is pending for this counter
-  checkPendingComplyNotify();
 }
 
 function logout(){
