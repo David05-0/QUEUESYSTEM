@@ -625,8 +625,7 @@ stateRef.on('value',snap=>{
     sharedLog=data.log||[];
     sharedTicketCounter=data.ticketCounter||0;
     sharedAbsentCounters=(data.absentCounters||[]).map(Number); // ← preserve on first load
-    // Adopt complianceNotify ts silently so stale notification never fires on load
-    db.ref('complianceNotify').once('value').then(s=>{ const d=s.val(); if(d&&d.ts) _lastComplyNotifyTs=d.ts; });
+
     // If session was restored (tab closed accidentally), resume the counter view
     if(activeCounter){
       const view=document.getElementById('counterView');
@@ -733,12 +732,14 @@ const complyNotifyRef = db.ref('complianceNotify');
 complyNotifyRef.on('value', snap => {
   const data = snap.val();
   if(!data || !data.ts) return;
-  // Only show if it's for this counter and it's a new notification
-  if(data.counter !== activeCounter) return;
+  // Already seen this exact notification — skip
   if(data.ts === _lastComplyNotifyTs) return;
+  // Stale — older than 2 minutes, ignore regardless of login state
+  if(Date.now() - data.ts > 120000) { _lastComplyNotifyTs = data.ts; return; }
+  // Not for this counter — ignore but remember ts so we don't re-process
+  if(data.counter !== activeCounter) { _lastComplyNotifyTs = data.ts; return; }
+  // Mark as seen and show
   _lastComplyNotifyTs = data.ts;
-  // Don't show on first page load (stale notification)
-  if(!activeCounter) return;
   showComplyNotify(data);
 });
 
