@@ -566,9 +566,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
 
 const firebaseConfig = {
   apiKey:"AIzaSyD1jlmo6pdJhqwjbRDMby9cTBHzazRejcE",
@@ -580,9 +580,9 @@ const firebaseConfig = {
   appId:"1:314957208142:web:51f960c760f8682e77811f"
 };
 
-const app = initializeApp(firebaseConfig);
-const db  = getDatabase(app);
-const stateRef = ref(db,'queueState');
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const stateRef = db.ref('queueState');
 
 const COUNTER_NAMES = ['DMW Desk 2','DMW Desk 3','DMW Desk 4','DMW Desk 5'];
 const COLOR_HEX = {1:'#e67e22',2:'#2471a3',3:'#1e8449',4:'#7d3c98'};
@@ -612,7 +612,7 @@ setInterval(updateClock,1000); updateClock();
 
 // ── Firebase ──
 let _fbFirstLoad = true;
-onValue(stateRef,snap=>{
+stateRef.on('value',snap=>{
   document.getElementById('fbBadge').className='fb-badge live';
   document.getElementById('fbBadge').innerHTML='<span class="fb-dot"></span>Connected';
   const data=snap.val()||{};
@@ -715,7 +715,7 @@ onValue(stateRef,snap=>{
 });
 
 function saveShared(){
-  set(stateRef,{
+  stateRef.set({
     ticketCounter: sharedTicketCounter,
     log:           sharedLog,
     lastUpdate:    Date.now(),
@@ -729,8 +729,8 @@ function saveShared(){
 let _lastComplyNotifyTs = null;
 
 // Listen for complianceNotify from admin
-const complyNotifyRef = ref(db, 'complianceNotify');
-onValue(complyNotifyRef, snap => {
+const complyNotifyRef = db.ref('complianceNotify');
+complyNotifyRef.on('value', snap => {
   const data = snap.val();
   if(!data || !data.ts) return;
   // Only show if it's for this counter and it's a new notification
