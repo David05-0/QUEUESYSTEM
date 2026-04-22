@@ -896,7 +896,12 @@ function adminComplianceDone(ticketId){
     ts:       Date.now()
   };
   saveState();
-  window._complianceNotify = null;
+  // Clear AFTER save completes so the value is included in the write
+  // Clear after 3s — enough time for display to receive it, then clean up Firebase
+  setTimeout(()=>{
+    window._complianceNotify = null;
+    saveState(); // Write null to Firebase so it doesn't re-trigger on future snapshots
+  }, 3000);
   showToast(`${label} ✓ Compliance done — desk notified`);
   renderAll();
 }
