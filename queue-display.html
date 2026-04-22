@@ -734,14 +734,25 @@ complyNotifyRef.on('value', snap => {
   if(!data || !data.ts) return;
   // Already seen this exact notification — skip
   if(data.ts === _lastComplyNotifyTs) return;
-  // Stale — older than 2 minutes, ignore regardless of login state
-  if(Date.now() - data.ts > 120000) { _lastComplyNotifyTs = data.ts; return; }
-  // Not for this counter — ignore but remember ts so we don't re-process
-  if(data.counter !== activeCounter) { _lastComplyNotifyTs = data.ts; return; }
-  // Mark as seen and show
   _lastComplyNotifyTs = data.ts;
+  // Stale — older than 2 minutes, ignore
+  if(Date.now() - data.ts > 120000) return;
+  // Not for this counter — ignore
+  if(data.counter !== activeCounter) return;
+  // Show the notification
   showComplyNotify(data);
 });
+
+// Also check when staff logs in — in case notification fired before login
+function checkPendingComplyNotify(){
+  complyNotifyRef.once('value', snap => {
+    const data = snap.val();
+    if(!data || !data.ts) return;
+    if(Date.now() - data.ts > 120000) return;
+    if(data.counter !== activeCounter) return;
+    showComplyNotify(data);
+  });
+}
 
 function showComplyNotify(data){
   const num = String(data.ticketId).padStart(3, '0');
@@ -820,6 +831,8 @@ function login(id){
   document.getElementById('loginScreen').classList.add('hidden');
   clearDisplay();
   renderView();
+  // Check if a compliance-done notification is pending for this counter
+  checkPendingComplyNotify();
 }
 
 function logout(){
