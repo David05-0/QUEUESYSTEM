@@ -358,6 +358,21 @@
 
   .toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--panel);border:1px solid var(--border);color:var(--text);padding:9px 22px;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:0.1em;opacity:0;transition:all 0.3s;pointer-events:none;z-index:99}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* ── COMPLIANCE DONE NOTIFICATION ── */
+  .comply-notify-backdrop{position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity 0.3s}
+  .comply-notify-backdrop.show{opacity:1;pointer-events:all}
+  .comply-notify-box{background:var(--panel);border:2px solid var(--teal);border-radius:8px;padding:28px 32px;max-width:min(420px,90vw);width:100%;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;box-shadow:0 0 60px rgba(14,154,181,0.35),0 16px 48px rgba(0,0,0,0.6);animation:notifyPop 0.4s cubic-bezier(0.34,1.56,0.64,1)}
+  @keyframes notifyPop{from{transform:scale(0.7);opacity:0}to{transform:scale(1);opacity:1}}
+  .comply-notify-icon{font-size:48px;animation:notifyBounce 0.6s ease}
+  @keyframes notifyBounce{0%{transform:scale(0.5)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
+  .comply-notify-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(22px,4vw,32px);letter-spacing:0.14em;color:var(--teal);line-height:1}
+  .comply-notify-num{font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,10vw,80px);letter-spacing:0.04em;line-height:0.9}
+  .comply-notify-name{font-size:clamp(16px,2.5vw,22px);letter-spacing:0.06em;color:var(--text);font-weight:500}
+  .comply-notify-svc{font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin-top:-4px}
+  .comply-notify-msg{font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--teal);border:1px solid rgba(14,154,181,0.3);background:rgba(14,154,181,0.08);padding:6px 16px;border-radius:20px}
+  .comply-notify-dismiss{margin-top:4px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:0.12em;background:var(--teal);color:#fff;border:none;border-radius:4px;padding:12px 40px;cursor:pointer;transition:all 0.15s}
+  .comply-notify-dismiss:hover{filter:brightness(1.15);transform:translateY(-1px)}
 </style>
 </head>
 <body>
@@ -536,6 +551,19 @@
   </div>
 </div>
 
+<!-- ── Compliance Done Notification ── -->
+<div class="comply-notify-backdrop" id="complyNotifyBackdrop">
+  <div class="comply-notify-box">
+    <div class="comply-notify-icon">✅</div>
+    <div class="comply-notify-title">Compliance Done</div>
+    <div class="comply-notify-num" id="complyNotifyNum">—</div>
+    <div class="comply-notify-name" id="complyNotifyName"></div>
+    <div class="comply-notify-svc" id="complyNotifySvc"></div>
+    <div class="comply-notify-msg">Client is ready — return to queue</div>
+    <button class="comply-notify-dismiss" onclick="dismissComplyNotify()">✓ Got It</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script type="module">
@@ -597,6 +625,8 @@ onValue(stateRef,snap=>{
     sharedLog=data.log||[];
     sharedTicketCounter=data.ticketCounter||0;
     sharedAbsentCounters=(data.absentCounters||[]).map(Number); // ← preserve on first load
+    // Adopt complianceNotify ts silently so stale notification never fires on load
+    db.ref('complianceNotify').once('value').then(s=>{ const d=s.val(); if(d&&d.ts) _lastComplyNotifyTs=d.ts; });
     // If session was restored (tab closed accidentally), resume the counter view
     if(activeCounter){
       const view=document.getElementById('counterView');
@@ -694,6 +724,41 @@ function saveShared(){
     absentCounters: sharedAbsentCounters   // ← never wipe absent desk data
   });
 }
+
+// ── Compliance Done Notification ──
+let _lastComplyNotifyTs = null;
+
+// Listen for complianceNotify from admin
+const complyNotifyRef = ref(db, 'complianceNotify');
+onValue(complyNotifyRef, snap => {
+  const data = snap.val();
+  if(!data || !data.ts) return;
+  // Only show if it's for this counter and it's a new notification
+  if(data.counter !== activeCounter) return;
+  if(data.ts === _lastComplyNotifyTs) return;
+  _lastComplyNotifyTs = data.ts;
+  // Don't show on first page load (stale notification)
+  if(!activeCounter) return;
+  showComplyNotify(data);
+});
+
+function showComplyNotify(data){
+  const num = String(data.ticketId).padStart(3, '0');
+  document.getElementById('complyNotifyNum').textContent = num;
+  document.getElementById('complyNotifyNum').style.color = COLOR_HEX[activeCounter] || 'var(--teal)';
+  document.getElementById('complyNotifyName').textContent = data.customer || '';
+  document.getElementById('complyNotifySvc').textContent  = data.service  || '';
+  document.getElementById('complyNotifyBackdrop').classList.add('show');
+  // Auto-dismiss after 30s if staff doesn't tap
+  clearTimeout(window._complyNotifyTimer);
+  window._complyNotifyTimer = setTimeout(dismissComplyNotify, 30000);
+}
+
+function dismissComplyNotify(){
+  clearTimeout(window._complyNotifyTimer);
+  document.getElementById('complyNotifyBackdrop').classList.remove('show');
+}
+window.dismissComplyNotify = dismissComplyNotify;
 
 // ── Queue helpers ──
 // "queue" = assigned to me, not served, not on hold, not currently being called
