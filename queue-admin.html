@@ -243,6 +243,8 @@
   .cc-act-btn.serve-btn:hover{background:rgba(30,132,73,0.1);border-color:var(--green)}
   .cc-act-btn.remove-btn{color:var(--accent);border-color:rgba(176,58,46,0.3)}
   .cc-act-btn.remove-btn:hover{background:rgba(176,58,46,0.1);border-color:var(--accent)}
+  .cc-act-btn.comply-done-btn{color:var(--teal);border-color:rgba(14,107,138,0.3);font-weight:600}
+  .cc-act-btn.comply-done-btn:hover{background:rgba(14,107,138,0.12);border-color:var(--teal)}
 
   /* ── SERVICE TALLY PANEL ── */
   .tally-card{background:var(--paper);border:1px solid var(--rule);border-radius:2px;box-shadow:0 2px 8px var(--shadow);overflow:hidden}
@@ -838,6 +840,9 @@ function renderPool(){
 
     // Admin action buttons — only show relevant actions per ticket state
     const actionBtns = [];
+    if(t.compliance && !t.served){
+      actionBtns.push(`<button class="cc-act-btn comply-done-btn" onclick="adminComplianceDone(${t.id})" title="Clear compliance hold — returns client to counter queue">✓ Compliance Done</button>`);
+    }
     if(!t.served && !t.unserved){
       actionBtns.push(`<button class="cc-act-btn serve-btn" onclick="adminMarkServed(${t.id})">✓ Mark Served</button>`);
     }
@@ -872,6 +877,20 @@ This cannot be undone and the client will not be called again.`)) return;
   showToast(`#${String(ticketId).padStart(3,'0')} marked Served`);
 }
 window.adminMarkServed = adminMarkServed;
+
+// ── Admin: Compliance Done — clears compliance hold, returns ticket to counter queue ──
+function adminComplianceDone(ticketId){
+  const t = log.find(x=>x.id===ticketId);
+  if(!t || !t.compliance || t.served) return;
+  const label = `#${String(ticketId).padStart(3,'0')}${t.customer?' — '+t.customer:''}`;
+  if(!confirm(`Mark compliance done for ${label}?\nThe client will be returned to the counter queue and the desk will be notified.`)) return;
+  t.compliance = false;
+  t.complianceDoneAt = Date.now();
+  saveState();
+  showToast(`${label} ✓ Compliance done — returned to queue`);
+  renderAll();
+}
+window.adminComplianceDone = adminComplianceDone;
 
 // ── Admin: Remove Ticket ──
 function adminRemoveTicket(ticketId){
