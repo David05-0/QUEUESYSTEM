@@ -736,6 +736,26 @@ function saveShared(){
 // ── Compliance Done Notification ──
 let _lastComplyNotifyTs = null;
 
+function playComplyToot(){
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    // Two-note toot: low then high
+    [[440, 0, 0.18], [660, 0.2, 0.28]].forEach(function(args){
+      const freq = args[0], start = args[1], dur = args[2];
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
+      gain.gain.setValueAtTime(0, ctx.currentTime + start);
+      gain.gain.linearRampToValueAtTime(0.55, ctx.currentTime + start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+      osc.start(ctx.currentTime + start);
+      osc.stop(ctx.currentTime + start + dur + 0.05);
+    });
+  } catch(e){ console.warn('Toot:', e); }
+}
+
 function showComplyNotify(data){
   const num = String(data.ticketId).padStart(3, '0');
   document.getElementById('complyNotifyNum').textContent = num;
@@ -743,6 +763,7 @@ function showComplyNotify(data){
   document.getElementById('complyNotifyName').textContent = data.customer || '';
   document.getElementById('complyNotifySvc').textContent  = data.service  || '';
   document.getElementById('complyNotifyBackdrop').classList.add('show');
+  playComplyToot();
   // Auto-dismiss after 30s if staff doesn't tap
   clearTimeout(window._complyNotifyTimer);
   window._complyNotifyTimer = setTimeout(dismissComplyNotify, 30000);
