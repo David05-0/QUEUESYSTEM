@@ -306,14 +306,6 @@
   /* Pool filter tabs */
 
   /* Pool service group headers */
-  .pool-group-header{display:flex;align-items:center;justify-content:space-between;padding:5px 4px 4px;cursor:pointer;user-select:none;flex-shrink:0}
-  .pool-group-header:hover .pool-group-label{opacity:1}
-  .pool-group-label{font-size:7.5px;letter-spacing:0.22em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:6px;opacity:0.75;transition:opacity 0.15s;flex:1}
-  .pool-group-label::after{content:'';flex:1;height:1px;background:var(--border)}
-  .pool-group-count{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:0.06em;color:var(--muted);margin-left:6px;flex-shrink:0}
-  .pool-group-toggle{font-size:8px;color:var(--muted);transition:transform 0.2s;flex-shrink:0;margin-left:4px}
-  .pool-group-toggle.collapsed{transform:rotate(-90deg)}
-  .pool-group-items{display:flex;flex-direction:column;gap:5px;overflow:hidden;transition:all 0.2s}
   .claim-flash{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:0.1em;opacity:0;pointer-events:none;transition:opacity 0.2s}
   .pool-item.claiming .claim-flash{opacity:1}
   #counterView.c1 .claim-flash{background:rgba(230,126,34,0.18);color:var(--c1)}
@@ -1448,32 +1440,7 @@ function renderPool(pool){
     return;
   }
   poolEmpty.style.display = 'none';
-
-  // Group by service type
-  const groups = {};
-  pool.forEach(t=>{
-    const svc = t.service||'—';
-    if(!groups[svc]) groups[svc]=[];
-    groups[svc].push(t);
-  });
-
-  Object.keys(groups).sort().forEach(svc=>{
-    const tickets = groups[svc];
-
-    // Section header
-    const hdr = document.createElement('div');
-    hdr.className = 'pool-group-header';
-    hdr.innerHTML = `
-      <div class="pool-group-label">${svc}</div>
-      <div class="pool-group-count">${tickets.length}</div>`;
-    poolList.insertBefore(hdr, poolEmpty);
-
-    // Items
-    const wrap = document.createElement('div');
-    wrap.className = 'pool-group-items';
-    tickets.forEach(t=> wrap.appendChild(buildPoolItem(t)));
-    poolList.insertBefore(wrap, poolEmpty);
-  });
+  pool.forEach(t=> poolList.insertBefore(buildPoolItem(t), poolEmpty));
 }
 
 function claimWithFlash(el, id){
