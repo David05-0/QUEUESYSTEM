@@ -125,7 +125,12 @@
     .save-meta{gap:7px}
     .save-meta-val{font-size:22px}
 
-    /* Toast */
+    /* Field error state */
+  .name-input.error{border-color:var(--accent) !important;background:rgba(176,58,46,0.06) !important;animation:inputShake 0.35s ease}
+  @keyframes inputShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+  .name-input-lbl.error{color:var(--accent) !important}
+
+  /* Toast */
     .toast{bottom:16px;font-size:14px;padding:10px 20px;max-width:90vw;white-space:normal;text-align:center}
 
     /* Panel body padding */
@@ -377,6 +382,11 @@
   .save-hist-item:last-child{border-bottom:none}
   .save-hist-label{color:var(--ink);font-weight:500}
 
+  /* Field error state */
+  .name-input.error{border-color:var(--accent) !important;background:rgba(176,58,46,0.06) !important;animation:inputShake 0.35s ease}
+  @keyframes inputShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+  .name-input-lbl.error{color:var(--accent) !important}
+
   /* Toast */
   .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(18px);background:var(--ink);color:var(--bg);padding:11px 26px;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.12em;opacity:0;transition:all 0.3s;pointer-events:none;z-index:999;white-space:nowrap}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -438,20 +448,20 @@
           </button>
         </div>
 
-        <div class="field-label">2 · Customer Name <span style="color:var(--muted)">(optional)</span></div>
+        <div class="field-label">2 · Customer Name <span style="color:var(--accent);font-size:8px">* Required</span></div>
         <div class="name-row">
           <div class="name-grid">
             <div>
               <div class="name-input-lbl">First Name</div>
-              <input type="text" class="name-input" id="custFirstName" placeholder="First name…" maxlength="30" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
+              <input type="text" class="name-input" id="custFirstName" placeholder="First name…" maxlength="30" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error');this.previousElementSibling.classList.remove('error')">
             </div>
             <div>
               <div class="name-input-lbl">Last Name</div>
-              <input type="text" class="name-input" id="custLastName" placeholder="Last name…" maxlength="30" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
+              <input type="text" class="name-input" id="custLastName" placeholder="Last name…" maxlength="30" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error');this.previousElementSibling.classList.remove('error')">
             </div>
           </div>
           <div class="name-input-lbl">Nickname <span style="color:var(--muted);font-size:6.5px">(used in announcement)</span></div>
-          <input type="text" class="name-input" id="custNickname" placeholder="Nickname…" maxlength="20" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
+          <input type="text" class="name-input" id="custNickname" placeholder="Nickname…" maxlength="20" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
         </div>
 
         <div class="field-label">3 · Priority</div>
@@ -741,27 +751,63 @@ window.setFilter = setFilter;
 
 // ── Issue — counter is 0 (unassigned) ──
 function issueTicket(){
+  const firstEl    = document.getElementById('custFirstName');
+  const lastEl     = document.getElementById('custLastName');
+  const nickEl     = document.getElementById('custNickname');
+  const firstName  = firstEl.value.trim();
+  const lastName   = lastEl.value.trim();
+  const nickname   = nickEl.value.trim();
+
+  // ── Validation: all three fields required ──
+  let valid = true;
+  [firstEl, lastEl, nickEl].forEach(el => el.classList.remove('error'));
+  document.querySelectorAll('.name-input-lbl').forEach(l => l.classList.remove('error'));
+
+  if(!firstName){
+    firstEl.classList.add('error');
+    firstEl.previousElementSibling.classList.add('error');
+    valid = false;
+  }
+  if(!lastName){
+    lastEl.classList.add('error');
+    lastEl.previousElementSibling.classList.add('error');
+    valid = false;
+  }
+  if(!nickname){
+    nickEl.classList.add('error');
+    nickEl.previousElementSibling && nickEl.previousElementSibling.classList.add('error');
+    valid = false;
+  }
+  if(!valid){
+    showToast('⚠ Please fill in all name fields');
+    // Focus on first empty field
+    if(!firstName) firstEl.focus();
+    else if(!lastName) lastEl.focus();
+    else nickEl.focus();
+    return;
+  }
+
   ticketCounter++;
   const now = new Date();
   const timeStr = [now.getHours(),now.getMinutes(),now.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':');
   const dateStr = now.toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'});
   const ticket = {
     id: ticketCounter,
-    counter: 0,            // 0 = unassigned, counter picks it up
+    counter: 0,
     service: selectedSvc,
-    firstName: document.getElementById('custFirstName').value.trim()||null,
-    lastName:  document.getElementById('custLastName').value.trim()||null,
-    nickname:  document.getElementById('custNickname').value.trim()||null,
-    customer:  [document.getElementById('custFirstName').value.trim(), document.getElementById('custLastName').value.trim()].filter(Boolean).join(' ')||null,
+    firstName, lastName, nickname,
+    customer: `${firstName} ${lastName}`,
     priority: selectedPrio,
     time: timeStr, date: dateStr,
     startTime: Date.now(),
     served: false, compliance: false, paymentHold: false
   };
   log.unshift(ticket);
-  document.getElementById('custFirstName').value = '';
-  document.getElementById('custLastName').value  = '';
-  document.getElementById('custNickname').value  = '';
+  firstEl.value = '';
+  lastEl.value  = '';
+  nickEl.value  = '';
+  // Clear error states on successful submit
+  [firstEl, lastEl, nickEl].forEach(el => el.classList.remove('error'));
   saveState();
   showToast(`#${String(ticket.id).padStart(3,'0')} → Pool`);
 }
