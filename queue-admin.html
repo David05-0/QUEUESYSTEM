@@ -460,8 +460,6 @@
               <input type="text" class="name-input" id="custFirstName" placeholder="First name…" maxlength="30" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error');this.previousElementSibling.classList.remove('error')">
             </div>
           </div>
-          <div class="name-input-lbl">Nickname <span style="color:var(--muted);font-size:6.5px">(used in announcement)</span></div>
-          <input type="text" class="name-input" id="custNickname" placeholder="Nickname…" maxlength="20" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
         </div>
 
         <div class="field-label">3 · Priority</div>
@@ -751,39 +749,30 @@ window.setFilter = setFilter;
 
 // ── Issue — counter is 0 (unassigned) ──
 function issueTicket(){
-  const firstEl    = document.getElementById('custFirstName');
-  const lastEl     = document.getElementById('custLastName');
-  const nickEl     = document.getElementById('custNickname');
-  const firstName  = firstEl.value.trim();
-  const lastName   = lastEl.value.trim();
-  const nickname   = nickEl.value.trim();
+  const lastEl    = document.getElementById('custLastName');
+  const firstEl   = document.getElementById('custFirstName');
+  const lastName  = lastEl.value.trim();
+  const firstName = firstEl.value.trim();
 
-  // ── Validation: all three fields required ──
+  // ── Validation: both fields required ──
   let valid = true;
-  [firstEl, lastEl, nickEl].forEach(el => el.classList.remove('error'));
+  [lastEl, firstEl].forEach(el => el.classList.remove('error'));
   document.querySelectorAll('.name-input-lbl').forEach(l => l.classList.remove('error'));
 
-  if(!firstName){
-    firstEl.classList.add('error');
-    firstEl.previousElementSibling.classList.add('error');
-    valid = false;
-  }
   if(!lastName){
     lastEl.classList.add('error');
     lastEl.previousElementSibling.classList.add('error');
     valid = false;
   }
-  if(!nickname){
-    nickEl.classList.add('error');
-    nickEl.previousElementSibling && nickEl.previousElementSibling.classList.add('error');
+  if(!firstName){
+    firstEl.classList.add('error');
+    firstEl.previousElementSibling.classList.add('error');
     valid = false;
   }
   if(!valid){
     showToast('⚠ Please fill in all name fields');
-    // Focus on first empty field
-    if(!firstName) firstEl.focus();
-    else if(!lastName) lastEl.focus();
-    else nickEl.focus();
+    if(!lastName) lastEl.focus();
+    else firstEl.focus();
     return;
   }
 
@@ -795,7 +784,8 @@ function issueTicket(){
     id: ticketCounter,
     counter: 0,
     service: selectedSvc,
-    firstName, lastName, nickname,
+    firstName, lastName,
+    nickname: firstName,
     customer: `${firstName} ${lastName}`,
     priority: selectedPrio,
     time: timeStr, date: dateStr,
@@ -803,11 +793,9 @@ function issueTicket(){
     served: false, compliance: false, paymentHold: false
   };
   log.unshift(ticket);
-  firstEl.value = '';
   lastEl.value  = '';
-  nickEl.value  = '';
-  // Clear error states on successful submit
-  [firstEl, lastEl, nickEl].forEach(el => el.classList.remove('error'));
+  firstEl.value = '';
+  [lastEl, firstEl].forEach(el => el.classList.remove('error'));
   saveState();
   showToast(`#${String(ticket.id).padStart(3,'0')} → Pool`);
 }
