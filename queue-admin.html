@@ -38,105 +38,7 @@
 
   /* ── 2-col layout ── */
   .layout{display:grid;grid-template-columns:320px 1fr;gap:20px;align-items:start}
-  @media(max-width:900px){.layout{grid-template-columns:1fr}}
-
-  /* ── MOBILE OVERRIDES ── */
-  @media(max-width:600px){
-    .app{padding:12px 12px 60px}
-
-    /* Header */
-    header{padding-bottom:10px;margin-bottom:16px;gap:6px}
-    .brand-title{font-size:28px}
-    .clock{font-size:22px}
-    .hdr-right{gap:2px}
-    .nav-links{gap:6px}
-
-    /* Left col — remove sticky on mobile so it scrolls naturally */
-    .layout > div:first-child{position:static !important;top:auto !important}
-
-    /* Service grid — 2 columns stays fine, just tighten padding */
-    .service-grid{grid-template-columns:1fr 1fr;gap:5px;margin-bottom:14px}
-    .svc-btn{padding:8px 6px;gap:5px}
-    .svc-icon{font-size:13px}
-    .svc-name{font-size:8px}
-    .svc-code{font-size:6.5px}
-
-    /* Name inputs — stack to single column */
-    .name-grid{grid-template-columns:1fr;gap:6px}
-    .name-input{font-size:16px;padding:10px 11px} /* 16px prevents iOS zoom */
-    .name-input-lbl{font-size:7px}
-
-    /* Priority row */
-    .priority-row{gap:7px}
-    .prio-opt{padding:8px 14px;font-size:9px}
-
-    /* Buttons — larger tap targets */
-    .issue-btn{font-size:22px;padding:16px}
-    .reset-btn{padding:11px;font-size:9px}
-    .eod-btn{padding:11px;font-size:9px}
-
-    /* Stats bar — 2x2 grid */
-    .stats-bar{grid-template-columns:1fr 1fr;gap:8px}
-    .stat-card{padding:10px 12px}
-    .stat-val{font-size:24px}
-
-    /* Pool head */
-    .pool-head{padding:10px 14px}
-    .pool-head-title{font-size:15px}
-    .pool-head-hint{display:none}
-
-    /* Pool filters — scrollable row */
-    .pool-filters{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:8px 12px;gap:5px;scrollbar-width:none}
-    .pool-filters::-webkit-scrollbar{display:none}
-    .pf-btn{white-space:nowrap;flex-shrink:0;padding:5px 11px;font-size:8px}
-    .pf-sep{flex-shrink:0}
-
-    /* Client cards — tighter */
-    .pool-body{padding:8px 10px;gap:6px;max-height:none}
-    .client-card{padding:9px 10px 9px 12px;gap:8px}
-    .cc-num{font-size:20px;min-width:38px}
-    .cc-svc{font-size:9px}
-    .cc-cust{font-size:8px}
-    .cc-actions{gap:4px}
-    .cc-act-btn{padding:5px 9px;font-size:8px}
-
-    /* Tally */
-    .tally-body{padding:8px 10px 12px}
-    .tally-row{grid-template-columns:1fr 32px 32px 32px;gap:5px;padding:6px 0}
-    .tally-row-head{grid-template-columns:1fr 32px 32px 32px;gap:5px}
-    .tally-num{font-size:16px}
-
-    /* Counter grid — single column */
-    .counter-grid{grid-template-columns:1fr}
-    .cg-item{padding:10px}
-    .cg-btns{gap:4px}
-    .cg-btn{padding:6px 10px;font-size:8px}
-
-    /* Transfer modal */
-    .stm-modal{width:100%;border-radius:12px 12px 0 0;position:fixed;bottom:0;left:0;right:0;max-height:90vh}
-    .stm-backdrop{align-items:flex-end}
-    .stm-toolbar{flex-wrap:wrap;gap:6px}
-    .stm-dest-select{min-width:100%;flex:none}
-    .stm-sel-all,.stm-do-btn{flex:1}
-
-    /* EOD modal */
-    .modal{width:100%;border-radius:12px 12px 0 0;position:fixed;bottom:0;left:0;right:0}
-    .modal-backdrop{align-items:flex-end}
-    .save-meta{gap:7px}
-    .save-meta-val{font-size:22px}
-
-    /* Field error state */
-  .name-input.error{border-color:var(--accent) !important;background:rgba(176,58,46,0.06) !important;animation:inputShake 0.35s ease}
-  @keyframes inputShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
-  .name-input-lbl.error{color:var(--accent) !important}
-
-  /* Toast */
-    .toast{bottom:16px;font-size:14px;padding:10px 20px;max-width:90vw;white-space:normal;text-align:center}
-
-    /* Panel body padding */
-    .panel-body{padding:14px 14px 16px}
-    .transfer-body{padding:12px 12px 14px}
-  }
+  @media(max-width:820px){.layout{grid-template-columns:1fr}}
 
   /* ── ISSUE PANEL ── */
   .issue-panel{background:var(--paper);border:1px solid var(--rule);border-radius:2px;box-shadow:0 2px 12px var(--shadow);overflow:hidden}
@@ -177,9 +79,6 @@
   .issue-btn:disabled{opacity:0.3;cursor:not-allowed;transform:none;box-shadow:none}
   .reset-btn{width:100%;margin-top:7px;background:transparent;color:var(--muted);border:1.5px dashed var(--rule);border-radius:3px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;padding:9px;cursor:pointer;transition:all 0.13s}
   .reset-btn:hover{color:var(--accent);border-color:var(--accent);border-style:solid}
-
-  /* ── LEFT COL ── */
-  .left-col{display:flex;flex-direction:column;gap:16px;position:sticky;top:20px;align-self:start}
 
   /* ── RIGHT SIDE ── */
   .right-side{display:flex;flex-direction:column;gap:16px}
@@ -248,8 +147,6 @@
   .cc-act-btn.serve-btn:hover{background:rgba(30,132,73,0.1);border-color:var(--green)}
   .cc-act-btn.remove-btn{color:var(--accent);border-color:rgba(176,58,46,0.3)}
   .cc-act-btn.remove-btn:hover{background:rgba(176,58,46,0.1);border-color:var(--accent)}
-  .cc-act-btn.comply-done-btn{color:var(--teal);border-color:rgba(14,107,138,0.3);font-weight:600}
-  .cc-act-btn.comply-done-btn:hover{background:rgba(14,107,138,0.12);border-color:var(--teal)}
 
   /* ── SERVICE TALLY PANEL ── */
   .tally-card{background:var(--paper);border:1px solid var(--rule);border-radius:2px;box-shadow:0 2px 8px var(--shadow);overflow:hidden}
@@ -382,10 +279,46 @@
   .save-hist-item:last-child{border-bottom:none}
   .save-hist-label{color:var(--ink);font-weight:500}
 
-  /* Field error state */
-  .name-input.error{border-color:var(--accent) !important;background:rgba(176,58,46,0.06) !important;animation:inputShake 0.35s ease}
-  @keyframes inputShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
-  .name-input-lbl.error{color:var(--accent) !important}
+  /* ── BM EXCEPTION PANEL ── */
+  .bm-panel{background:var(--paper);border:1px solid var(--rule);border-radius:2px;box-shadow:0 2px 12px var(--shadow);overflow:hidden}
+  .bm-head{background:#1a2a1a;color:#e8f5e8;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .bm-head-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:0.1em;display:flex;align-items:center;gap:8px}
+  .bm-head-sub{font-size:8px;letter-spacing:0.18em;color:rgba(232,245,232,0.45);text-transform:uppercase}
+  .bm-head-count{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:0.06em;color:#6fcf6f;margin-left:auto}
+  .bm-body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:12px}
+  .bm-source-row{display:flex;gap:6px;margin-bottom:2px}
+  .bm-source-btn{flex:1;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;border:1.5px solid var(--rule);background:transparent;color:var(--muted);border-radius:3px;padding:7px;cursor:pointer;transition:all 0.13s}
+  .bm-source-btn.active{border-color:#4a7c4a;background:rgba(74,124,74,0.1);color:#4a7c4a}
+  .bm-queue-select{width:100%;font-family:'DM Mono',monospace;font-size:11px;padding:8px 10px;border:1.5px solid var(--rule);background:var(--bg);color:var(--ink);border-radius:3px;outline:none;cursor:pointer;transition:border-color 0.13s}
+  .bm-queue-select:focus{border-color:#4a7c4a}
+  .bm-field-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .bm-field{display:flex;flex-direction:column;gap:4px}
+  .bm-field.full{grid-column:1/-1}
+  .bm-label{font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)}
+  .bm-input{font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--rule);background:var(--bg);color:var(--ink);border-radius:3px;outline:none;transition:border-color 0.13s;width:100%}
+  .bm-input:focus{border-color:#4a7c4a}
+  .bm-input.error{border-color:var(--accent);background:rgba(176,58,46,0.05);animation:inputShake 0.35s ease}
+  .bm-select{font-family:'DM Mono',monospace;font-size:11px;padding:8px 10px;border:1.5px solid var(--rule);background:var(--bg);color:var(--ink);border-radius:3px;outline:none;cursor:pointer;transition:border-color 0.13s;width:100%}
+  .bm-select:focus{border-color:#4a7c4a}
+  .bm-select.error{border-color:var(--accent)}
+  .bm-add-btn{width:100%;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:0.1em;background:#1a2a1a;color:#e8f5e8;border:none;border-radius:3px;padding:12px;cursor:pointer;transition:all 0.13s;margin-top:4px}
+  .bm-add-btn:hover{background:#243824}
+  /* BM List */
+  .bm-list{display:flex;flex-direction:column;gap:0;border:1px solid var(--rule);border-radius:3px;overflow:hidden;max-height:320px;overflow-y:auto}
+  .bm-list-head{display:grid;grid-template-columns:28px 1fr 1fr 80px 50px 50px 80px 50px;gap:6px;padding:7px 10px;background:#1a2a1a;color:rgba(232,245,232,0.6);font-size:7px;letter-spacing:0.16em;text-transform:uppercase;position:sticky;top:0;z-index:1;flex-shrink:0}
+  .bm-list-empty{font-size:10px;color:var(--muted);text-align:center;padding:20px;letter-spacing:0.1em}
+  .bm-entry{display:grid;grid-template-columns:28px 1fr 1fr 80px 50px 50px 80px 50px;gap:6px;padding:7px 10px;border-top:1px solid var(--rule);align-items:center;font-size:10px;transition:background 0.12s}
+  .bm-entry:hover{background:rgba(74,124,74,0.05)}
+  .bm-entry-num{font-family:'Bebas Neue',sans-serif;font-size:14px;color:var(--muted)}
+  .bm-entry-name{font-weight:500;letter-spacing:0.03em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .bm-entry-cell{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:9px}
+  .bm-entry-del{background:none;border:none;color:var(--rule);cursor:pointer;font-size:13px;transition:color 0.13s;padding:2px 4px;justify-self:center}
+  .bm-entry-del:hover{color:var(--accent)}
+  .bm-actions-row{display:flex;gap:7px;margin-top:4px}
+  .bm-export-btn{flex:1;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;border:1.5px solid #4a7c4a;background:transparent;color:#4a7c4a;border-radius:3px;padding:8px;cursor:pointer;transition:all 0.13s}
+  .bm-export-btn:hover{background:rgba(74,124,74,0.1)}
+  .bm-clear-btn{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;border:1.5px solid var(--rule);background:transparent;color:var(--muted);border-radius:3px;padding:8px 14px;cursor:pointer;transition:all 0.13s}
+  .bm-clear-btn:hover{border-color:var(--accent);color:var(--accent)}
 
   /* Toast */
   .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(18px);background:var(--ink);color:var(--bg);padding:11px 26px;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.12em;opacity:0;transition:all 0.3s;pointer-events:none;z-index:999;white-space:nowrap}
@@ -414,7 +347,7 @@
   <div class="layout">
 
     <!-- ── LEFT: Issue form + Counter Transfer ── -->
-    <div class="left-col">
+    <div style="display:flex;flex-direction:column;gap:16px;position:sticky;top:20px;align-self:start">
 
     <div class="issue-panel">
       <div class="panel-head">
@@ -448,18 +381,20 @@
           </button>
         </div>
 
-        <div class="field-label">2 · Customer Name <span style="color:var(--accent);font-size:8px">* Required</span></div>
+        <div class="field-label">2 · Customer Name <span style="color:var(--muted)">(optional)</span></div>
         <div class="name-row">
           <div class="name-grid">
             <div>
-              <div class="name-input-lbl">Last Name</div>
-              <input type="text" class="name-input" id="custLastName" placeholder="Last name…" maxlength="30" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error');this.previousElementSibling.classList.remove('error')">
+              <div class="name-input-lbl">First Name</div>
+              <input type="text" class="name-input" id="custFirstName" placeholder="First name…" maxlength="30" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
             </div>
             <div>
-              <div class="name-input-lbl">First Name</div>
-              <input type="text" class="name-input" id="custFirstName" placeholder="First name…" maxlength="30" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error');this.previousElementSibling.classList.remove('error')">
+              <div class="name-input-lbl">Last Name</div>
+              <input type="text" class="name-input" id="custLastName" placeholder="Last name…" maxlength="30" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
             </div>
           </div>
+          <div class="name-input-lbl">Nickname <span style="color:var(--muted);font-size:6.5px">(used in announcement)</span></div>
+          <input type="text" class="name-input" id="custNickname" placeholder="Nickname…" maxlength="20" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
         </div>
 
         <div class="field-label">3 · Priority</div>
@@ -553,6 +488,108 @@
         </div>
         <div class="pool-body" id="poolBody">
           <div class="pool-empty" id="poolEmpty">No tickets issued yet</div>
+        </div>
+      </div>
+
+      <!-- Balik Manggagawa -->
+      <div class="bm-panel" id="bmPanel">
+        <div class="bm-head">
+          <div>
+            <div class="bm-head-title">🛡 Balik Manggagawa</div>
+            <div class="bm-head-sub">Balik Manggagawa Exception Records</div>
+          </div>
+          <div class="bm-head-count" id="bmCount">0</div>
+        </div>
+        <div class="bm-body">
+
+          <!-- Source toggle -->
+          <div>
+            <div class="bm-label" style="margin-bottom:6px">Client Source</div>
+            <div class="bm-source-row">
+              <button class="bm-source-btn active" id="bmSrcQueue" onclick="setBmSource('queue')">📋 From Queue</button>
+              <button class="bm-source-btn" id="bmSrcManual" onclick="setBmSource('manual')">✏ Manual Entry</button>
+            </div>
+          </div>
+
+          <!-- From Queue: dropdown -->
+          <div id="bmQueuePicker">
+            <div class="bm-label" style="margin-bottom:5px">Select Client from Queue</div>
+            <select class="bm-queue-select" id="bmQueueSelect">
+              <option value="">— Select a client —</option>
+            </select>
+          </div>
+
+          <!-- Manual entry: name fields -->
+          <div id="bmManualFields" style="display:none">
+            <div class="bm-field-grid">
+              <div class="bm-field">
+                <div class="bm-label">Last Name</div>
+                <input class="bm-input" id="bmLastName" placeholder="Last name…" maxlength="40" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
+              </div>
+              <div class="bm-field">
+                <div class="bm-label">First Name</div>
+                <input class="bm-input" id="bmFirstName" placeholder="First name…" maxlength="40" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
+              </div>
+            </div>
+          </div>
+
+          <!-- Common fields -->
+          <div class="bm-field-grid">
+            <div class="bm-field full">
+              <div class="bm-label">Position / Job Title</div>
+              <input class="bm-input" id="bmPosition" placeholder="e.g. Domestic Worker…" maxlength="60" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
+            </div>
+            <div class="bm-field">
+              <div class="bm-label">Country of Destination</div>
+              <input class="bm-input" id="bmCountry" placeholder="e.g. Saudi Arabia…" maxlength="40" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
+            </div>
+            <div class="bm-field">
+              <div class="bm-label">Region</div>
+              <select class="bm-select" id="bmRegion">
+                <option value="">— Select —</option>
+                <option>NCR</option><option>CAR</option><option>Region I</option>
+                <option>Region II</option><option>Region III</option><option>Region IV-A</option>
+                <option>Region IV-B</option><option>Region V</option><option>Region VI</option>
+                <option>Region VII</option><option>Region VIII</option><option>Region IX</option>
+                <option>Region X</option><option>Region XI</option><option>Region XII</option>
+                <option>Region XIII</option><option>BARMM</option>
+              </select>
+            </div>
+            <div class="bm-field">
+              <div class="bm-label">Gender</div>
+              <select class="bm-select" id="bmGender">
+                <option value="">— Select —</option>
+                <option>Male</option><option>Female</option><option>Prefer not to say</option>
+              </select>
+            </div>
+            <div class="bm-field">
+              <div class="bm-label">Age</div>
+              <input class="bm-input" id="bmAge" type="number" min="1" max="99" placeholder="Age…" oninput="this.classList.remove('error')">
+            </div>
+          </div>
+
+          <button class="bm-add-btn" onclick="addBmEntry()">＋ Add Exception Record</button>
+
+          <!-- Records list -->
+          <div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+              <div class="bm-label">Recorded Exceptions</div>
+            </div>
+            <div class="bm-list" id="bmList">
+              <div class="bm-list-head">
+                <div>#</div><div>Name</div><div>Position</div>
+                <div>Country</div><div>Gender</div><div>Age</div><div>Region</div><div></div>
+              </div>
+              <div class="bm-list-empty" id="bmListEmpty">No exceptions recorded yet</div>
+            </div>
+          </div>
+
+          <div class="bm-actions-row">
+            <button class="bm-export-btn" onclick="exportBmCsv()">⬇ Export CSV</button>
+            <button class="bm-export-btn" onclick="exportBmPrint()">🖨 Print</button>
+            <button class="bm-clear-btn" onclick="clearBmRecords()">✕ Clear</button>
+          </div>
+
         </div>
       </div>
 
@@ -695,8 +732,7 @@ function saveState(isReset=false){
     lastUpdate: Date.now(),
     resetFlag: isReset ? Date.now() : (window._lastResetFlag||null),
     absentCounters: [...absentCounters],
-    lastCall: lastCallVal !== undefined ? lastCallVal : null,
-    complianceNotify: window._complianceNotify || null
+    lastCall: lastCallVal !== undefined ? lastCallVal : null
   };
 
   if(isReset){
@@ -749,53 +785,27 @@ window.setFilter = setFilter;
 
 // ── Issue — counter is 0 (unassigned) ──
 function issueTicket(){
-  const lastEl    = document.getElementById('custLastName');
-  const firstEl   = document.getElementById('custFirstName');
-  const lastName  = lastEl.value.trim();
-  const firstName = firstEl.value.trim();
-
-  // ── Validation: both fields required ──
-  let valid = true;
-  [lastEl, firstEl].forEach(el => el.classList.remove('error'));
-  document.querySelectorAll('.name-input-lbl').forEach(l => l.classList.remove('error'));
-
-  if(!lastName){
-    lastEl.classList.add('error');
-    lastEl.previousElementSibling.classList.add('error');
-    valid = false;
-  }
-  if(!firstName){
-    firstEl.classList.add('error');
-    firstEl.previousElementSibling.classList.add('error');
-    valid = false;
-  }
-  if(!valid){
-    showToast('⚠ Please fill in all name fields');
-    if(!lastName) lastEl.focus();
-    else firstEl.focus();
-    return;
-  }
-
   ticketCounter++;
   const now = new Date();
   const timeStr = [now.getHours(),now.getMinutes(),now.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':');
   const dateStr = now.toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'});
   const ticket = {
     id: ticketCounter,
-    counter: 0,
+    counter: 0,            // 0 = unassigned, counter picks it up
     service: selectedSvc,
-    firstName, lastName,
-    nickname: firstName,
-    customer: `${firstName} ${lastName}`,
+    firstName: document.getElementById('custFirstName').value.trim()||null,
+    lastName:  document.getElementById('custLastName').value.trim()||null,
+    nickname:  document.getElementById('custNickname').value.trim()||null,
+    customer:  [document.getElementById('custFirstName').value.trim(), document.getElementById('custLastName').value.trim()].filter(Boolean).join(' ')||null,
     priority: selectedPrio,
     time: timeStr, date: dateStr,
     startTime: Date.now(),
     served: false, compliance: false, paymentHold: false
   };
   log.unshift(ticket);
-  lastEl.value  = '';
-  firstEl.value = '';
-  [lastEl, firstEl].forEach(el => el.classList.remove('error'));
+  document.getElementById('custFirstName').value = '';
+  document.getElementById('custLastName').value  = '';
+  document.getElementById('custNickname').value  = '';
   saveState();
   showToast(`#${String(ticket.id).padStart(3,'0')} → Pool`);
 }
@@ -875,9 +885,6 @@ function renderPool(){
 
     // Admin action buttons — only show relevant actions per ticket state
     const actionBtns = [];
-    if(t.compliance && !t.served){
-      actionBtns.push(`<button class="cc-act-btn comply-done-btn" onclick="adminComplianceDone(${t.id})" title="Clear compliance hold — returns client to counter queue">✓ Compliance Done</button>`);
-    }
     if(!t.served && !t.unserved){
       actionBtns.push(`<button class="cc-act-btn serve-btn" onclick="adminMarkServed(${t.id})">✓ Mark Served</button>`);
     }
@@ -912,34 +919,6 @@ This cannot be undone and the client will not be called again.`)) return;
   showToast(`#${String(ticketId).padStart(3,'0')} marked Served`);
 }
 window.adminMarkServed = adminMarkServed;
-
-// ── Admin: Compliance Done — clears compliance hold, returns ticket to counter queue ──
-function adminComplianceDone(ticketId){
-  const t = log.find(x=>x.id===ticketId);
-  if(!t || !t.compliance || t.served) return;
-  const label = `#${String(ticketId).padStart(3,'0')}${t.customer?' — '+t.customer:''}`;
-  if(!confirm(`Mark compliance done for ${label}?\nThe client will be returned to the counter queue and the desk will be notified.`)) return;
-  t.compliance = false;
-  t.complianceDoneAt = Date.now();
-  // Store notification inside queueState so the existing stateRef listener picks it up
-  window._complianceNotify = {
-    ticketId: t.id,
-    counter:  t.counter,
-    customer: t.customer || null,
-    service:  t.service  || null,
-    ts:       Date.now()
-  };
-  saveState();
-  // Clear AFTER save completes so the value is included in the write
-  // Clear after 3s — enough time for display to receive it, then clean up Firebase
-  setTimeout(()=>{
-    window._complianceNotify = null;
-    saveState(); // Write null to Firebase so it doesn't re-trigger on future snapshots
-  }, 3000);
-  showToast(`${label} ✓ Compliance done — desk notified`);
-  renderAll();
-}
-window.adminComplianceDone = adminComplianceDone;
 
 // ── Admin: Remove Ticket ──
 function adminRemoveTicket(ticketId){
@@ -1467,6 +1446,193 @@ function showToast(msg){
   el.textContent=msg; el.classList.add('show');
   setTimeout(()=>el.classList.remove('show'),2200);
 }
+
+// ══════════════════════════════════════════════
+// ── BM EXCEPTION RECORDS ──
+// ══════════════════════════════════════════════
+let bmRecords = JSON.parse(localStorage.getItem('bmRecords') || '[]');
+let bmSource  = 'queue';
+
+function saveBmRecords(){ localStorage.setItem('bmRecords', JSON.stringify(bmRecords)); }
+
+function setBmSource(src){
+  bmSource = src;
+  document.getElementById('bmSrcQueue').classList.toggle('active', src==='queue');
+  document.getElementById('bmSrcManual').classList.toggle('active', src==='manual');
+  document.getElementById('bmQueuePicker').style.display  = src==='queue'  ? '' : 'none';
+  document.getElementById('bmManualFields').style.display = src==='manual' ? '' : 'none';
+}
+window.setBmSource = setBmSource;
+
+function refreshBmQueueDropdown(){
+  const sel = document.getElementById('bmQueueSelect');
+  if(!sel) return;
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">— Select a client —</option>';
+  log.filter(t=>!t.served && t.customer).forEach(t=>{
+    const opt = document.createElement('option');
+    opt.value = t.id;
+    opt.textContent = '#' + String(t.id).padStart(3,'0') + ' · ' + t.customer + (t.service?' ('+t.service+')':'');
+    sel.appendChild(opt);
+  });
+  if(prev) sel.value = prev;
+}
+
+function addBmEntry(){
+  let lastName='', firstName='';
+  if(bmSource==='queue'){
+    const sel = document.getElementById('bmQueueSelect');
+    const tid = parseInt(sel.value);
+    if(!tid){ sel.style.borderColor='var(--accent)'; setTimeout(()=>sel.style.borderColor='',1500); showToast('⚠ Select a client from queue'); return; }
+    sel.style.borderColor='';
+    const t = log.find(x=>x.id===tid);
+    if(!t){ showToast('Client not found'); return; }
+    lastName  = t.lastName  || '';
+    firstName = t.firstName || t.customer || '';
+  } else {
+    lastName  = document.getElementById('bmLastName').value.trim();
+    firstName = document.getElementById('bmFirstName').value.trim();
+    if(!lastName || !firstName){
+      if(!lastName)  document.getElementById('bmLastName').classList.add('error');
+      if(!firstName) document.getElementById('bmFirstName').classList.add('error');
+      showToast('⚠ Enter first and last name'); return;
+    }
+  }
+
+  const position = document.getElementById('bmPosition').value.trim();
+  const country  = document.getElementById('bmCountry').value.trim();
+  const region   = document.getElementById('bmRegion').value;
+  const gender   = document.getElementById('bmGender').value;
+  const age      = document.getElementById('bmAge').value.trim();
+
+  let valid = true;
+  if(!position){ document.getElementById('bmPosition').classList.add('error'); valid=false; }
+  if(!country) { document.getElementById('bmCountry').classList.add('error');  valid=false; }
+  if(!region)  { document.getElementById('bmRegion').classList.add('error');   valid=false; }
+  if(!gender)  { document.getElementById('bmGender').classList.add('error');   valid=false; }
+  if(!age)     { document.getElementById('bmAge').classList.add('error');      valid=false; }
+  if(!valid){ showToast('⚠ Please fill in all fields'); return; }
+
+  const now = new Date();
+  bmRecords.push({
+    id: bmRecords.length + 1,
+    lastName, firstName,
+    fullName: firstName + ' ' + lastName,
+    position, country, gender,
+    age: parseInt(age),
+    region,
+    time: [now.getHours(),now.getMinutes(),now.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':'),
+    date: now.toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'}),
+    ts: Date.now()
+  });
+  saveBmRecords();
+
+  document.getElementById('bmPosition').value = '';
+  document.getElementById('bmCountry').value  = '';
+  document.getElementById('bmRegion').value   = '';
+  document.getElementById('bmGender').value   = '';
+  document.getElementById('bmAge').value      = '';
+  if(bmSource==='manual'){
+    document.getElementById('bmLastName').value  = '';
+    document.getElementById('bmFirstName').value = '';
+  } else {
+    document.getElementById('bmQueueSelect').value = '';
+  }
+
+  renderBmList();
+  showToast('✓ Balik Manggagawa recorded — ' + firstName + ' ' + lastName);
+}
+window.addBmEntry = addBmEntry;
+
+function deleteBmEntry(idx){
+  if(!confirm('Remove this exception record?')) return;
+  bmRecords.splice(idx,1);
+  bmRecords.forEach((r,i)=>r.id=i+1);
+  saveBmRecords();
+  renderBmList();
+}
+window.deleteBmEntry = deleteBmEntry;
+
+function renderBmList(){
+  const list  = document.getElementById('bmList');
+  const empty = document.getElementById('bmListEmpty');
+  if(!list) return;
+  document.getElementById('bmCount').textContent = bmRecords.length;
+  list.querySelectorAll('.bm-entry').forEach(e=>e.remove());
+  if(!bmRecords.length){ empty.style.display='block'; return; }
+  empty.style.display='none';
+  [...bmRecords].reverse().forEach((r,i)=>{
+    const idx = bmRecords.length - 1 - i;
+    const row = document.createElement('div');
+    row.className = 'bm-entry';
+    row.innerHTML =
+      '<div class="bm-entry-num">' + r.id + '</div>' +
+      '<div class="bm-entry-name" title="' + r.fullName + '">' + r.fullName + '</div>' +
+      '<div class="bm-entry-cell" title="' + r.position + '">' + r.position + '</div>' +
+      '<div class="bm-entry-cell">' + r.country + '</div>' +
+      '<div class="bm-entry-cell">' + r.gender + '</div>' +
+      '<div class="bm-entry-cell">' + r.age + '</div>' +
+      '<div class="bm-entry-cell">' + r.region + '</div>' +
+      '<button class="bm-entry-del" onclick="deleteBmEntry(' + idx + ')" title="Remove">✕</button>';
+    list.insertBefore(row, empty);
+  });
+}
+
+function clearBmRecords(){
+  if(!bmRecords.length) return;
+  if(!confirm('Clear all ' + bmRecords.length + ' Balik Manggagawa exception records?')) return;
+  bmRecords = [];
+  saveBmRecords();
+  renderBmList();
+  showToast('Balik Manggagawa exception records cleared');
+}
+window.clearBmRecords = clearBmRecords;
+
+function exportBmCsv(){
+  if(!bmRecords.length){ showToast('No records to export'); return; }
+  const headers = ['#','Last Name','First Name','Position','Country of Destination','Gender','Age','Region','Time','Date'];
+  const rows = bmRecords.map(r=>[r.id,r.lastName,r.firstName,r.position,r.country,r.gender,r.age,r.region,r.time,r.date]
+    .map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const d = new Date();
+  const ds = d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
+  a.download = 'BM_Balik_Manggagawa_' + ds + '.csv';
+  a.click();
+  showToast('CSV exported');
+}
+window.exportBmCsv = exportBmCsv;
+
+function exportBmPrint(){
+  if(!bmRecords.length){ showToast('No records to print'); return; }
+  const d = new Date();
+  const rows = bmRecords.map(r=>
+    '<tr><td>'+r.id+'</td><td>'+r.lastName+', '+r.firstName+'</td><td>'+r.position+'</td>' +
+    '<td>'+r.country+'</td><td>'+r.gender+'</td><td>'+r.age+'</td><td>'+r.region+'</td><td>'+r.time+'</td></tr>'
+  ).join('');
+  const win = window.open('','_blank');
+  win.document.write('<!DOCTYPE html><html><head><title>Balik Manggagawas</title><style>' +
+    'body{font-family:Arial,sans-serif;font-size:11px;padding:20px}' +
+    'h2{font-size:16px;margin-bottom:4px}p{color:#666;font-size:10px;margin-bottom:12px}' +
+    'table{width:100%;border-collapse:collapse}' +
+    'th{background:#1a2a1a;color:#e8f5e8;padding:6px 8px;text-align:left;font-size:9px;letter-spacing:0.1em;text-transform:uppercase}' +
+    'td{padding:5px 8px;border-bottom:1px solid #e8e8e8;font-size:10px}' +
+    'tr:nth-child(even){background:#f9f9f9}' +
+    '</style></head><body>' +
+    '<h2>Balik Manggagawa Records</h2>' +
+    '<p>Printed: ' + d.toLocaleDateString('en-PH',{month:'long',day:'numeric',year:'numeric'}) + ' ' + d.toLocaleTimeString() + ' &nbsp;·&nbsp; Total: ' + bmRecords.length + '</p>' +
+    '<table><thead><tr><th>#</th><th>Name</th><th>Position</th><th>Country</th><th>Gender</th><th>Age</th><th>Region</th><th>Time</th></tr></thead>' +
+    '<tbody>' + rows + '</tbody></table>' +
+    '<script>window.onload=function(){window.print();}<' + '/script>' +
+    '</body></html>');
+  win.document.close();
+}
+window.exportBmPrint = exportBmPrint;
+
+renderBmList();
+
 </script>
 </body>
 </html>
