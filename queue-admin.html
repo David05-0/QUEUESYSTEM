@@ -300,10 +300,17 @@
   .bm-source-row{display:flex;gap:6px;margin-bottom:2px}
   .bm-source-btn{flex:1;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;border:1.5px solid var(--rule);background:transparent;color:var(--muted);border-radius:3px;padding:7px;cursor:pointer;transition:all 0.13s}
   .bm-source-btn.active{border-color:#4a7c4a;background:rgba(74,124,74,0.1);color:#4a7c4a}
-  .bm-queue-select{width:100%;font-family:'DM Mono',monospace;font-size:11px;padding:4px 2px;border:1.5px solid var(--rule);background:var(--bg);color:var(--ink);border-radius:3px;outline:none;cursor:pointer;transition:border-color 0.13s;min-height:110px}
-  .bm-queue-select:focus{border-color:#4a7c4a}
-  .bm-queue-select option{padding:6px 8px;cursor:pointer}
-  .bm-queue-select option:checked{background:#1a2a1a;color:#e8f5e8}
+  .bm-client-list{border:1.5px solid var(--rule);border-radius:3px;max-height:150px;overflow-y:auto;scrollbar-width:thin;background:var(--bg)}
+  .bm-client-item{padding:8px 10px;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px;border-bottom:1px solid var(--rule);display:flex;align-items:center;gap:8px;transition:background 0.12s;user-select:none}
+  .bm-client-item:last-child{border-bottom:none}
+  .bm-client-item:hover{background:rgba(74,124,74,0.08)}
+  .bm-client-item.selected{background:#1a2a1a;color:#e8f5e8}
+  .bm-client-item.selected .bm-client-num{color:#6fcf6f}
+  .bm-client-num{font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--muted);flex-shrink:0}
+  .bm-client-name{font-weight:500;flex:1}
+  .bm-client-svc{font-size:8px;color:var(--muted);text-align:right;flex-shrink:0}
+  .bm-client-empty{padding:14px 10px;font-size:10px;color:var(--muted);text-align:center;font-family:'DM Mono',monospace}
+  .bm-selected-lbl{font-size:9px;color:#4a7c4a;letter-spacing:0.1em;margin-top:4px;padding:4px 8px;background:rgba(74,124,74,0.08);border-radius:3px;border:1px solid rgba(74,124,74,0.2)}
   .bm-field-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .bm-field{display:flex;flex-direction:column;gap:4px}
   .bm-field.full{grid-column:1/-1}
@@ -529,12 +536,16 @@
             </div>
           </div>
 
-          <!-- From Queue: dropdown -->
+          <!-- From Queue: searchable list -->
           <div id="bmQueuePicker">
             <div class="bm-label" style="margin-bottom:5px">Select Client from Queue</div>
-            <select class="bm-queue-select" id="bmQueueSelect" size="5">
-              <option value="">— Select a client —</option>
-            </select>
+            <input type="text" class="bm-input" id="bmQueueSearch" placeholder="Search name or ticket #…"
+              autocomplete="off" oninput="filterBmQueue(this.value)" style="margin-bottom:5px">
+            <div class="bm-client-list" id="bmClientList">
+              <div class="bm-client-empty" id="bmClientEmpty">No active clients in queue</div>
+            </div>
+            <input type="hidden" id="bmQueueSelect" value="">
+            <div class="bm-selected-lbl" id="bmSelectedLbl" style="display:none"></div>
           </div>
 
           <!-- Manual entry: name fields -->
@@ -1528,27 +1539,76 @@ function setBmSource(src){
 }
 window.setBmSource = setBmSource;
 
-function refreshBmQueueDropdown(){
-  const sel = document.getElementById('bmQueueSelect');
-  if(!sel) return;
-  const prev = sel.value;
-  sel.innerHTML = '<option value="">— Select a client —</option>';
-  log.filter(t=>!t.served && t.customer).forEach(t=>{
-    const opt = document.createElement('option');
-    opt.value = t.id;
-    opt.textContent = '#' + String(t.id).padStart(3,'0') + ' · ' + t.customer + (t.service?' ('+t.service+')':'');
-    sel.appendChild(opt);
+let _bmQueueFilter = '';
+
+function filterBmQueue(val){
+  _bmQueueFilter = val.trim().toLowerCase();
+  renderBmClientList();
+}
+window.filterBmQueue = filterBmQueue;
+
+function selectBmClient(id, name){
+  document.getElementById('bmQueueSelect').value = id;
+  // Update visual selection
+  document.querySelectorAll('.bm-client-item').forEach(el=>{
+    el.classList.toggle('selected', el.dataset.id == id);
   });
-  if(prev) sel.value = prev;
+  const lbl = document.getElementById('bmSelectedLbl');
+  lbl.textContent = '✓ Selected: ' + name;
+  lbl.style.display = 'block';
+}
+window.selectBmClient = selectBmClient;
+
+function renderBmClientList(){
+  const list  = document.getElementById('bmClientList');
+  const empty = document.getElementById('bmClientEmpty');
+  if(!list) return;
+  list.querySelectorAll('.bm-client-item').forEach(e=>e.remove());
+
+  const active = log.filter(t => !t.served && (t.customer || t.firstName || t.lastName));
+  const q = _bmQueueFilter;
+  const filtered = q ? active.filter(t=>{
+    const num  = String(t.id).padStart(3,'0');
+    const name = (t.customer || '').toLowerCase();
+    return num.includes(q) || name.includes(q);
+  }) : active;
+
+  if(!filtered.length){
+    empty.style.display = 'block';
+    empty.textContent   = q ? 'No clients match "' + q + '"' : 'No active clients in queue';
+    return;
+  }
+  empty.style.display = 'none';
+
+  const curId = document.getElementById('bmQueueSelect').value;
+  filtered.forEach(t=>{
+    const name = t.customer || ((t.firstName||'') + ' ' + (t.lastName||'')).trim() || '(no name)';
+    const item = document.createElement('div');
+    item.className = 'bm-client-item' + (String(t.id) === String(curId) ? ' selected' : '');
+    item.dataset.id = t.id;
+    item.onclick = () => selectBmClient(t.id, name);
+    item.innerHTML =
+      '<div class="bm-client-num">' + String(t.id).padStart(3,'0') + '</div>' +
+      '<div class="bm-client-name">' + name + '</div>' +
+      '<div class="bm-client-svc">' + (t.service||'') + '</div>';
+    list.insertBefore(item, empty);
+  });
+}
+
+function refreshBmQueueDropdown(){
+  renderBmClientList();
 }
 
 function addBmEntry(){
   let lastName='', firstName='';
   if(bmSource==='queue'){
-    const sel = document.getElementById('bmQueueSelect');
-    const tid = parseInt(sel.value);
-    if(!tid){ sel.style.borderColor='var(--accent)'; setTimeout(()=>sel.style.borderColor='',1500); showToast('⚠ Select a client from queue'); return; }
-    sel.style.borderColor='';
+    const hiddenSel = document.getElementById('bmQueueSelect');
+    const tid = parseInt(hiddenSel.value);
+    if(!tid){
+      const listEl = document.getElementById('bmClientList');
+      if(listEl){ listEl.style.border='1.5px solid var(--accent)'; setTimeout(()=>listEl.style.border='',1500); }
+      showToast('⚠ Please select a client from the list'); return;
+    }
     const t = log.find(x=>x.id===tid);
     if(!t){ showToast('Client not found'); return; }
     lastName  = t.lastName  || '';
@@ -1601,6 +1661,12 @@ function addBmEntry(){
     document.getElementById('bmFirstName').value = '';
   } else {
     document.getElementById('bmQueueSelect').value = '';
+    document.querySelectorAll('.bm-client-item').forEach(el=>el.classList.remove('selected'));
+    const lbl = document.getElementById('bmSelectedLbl');
+    lbl.style.display = 'none'; lbl.textContent = '';
+    document.getElementById('bmQueueSearch').value = '';
+    _bmQueueFilter = '';
+    renderBmClientList();
   }
 
   renderBmList();
