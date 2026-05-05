@@ -1603,7 +1603,7 @@ function renderBmClientList(){
   if(!list) return;
   list.querySelectorAll('.bm-client-item').forEach(e=>e.remove());
 
-  const active = log.filter(t => !t.served && (t.customer || t.firstName || t.lastName));
+  const active = log.filter(t => (t.customer || t.firstName || t.lastName));
   const q = _bmQueueFilter;
   const filtered = q ? active.filter(t=>{
     const num  = String(t.id).padStart(3,'0');
@@ -1613,7 +1613,7 @@ function renderBmClientList(){
 
   if(!filtered.length){
     empty.style.display = 'block';
-    empty.textContent   = q ? 'No clients match "' + q + '"' : 'No active clients in queue';
+    empty.textContent   = q ? 'No clients match "' + q + '"' : 'No clients in queue';
     return;
   }
   empty.style.display = 'none';
