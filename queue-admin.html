@@ -1590,17 +1590,22 @@ window.clearBmRecords = clearBmRecords;
 
 function exportBmCsv(){
   if(!bmRecords.length){ showToast('No records to export'); return; }
-  const headers = ['#','Last Name','First Name','Position','Country of Destination','Gender','Age','Region','Time','Date'];
-  const rows = bmRecords.map(r=>[r.id,r.lastName,r.firstName,r.position,r.country,r.gender,r.age,r.region,r.time,r.date]
-    .map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));
-  const csv = [headers.join(','), ...rows].join('\n');
-  const blob = new Blob([csv], {type:'text/csv'});
+  function esc(v){ return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }
+  const CRLF = '\r\n';
+  const headers = ['#','Last Name','First Name','Position','Country of Destination','Gender','Age','Region','Time','Date'].map(esc).join(',');
+  const rows = bmRecords.map(r =>
+    [r.id, r.lastName, r.firstName, r.position, r.country, r.gender, r.age, r.region, r.time, r.date].map(esc).join(',')
+  );
+  const csv = '\ufeff' + [headers, ...rows].join(CRLF);
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   const d = new Date();
   const ds = d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
   a.download = 'BM_Balik_Manggagawa_' + ds + '.csv';
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
   showToast('CSV exported');
 }
 window.exportBmCsv = exportBmCsv;
