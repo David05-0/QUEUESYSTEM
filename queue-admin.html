@@ -622,6 +622,7 @@
           <div class="bm-actions-row">
             <button class="bm-export-btn" onclick="exportBmCsv()">⬇ Export CSV</button>
             <button class="bm-export-btn" onclick="exportBmPrint()">🖨 Print</button>
+            <button class="bm-export-btn" onclick="restoreBmFromDevice()" title="Recover records saved on this device before cloud sync was enabled">♻ Restore Local</button>
             <button class="bm-clear-btn" onclick="clearBmRecords()">✕ Clear</button>
           </div>
 
@@ -1580,28 +1581,26 @@ let poolSearchQuery = '';
 let bmRecords = [];
 let bmSource  = 'queue';
 
-// ── One-time migration: push any localStorage BM data to Firebase ──
+// ── Migration: force-push localStorage BM data to Firebase (runs every load) ──
 (function migrateBmLocalStorage(){
   const raw = localStorage.getItem('bmRecords');
   if(!raw) return;
   try {
     const old = JSON.parse(raw);
-    if(!Array.isArray(old) || !old.length) return;
-    // Check Firebase first — only migrate if Firebase is empty
-    db.ref('bmRecords').once('value', snap => {
-      if(snap.val()) return; // Firebase already has data, skip
-      const obj = {};
-      old.forEach(r => {
-        const key = 'bm_' + (r.ts || Date.now() + Math.random());
-        if(!r.ts) r.ts = Date.now();
-        obj[key] = r;
-      });
-      db.ref('bmRecords').set(obj).then(() => {
-        localStorage.removeItem('bmRecords');
-        showToast('✓ BM records migrated to cloud (' + old.length + ' records)');
-      });
+    if(!Array.isArray(old) || !old.length){ localStorage.removeItem('bmRecords'); return; }
+    const obj = {};
+    old.forEach(r => {
+      if(!r.ts) r.ts = Date.now() + Math.floor(Math.random()*1000);
+      obj['bm_' + r.ts] = r;
     });
-  } catch(e){}
+    // Merge into Firebase (set each key individually to avoid overwriting newer cloud records)
+    const updates = {};
+    Object.keys(obj).forEach(k => { updates['bmRecords/' + k] = obj[k]; });
+    db.ref().update(updates).then(() => {
+      localStorage.removeItem('bmRecords');
+      console.log('[BM] Migrated ' + old.length + ' records to Firebase');
+    }).catch(e => console.error('[BM] Migration failed', e));
+  } catch(e){ console.error('[BM] Migration error', e); }
 })();
 
 // ── Firebase live listener — syncs BM records to all devices ──
@@ -1801,6 +1800,33 @@ function renderBmList(){
     list.insertBefore(row, empty);
   });
 }
+
+function restoreBmFromDevice(){
+  // Check ALL possible localStorage keys for BM data
+  const keys = ['bmRecords', 'bm_records', 'bmexception', 'BMRecords'];
+  let found = null;
+  for(const k of keys){
+    const raw = localStorage.getItem(k);
+    if(raw){ try{ const d=JSON.parse(raw); if(Array.isArray(d)&&d.length){found={key:k,data:d}; break;} }catch(e){} }
+  }
+  if(!found){
+    alert('No local BM records found on this device.\n\nThe data may already be in the cloud, or it was stored on a different device.');
+    return;
+  }
+  if(!confirm('Found ' + found.data.length + ' local BM record(s).\nMerge them into the cloud? This will not delete existing cloud records.')) return;
+  const updates = {};
+  found.data.forEach(r => {
+    if(!r.ts) r.ts = Date.now() + Math.floor(Math.random()*9999);
+    updates['bmRecords/bm_' + r.ts] = r;
+  });
+  db.ref().update(updates)
+    .then(() => {
+      localStorage.removeItem(found.key);
+      showToast('✓ ' + found.data.length + ' records restored to cloud');
+    })
+    .catch(() => showToast('⚠ Restore failed — check Firebase connection'));
+}
+window.restoreBmFromDevice = restoreBmFromDevice;
 
 function clearBmRecords(){
   if(!bmRecords.length) return;
