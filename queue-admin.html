@@ -158,6 +158,12 @@
   .cc-act-btn.serve-btn:hover{background:rgba(30,132,73,0.1);border-color:var(--green)}
   .cc-act-btn.remove-btn{color:var(--accent);border-color:rgba(176,58,46,0.3)}
   .cc-act-btn.remove-btn:hover{background:rgba(176,58,46,0.1);border-color:var(--accent)}
+  .cc-act-btn.notify-btn{color:var(--teal);border-color:rgba(14,107,138,0.3);font-weight:600}
+  .cc-act-btn.notify-btn:hover{background:rgba(14,107,138,0.12);border-color:var(--teal)}
+  .cc-act-btn.notify-btn.sent{color:var(--green);border-color:rgba(30,132,73,0.4);background:rgba(30,132,73,0.08);pointer-events:none;opacity:0.75}
+
+  /* ── Notify Counter confirmation toast ── */
+  .notify-confirm-badge{display:inline-flex;align-items:center;gap:4px;font-size:7px;letter-spacing:0.12em;text-transform:uppercase;padding:2px 8px;border-radius:20px;background:rgba(14,107,138,0.1);color:var(--teal);border:1px solid rgba(14,107,138,0.25);margin-top:2px;animation:fadeUp 0.2s ease}
 
   /* ── SERVICE TALLY PANEL ── */
   .tally-card{background:var(--paper);border:1px solid var(--rule);border-radius:2px;box-shadow:0 2px 8px var(--shadow);overflow:hidden}
@@ -963,6 +969,10 @@ function renderPool(){
     if(!t.served && !t.unserved){
       actionBtns.push(`<button class="cc-act-btn serve-btn" onclick="adminMarkServed(${t.id})">✓ Mark Served</button>`);
     }
+    // Notify counter button — only for compliance-hold clients assigned to a counter
+    if(t.compliance && t.counter > 0 && !t.served){
+      actionBtns.push(`<button class="cc-act-btn notify-btn" data-tid="${t.id}" onclick="notifyCounter(${t.id})">📢 Notify Counter</button>`);
+    }
     actionBtns.push(`<button class="cc-act-btn remove-btn" onclick="adminRemoveTicket(${t.id})">✕ Remove</button>`);
 
     card.innerHTML = `
@@ -994,6 +1004,33 @@ This cannot be undone and the client will not be called again.`)) return;
   showToast(`#${String(ticketId).padStart(3,'0')} marked Served`);
 }
 window.adminMarkServed = adminMarkServed;
+
+// ── Admin: Notify Counter — compliance done ──
+function notifyCounter(ticketId){
+  const t = log.find(x=>x.id===ticketId);
+  if(!t) return;
+  if(!t.compliance){
+    showToast('⚠ This client is not on Compliance hold');
+    return;
+  }
+  const payload = {
+    ticketId:  t.id,
+    counter:   t.counter,
+    customer:  t.customer || '',
+    service:   t.service  || '',
+    ts:        Date.now()
+  };
+  // Write directly to complianceNotify node — display.html listener picks this up
+  db.ref('queueState/complianceNotify').set(payload)
+    .then(()=>{
+      showToast(`📢 Counter ${t.counter+1} notified — #${String(t.id).padStart(3,'0')} compliance done`);
+      // Mark the button as sent so admin can see it was dispatched
+      const btn = document.querySelector(`.notify-btn[data-tid="${ticketId}"]`);
+      if(btn){ btn.classList.add('sent'); btn.textContent = '✓ Sent'; }
+    })
+    .catch(()=>showToast('⚠ Failed to send notification'));
+}
+window.notifyCounter = notifyCounter;
 
 // ── Admin: Remove Ticket ──
 function adminRemoveTicket(ticketId){
