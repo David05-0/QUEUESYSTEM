@@ -625,7 +625,7 @@
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:2px">
         <button onclick="addCbmEntry()" style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.1em;padding:11px;background:rgba(14,154,181,0.14);border:1.5px solid rgba(14,154,181,0.4);color:var(--teal);border-radius:3px;cursor:pointer;width:100%">＋ Add Record</button>
-        <button onclick="transferAllToCounter2()" id="btnTransferToC2" style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:0.08em;padding:11px;background:rgba(36,113,163,0.14);border:1.5px solid rgba(36,113,163,0.4);color:var(--c2);border-radius:3px;cursor:pointer;width:100%">↗ Send All to DMW Desk 3</button>
+        <button onclick="transferAllToCounter2()" id="btnTransferToC2" style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:0.08em;padding:11px;background:rgba(36,113,163,0.14);border:1.5px solid rgba(36,113,163,0.4);color:var(--c2);border-radius:3px;cursor:pointer;width:100%">↗ Send All to DMW Desk 2</button>
       </div>
     </div>
     <div style="overflow-y:auto;max-height:260px">
@@ -823,25 +823,27 @@ function openClientInfo(){
 function closeClientInfo(){
   document.getElementById('ciModal').style.display = 'none';
 }
-// ── Transfer all records from this counter to Counter 2 (DMW Desk 3) ──
+// ── Transfer all records from this counter to DMW Desk 2 (counter_1) ──
 function transferAllToCounter2(){
   if(!cbmRecords.length){ showToast('⚠ No records to transfer'); return; }
   if(!activeCounter){ showToast('⚠ Not logged in'); return; }
-  if(activeCounter === 2){ showToast('⚠ Already on DMW Desk 3'); return; }
-  if(!confirm('Transfer all ' + cbmRecords.length + ' record(s) from ' + COUNTER_NAMES[activeCounter-1] + ' to DMW Desk 3?')) return;
-  const destRef = db.ref('counterBmRecords/counter_2');
+  if(activeCounter === 1){ showToast('⚠ Already on DMW Desk 2'); return; }
+  if(!confirm('Transfer all ' + cbmRecords.length + ' record(s) from ' + COUNTER_NAMES[activeCounter-1] + ' to DMW Desk 2?\n\nYour records will be kept — only a copy is sent.')) return;
+  const destRef = db.ref('counterBmRecords/counter_1');
+  const now = Date.now();
   const promises = cbmRecords.map(r => {
-    const key = 'bm_' + r.ts;
-    const entry = Object.assign({}, r, { counter: COUNTER_NAMES[1], transferredFrom: COUNTER_NAMES[activeCounter-1], transferredAt: Date.now() });
+    // Use a unique key so it never overwrites existing Desk 2 records
+    const key = 'bm_' + r.ts + '_from' + activeCounter;
+    const entry = Object.assign({}, r, {
+      counter: COUNTER_NAMES[0],
+      transferredFrom: COUNTER_NAMES[activeCounter-1],
+      transferredAt: now
+    });
     return destRef.child(key).set(entry);
   });
   Promise.all(promises)
     .then(() => {
-      // Delete from source counter
-      return db.ref('counterBmRecords/counter_' + activeCounter).remove();
-    })
-    .then(() => {
-      showToast('✓ All records transferred to DMW Desk 3');
+      showToast('✓ ' + cbmRecords.length + ' record(s) copied to DMW Desk 2');
     })
     .catch(err => {
       console.error('Transfer error:', err);
@@ -891,7 +893,7 @@ function exportCbmCsv(){
   const headers = [
     'FIRST NAME','MIDDLE NAME','LAST NAME','SEX','BIRTHPLACE','DESTINATION','POSITION',
     'MUNICIPALITY','PROVINCE','REGION',
-    '19 & BELOW','20 TO 34','35 TO 64','65 AND ABOVE',
+    'AGE','19 & BELOW','20 TO 34','35 TO 64','65 AND ABOVE',
     'REMARKS','TYPE','DATE','CP NUMBER','COUNTER'
   ];
   const rows = cbmRecords.map(r => {
@@ -907,10 +909,11 @@ function exportCbmCsv(){
       r.municipality||'',
       r.province||'',
       r.region||'',
-      (ageNum && ageNum <= 19) ? '1' : '',
-      (ageNum && ageNum >= 20 && ageNum <= 34) ? '1' : '',
-      (ageNum && ageNum >= 35 && ageNum <= 64) ? '1' : '',
-      (ageNum && ageNum >= 65) ? '1' : '',
+      ageNum ? String(ageNum) : '',
+      (ageNum && ageNum <= 19) ? String(ageNum) : '',
+      (ageNum && ageNum >= 20 && ageNum <= 34) ? String(ageNum) : '',
+      (ageNum && ageNum >= 35 && ageNum <= 64) ? String(ageNum) : '',
+      (ageNum && ageNum >= 65) ? String(ageNum) : '',
       r.remarks||'',
       r.type||'',
       r.date||'',
@@ -947,6 +950,7 @@ function printCbmRecords(){
       <td>${r.municipality||''}</td>
       <td>${r.province||''}</td>
       <td>${r.region||''}</td>
+      <td class="age-cell age-total">${ageNum||''}</td>
       <td class="age-cell">${(ageNum && ageNum<=19)?ageNum:''}</td>
       <td class="age-cell">${(ageNum && ageNum>=20 && ageNum<=34)?ageNum:''}</td>
       <td class="age-cell">${(ageNum && ageNum>=35 && ageNum<=64)?ageNum:''}</td>
@@ -978,6 +982,8 @@ function printCbmRecords(){
     tr:last-child td{border-bottom:1px solid #e0e0e0}
     .num{color:#2471a3;font-weight:700;text-align:center;min-width:18px}
     .age-cell{text-align:center;color:#1e8449;font-weight:600}
+    .age-total{background:#e8f5e9;color:#1e8449;font-weight:700;border-left:2px solid #1e8449}
+    .age-total-th{background:#155a2e !important;border-left:2px solid #0d3d1f !important}
     .footer{margin-top:14px;font-size:7.5px;color:#aaa;text-align:right;border-top:1px solid #ddd;padding-top:6px}
     @media print{body{padding:8px 12px} @page{margin:8mm;size:landscape}}
   </style></head><body>
@@ -998,13 +1004,13 @@ function printCbmRecords(){
         <th colspan="6" class="group-hdr g-ofw">OFW's Information</th>
         <th colspan="3" class="group-hdr g-addr">Address</th>
         <th rowspan="2" class="group-hdr g-reg" style="vertical-align:middle">Region</th>
-        <th colspan="4" class="group-hdr g-age">Age</th>
+        <th colspan="5" class="group-hdr g-age">Age</th>
         <th rowspan="2" class="group-hdr g-rmk" style="vertical-align:middle">Remarks</th>
       </tr>
       <tr>
         <th>First Name</th><th>Middle Name</th><th>Last Name</th><th>Sex</th><th>Birthplace</th><th>Destination</th>
         <th>Position</th><th>Municipality</th><th>Province</th>
-        <th class="age-th">19 &amp; Below</th><th class="age-th">20–34</th><th class="age-th">35–64</th><th class="age-th">65+</th>
+        <th class="age-th age-total-th">Age</th><th class="age-th">19 &amp; Below</th><th class="age-th">20–34</th><th class="age-th">35–64</th><th class="age-th">65+</th>
       </tr>
     </thead>
     <tbody>${rows}</tbody>
