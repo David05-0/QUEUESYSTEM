@@ -649,6 +649,101 @@ function updateClock(){
 }
 setInterval(updateClock,1000); updateClock();
 
+// ══════════════════════════════════════════════
+// ── COUNTER BM EXCEPTION RECORDS ──
+// ══════════════════════════════════════════════
+let cbmRecords = [];
+let cbmRef = null;
+
+function initCbmListener(){
+  if(cbmRef) cbmRef.off();
+  cbmRef = db.ref('counterBmRecords/counter_' + activeCounter);
+  cbmRef.on('value', snap => {
+    const data = snap.val();
+    cbmRecords = data ? Object.values(data).sort((a,b) => a.ts - b.ts) : [];
+    cbmRecords.forEach((r,i) => r.id = i + 1);
+    renderCbmList();
+  });
+}
+
+function addCbmEntry(){
+  const last         = document.getElementById('cbmLast').value.trim();
+  const first        = document.getElementById('cbmFirst').value.trim();
+  const date         = document.getElementById('cbmDate').value;
+  const cp           = document.getElementById('cbmCp').value.trim();
+  const country      = document.getElementById('cbmCountry').value.trim();
+  const municipality = document.getElementById('cbmMunicipality').value.trim();
+  const province     = document.getElementById('cbmProvince').value.trim();
+
+  let valid = true;
+  if(!last)   { document.getElementById('cbmLast').classList.add('error');    valid=false; }
+  if(!first)  { document.getElementById('cbmFirst').classList.add('error');   valid=false; }
+  if(!country){ document.getElementById('cbmCountry').classList.add('error'); valid=false; }
+  if(!valid) return;
+
+  const ts = Date.now();
+  const entry = {
+    id: cbmRecords.length + 1,
+    lastName: last, firstName: first,
+    fullName: first + ' ' + last,
+    date: date || new Date().toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'}),
+    cp, country, municipality, province,
+    ts,
+    position:'', gender:'', age:'', region:'',
+    time: new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit',second:'2-digit'})
+  };
+
+  db.ref('counterBmRecords/counter_' + activeCounter + '/bm_' + ts).set(entry)
+    .then(() => {
+      showToast('✓ BM record added');
+      ['cbmLast','cbmFirst','cbmCp','cbmCountry','cbmMunicipality','cbmProvince'].forEach(id => document.getElementById(id).value='');
+      document.getElementById('cbmDate').value = new Date().toISOString().split('T')[0];
+    })
+    .catch(() => showToast('⚠ Failed to save record'));
+}
+
+function openClientInfo(){
+  const modal = document.getElementById('ciModal');
+  modal.style.display = 'flex';
+  const d = document.getElementById('cbmDate');
+  if(d && !d.value) d.value = new Date().toISOString().split('T')[0];
+}
+
+function closeClientInfo(){
+  document.getElementById('ciModal').style.display = 'none';
+}
+
+function deleteCbmEntry(idx){
+  if(!confirm('Remove this BM record?')) return;
+  const r = cbmRecords[idx];
+  if(!r) return;
+  db.ref('counterBmRecords/counter_' + activeCounter + '/bm_' + r.ts).remove()
+    .catch(() => showToast('⚠ Failed to remove record'));
+}
+
+function renderCbmList(){
+  const list = document.getElementById('cbmList');
+  if(!list) return;
+  const n = cbmRecords.length;
+  ['cbmCount','ciCount'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.textContent = n || '';
+  });
+  if(!n){
+    list.innerHTML = '<div style="font-size:10px;color:var(--muted);text-align:center;padding:20px;letter-spacing:0.1em">No records yet</div>';
+    return;
+  }
+  list.innerHTML = cbmRecords.map((r,i)=>`
+    <div style="display:grid;grid-template-columns:28px 1fr 90px 80px 90px 24px;gap:4px;padding:7px 12px;border-top:1px solid var(--border);align-items:center;font-size:10px">
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:14px;color:var(--muted)">${r.id}</span>
+      <span style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.fullName||(r.firstName+' '+r.lastName)}</span>
+      <span style="color:var(--muted);font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.country||'—'}</span>
+      <span style="color:var(--muted);font-size:9px">${r.cp||'—'}</span>
+      <span style="color:var(--muted);font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.municipality||'—'}</span>
+      <button onclick="deleteCbmEntry(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:0" title="Remove">✕</button>
+    </div>`).join('');
+}
+
 // ── Firebase ──
 let _fbFirstLoad = true;
 stateRef.on('value',snap=>{
@@ -676,113 +771,7 @@ stateRef.on('value',snap=>{
       renderView();
     } else {
       refreshLoginCounts();
-      
-// ══════════════════════════════════════════════
-// ── COUNTER BM EXCEPTION RECORDS ──
-// ══════════════════════════════════════════════
-let cbmRecords = [];
-
-// Firebase live listener — scoped to this counter only
-let cbmRef = null;
-function initCbmListener(){
-  if(cbmRef) cbmRef.off();
-  cbmRef = db.ref('counterBmRecords/counter_' + activeCounter);
-  cbmRef.on('value', snap => {
-    const data = snap.val();
-    cbmRecords = data ? Object.values(data).sort((a,b) => a.ts - b.ts) : [];
-    cbmRecords.forEach((r,i) => r.id = i + 1);
-    renderCbmList();
-  });
-}
-
-
-
-function addCbmEntry(){
-  const last         = document.getElementById('cbmLast').value.trim();
-  const first        = document.getElementById('cbmFirst').value.trim();
-  const date         = document.getElementById('cbmDate').value;
-  const cp           = document.getElementById('cbmCp').value.trim();
-  const country      = document.getElementById('cbmCountry').value.trim();
-  const municipality = document.getElementById('cbmMunicipality').value.trim();
-  const province     = document.getElementById('cbmProvince').value.trim();
-
-  let valid = true;
-  if(!last)   { document.getElementById('cbmLast').classList.add('error');    valid=false; }
-  if(!first)  { document.getElementById('cbmFirst').classList.add('error');   valid=false; }
-  if(!country){ document.getElementById('cbmCountry').classList.add('error'); valid=false; }
-  if(!valid) return;
-
-  const ts = Date.now();
-  const entry = {
-    id: cbmRecords.length + 1,
-    lastName: last, firstName: first,
-    fullName: first + ' ' + last,
-    date: date || new Date().toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'}),
-    cp, country, municipality, province,
-    ts,
-    // keep compat fields for admin display
-    position:'', gender:'', age:'', region:'',
-    time: new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit',second:'2-digit'})
-  };
-
-  db.ref('counterBmRecords/counter_' + activeCounter + '/bm_' + ts).set(entry)
-    .then(() => {
-      showToast('✓ BM record added');
-      // Clear form
-      ['cbmLast','cbmFirst','cbmCp','cbmCountry','cbmMunicipality','cbmProvince'].forEach(id => document.getElementById(id).value='');
-      document.getElementById('cbmDate').value = new Date().toISOString().split('T')[0];
-    })
-    .catch(() => showToast('⚠ Failed to save record'));
-}
-window.addCbmEntry = addCbmEntry;
-
-function openClientInfo(){
-  const modal = document.getElementById('ciModal');
-  modal.style.display = 'flex';
-  const d = document.getElementById('cbmDate');
-  if(d && !d.value) d.value = new Date().toISOString().split('T')[0];
-}
-window.openClientInfo = openClientInfo;
-
-function closeClientInfo(){
-  document.getElementById('ciModal').style.display = 'none';
-}
-window.closeClientInfo = closeClientInfo;
-
-function deleteCbmEntry(idx){
-  if(!confirm('Remove this BM record?')) return;
-  const r = cbmRecords[idx];
-  if(!r) return;
-  db.ref('counterBmRecords/counter_' + activeCounter + '/bm_' + r.ts).remove()
-    .catch(() => showToast('⚠ Failed to remove record'));
-}
-window.deleteCbmEntry = deleteCbmEntry;
-
-function renderCbmList(){
-  const list = document.getElementById('cbmList');
-  if(!list) return;
-  const n = cbmRecords.length;
-  // Update both count badges
-  ['cbmCount','ciCount'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el) el.textContent = n || '';
-  });
-  if(!n){
-    list.innerHTML = '<div style="font-size:10px;color:var(--muted);text-align:center;padding:20px;letter-spacing:0.1em">No records yet</div>';
-    return;
-  }
-  list.innerHTML = cbmRecords.map((r,i)=>`
-    <div style="display:grid;grid-template-columns:28px 1fr 90px 80px 90px 24px;gap:4px;padding:7px 12px;border-top:1px solid var(--border);align-items:center;font-size:10px">
-      <span style="font-family:'Bebas Neue',sans-serif;font-size:14px;color:var(--muted)">${r.id}</span>
-      <span style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.fullName||(r.firstName+' '+r.lastName)}</span>
-      <span style="color:var(--muted);font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.country||'—'}</span>
-      <span style="color:var(--muted);font-size:9px">${r.cp||'—'}</span>
-      <span style="color:var(--muted);font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.municipality||'—'}</span>
-      <button onclick="deleteCbmEntry(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:0" title="Remove">✕</button>
-    </div>`).join('');
-}
-
-buildLogin();
+      buildLogin();
     }
     return;
   }
