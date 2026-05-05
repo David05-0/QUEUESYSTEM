@@ -22,8 +22,6 @@
   /* ══ LOGIN ══ */
   #loginScreen{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);gap:28px}
   #loginScreen.hidden{display:none}
-  #loginScreen:not(.hidden) ~ * #cbmDrawer,
-  body:has(#loginScreen:not(.hidden)) #cbmDrawer{display:none!important}
   .login-sup{font-size:10px;letter-spacing:0.3em;color:var(--accent);text-transform:uppercase;text-align:center}
   .login-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,7vw,72px);letter-spacing:0.06em;line-height:1;text-align:center}
   .login-title span{color:var(--accent)}
@@ -343,40 +341,6 @@
   @keyframes popIn{from{transform:scale(0.82);opacity:0}to{transform:scale(1);opacity:1}}
 
 
-  /* ══ COUNTER BM PANEL ══ */
-  .cbm-panel{background:var(--panel);border-top:2px solid var(--teal);flex-shrink:0;display:flex;flex-direction:column}
-  .cbm-header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:rgba(14,154,181,0.07);cursor:pointer;user-select:none;flex-shrink:0}
-  .cbm-header-left{display:flex;align-items:center;gap:7px}
-  .cbm-header-icon{font-size:13px}
-  .cbm-header-title{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:0.08em;color:var(--teal)}
-  .cbm-header-count{font-size:9px;background:rgba(14,154,181,0.18);color:var(--teal);border:1px solid rgba(14,154,181,0.3);border-radius:20px;padding:1px 7px;letter-spacing:0.1em}
-  .cbm-chevron{font-size:10px;color:var(--muted);transition:transform 0.2s}
-  .cbm-chevron.open{transform:rotate(180deg)}
-  .cbm-body{display:none;flex-direction:column;gap:0}
-  .cbm-body.open{display:flex}
-  .cbm-form{padding:10px 12px;display:flex;flex-direction:column;gap:7px;border-bottom:1px solid var(--border)}
-  .cbm-row{display:grid;gap:7px}
-  .cbm-row.cols2{grid-template-columns:1fr 1fr}
-  .cbm-row.cols3{grid-template-columns:1fr 1fr 1fr}
-  .cbm-field{display:flex;flex-direction:column;gap:3px}
-  .cbm-lbl{font-size:7px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)}
-  .cbm-input{font-family:'DM Mono',monospace;font-size:11px;padding:6px 8px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;transition:border-color 0.13s;width:100%}
-  .cbm-input:focus{border-color:var(--teal)}
-  .cbm-input.error{border-color:var(--red);background:rgba(255,95,95,0.06);animation:inputShake 0.35s ease}
-  .cbm-select{font-family:'DM Mono',monospace;font-size:10px;padding:6px 8px;border:1.5px solid var(--border);background:#111118;color:var(--text);border-radius:3px;outline:none;cursor:pointer;transition:border-color 0.13s;width:100%}
-  .cbm-select:focus{border-color:var(--teal)}
-  .cbm-add-btn{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:0.1em;padding:9px;background:rgba(14,154,181,0.12);border:1.5px solid rgba(14,154,181,0.35);color:var(--teal);border-radius:3px;cursor:pointer;transition:all 0.15s;width:100%;margin-top:2px}
-  .cbm-add-btn:hover{background:rgba(14,154,181,0.22);border-color:var(--teal)}
-  .cbm-list-wrap{max-height:180px;overflow-y:auto;flex-shrink:0}
-  .cbm-list-head{display:grid;grid-template-columns:22px 1fr 70px 55px 60px 24px;gap:4px;padding:5px 10px;background:rgba(14,154,181,0.08);color:rgba(238,238,246,0.4);font-size:6.5px;letter-spacing:0.14em;text-transform:uppercase;position:sticky;top:0;z-index:1}
-  .cbm-entry{display:grid;grid-template-columns:22px 1fr 70px 55px 60px 24px;gap:4px;padding:5px 10px;border-top:1px solid var(--border);align-items:center;font-size:9px;transition:background 0.12s}
-  .cbm-entry:hover{background:rgba(14,154,181,0.04)}
-  .cbm-entry-num{font-family:'Bebas Neue',sans-serif;font-size:12px;color:var(--muted)}
-  .cbm-entry-name{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:9px}
-  .cbm-entry-cell{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:8px}
-  .cbm-entry-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;transition:color 0.13s;padding:0;justify-self:center}
-  .cbm-entry-del:hover{color:var(--red)}
-  .cbm-empty{font-size:9px;color:var(--muted);text-align:center;padding:14px;letter-spacing:0.1em}
   .toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--panel);border:1px solid var(--border);color:var(--text);padding:9px 22px;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:0.1em;opacity:0;transition:all 0.3s;pointer-events:none;z-index:99}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
@@ -420,6 +384,7 @@
     <div class="cv-right">
       <span class="fb-badge live" id="cvFbBadge"><span class="fb-dot"></span>Live</span>
       <div class="cv-clock" id="cvClock">00:00:00</div>
+      <button onclick="openClientInfo()" style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;background:rgba(14,154,181,0.12);border:1px solid rgba(14,154,181,0.4);color:var(--teal);border-radius:3px;padding:5px 10px;cursor:pointer;margin-right:6px">📋 Client Info <span id="cbmCount" style="opacity:0.7"></span></button>
       <button class="cv-logout" onclick="logout()">← Change</button>
     </div>
   </div>
@@ -545,84 +510,61 @@
 
   </div>
 
-<!-- ══ CLIENT INFO FIXED DRAWER ══ -->
-<div id="cbmDrawer"
-  ondragover="event.stopPropagation();event.preventDefault()"
-  ondrop="event.stopPropagation()"
-  onmousedown="event.stopPropagation()"
-  ontouchstart="event.stopPropagation()"
-  style="
-  position:fixed;
-  bottom:0;
-  left:0;
-  width:290px;
-  z-index:9999;
-  background:#111118;
-  border-top:2px solid var(--teal);
-  border-right:1px solid var(--border);
-  box-shadow:0 -4px 24px rgba(0,0,0,0.5);
-  display:flex;
-  flex-direction:column;
-  font-family:'DM Mono',monospace;
-  pointer-events:all;
-">
-  <div onclick="toggleCbmPanel()" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()" style="
-    display:flex;align-items:center;justify-content:space-between;
-    padding:9px 13px;background:rgba(14,154,181,0.09);cursor:pointer;user-select:none;
-  ">
-    <div style="display:flex;align-items:center;gap:8px">
-      <span style="font-size:13px">📋</span>
-      <span style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:0.08em;color:var(--teal)">Client Info</span>
-      <span id="cbmCount" style="font-size:9px;background:rgba(14,154,181,0.18);color:var(--teal);border:1px solid rgba(14,154,181,0.3);border-radius:20px;padding:1px 7px;letter-spacing:0.1em">0</span>
+<!-- ── Client Info Modal ── -->
+<div id="ciModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.75);align-items:center;justify-content:center;font-family:'DM Mono',monospace">
+  <div style="background:#111118;border:1.5px solid var(--teal);border-radius:6px;width:min(480px,95vw);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.8);display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);background:rgba(14,154,181,0.08)">
+      <div style="display:flex;align-items:center;gap:9px">
+        <span style="font-size:16px">📋</span>
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:0.1em;color:var(--teal)">Client Info</span>
+        <span id="ciCount" style="font-size:9px;background:rgba(14,154,181,0.18);color:var(--teal);border:1px solid rgba(14,154,181,0.3);border-radius:20px;padding:2px 8px">0</span>
+      </div>
+      <button onclick="closeClientInfo()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:3px;padding:4px 10px;cursor:pointer;font-size:12px">✕</button>
     </div>
-    <span id="cbmChevron" style="font-size:10px;color:var(--muted);transition:transform 0.2s">▲</span>
-  </div>
-  <div id="cbmBody" style="display:none;flex-direction:column;max-height:70vh;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent">
-    <div style="padding:10px 12px;display:flex;flex-direction:column;gap:7px;border-bottom:1px solid var(--border)">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
-        <div style="display:flex;flex-direction:column;gap:3px">
-          <div class="cbm-lbl">Last Name</div>
-          <input class="cbm-input" id="cbmLast" placeholder="LAST NAME" maxlength="40" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
+    <div style="padding:16px 18px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--border)">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Last Name</label>
+          <input id="cbmLast" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="LAST NAME" maxlength="40" oninput="this.value=this.value.toUpperCase()">
         </div>
-        <div style="display:flex;flex-direction:column;gap:3px">
-          <div class="cbm-lbl">First Name</div>
-          <input class="cbm-input" id="cbmFirst" placeholder="FIRST NAME" maxlength="40" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">First Name</label>
+          <input id="cbmFirst" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="FIRST NAME" maxlength="40" oninput="this.value=this.value.toUpperCase()">
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
-        <div style="display:flex;flex-direction:column;gap:3px">
-          <div class="cbm-lbl">Date</div>
-          <input class="cbm-input" id="cbmDate" type="date">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Date</label>
+          <input id="cbmDate" type="date" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%;color-scheme:dark">
         </div>
-        <div style="display:flex;flex-direction:column;gap:3px">
-          <div class="cbm-lbl">CP Number</div>
-          <input class="cbm-input" id="cbmCp" placeholder="09XXXXXXXXX" maxlength="15" autocomplete="off">
-        </div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:3px">
-        <div class="cbm-lbl">Country of Destination</div>
-        <input class="cbm-input" id="cbmCountry" placeholder="E.G. SAUDI ARABIA" maxlength="40" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
-        <div style="display:flex;flex-direction:column;gap:3px">
-          <div class="cbm-lbl">Municipality</div>
-          <input class="cbm-input" id="cbmMunicipality" placeholder="MUNICIPALITY" maxlength="40" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
-        </div>
-        <div style="display:flex;flex-direction:column;gap:3px">
-          <div class="cbm-lbl">Province</div>
-          <input class="cbm-input" id="cbmProvince" placeholder="PROVINCE" maxlength="40" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">CP Number</label>
+          <input id="cbmCp" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="09XXXXXXXXX" maxlength="15">
         </div>
       </div>
-      <button class="cbm-add-btn" onclick="addCbmEntry()">＋ Add Record</button>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Country of Destination</label>
+        <input id="cbmCountry" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="E.G. SAUDI ARABIA" maxlength="40" oninput="this.value=this.value.toUpperCase()">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Municipality</label>
+          <input id="cbmMunicipality" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="MUNICIPALITY" maxlength="40" oninput="this.value=this.value.toUpperCase()">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Province</label>
+          <input id="cbmProvince" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="PROVINCE" maxlength="40" oninput="this.value=this.value.toUpperCase()">
+        </div>
+      </div>
+      <button onclick="addCbmEntry()" style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.1em;padding:11px;background:rgba(14,154,181,0.14);border:1.5px solid rgba(14,154,181,0.4);color:var(--teal);border-radius:3px;cursor:pointer;width:100%;margin-top:2px">＋ Add Record</button>
     </div>
-    <div style="max-height:180px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent">
-      <div style="display:grid;grid-template-columns:22px 1fr 70px 55px 60px 24px;gap:4px;padding:5px 10px;background:rgba(14,154,181,0.08);color:rgba(238,238,246,0.4);font-size:6.5px;letter-spacing:0.14em;text-transform:uppercase;position:sticky;top:0">
+    <div style="overflow-y:auto;max-height:260px">
+      <div style="display:grid;grid-template-columns:28px 1fr 90px 80px 90px 24px;gap:4px;padding:6px 12px;background:rgba(14,154,181,0.07);color:rgba(238,238,246,0.4);font-size:6.5px;letter-spacing:0.14em;text-transform:uppercase;position:sticky;top:0">
         <span>#</span><span>Name</span><span>Country</span><span>CP</span><span>Municipality</span><span></span>
       </div>
-      <div id="cbmList"><div class="cbm-empty">No records yet</div></div>
+      <div id="cbmList" style="display:flex;flex-direction:column"></div>
     </div>
   </div>
-</div>
 </div>
 
 <!-- ── Transfer Modal ── -->
@@ -730,8 +672,6 @@ stateRef.on('value',snap=>{
       document.getElementById('cvName').textContent=COUNTER_NAMES[activeCounter-1];
       document.getElementById('cvDot').style.background=COLOR_HEX[activeCounter];
       initCbmListener();
-      const cbmDateR = document.getElementById('cbmDate');
-      if(cbmDateR) cbmDateR.value = new Date().toISOString().split('T')[0];
       document.getElementById('loginScreen').classList.add('hidden');
       renderView();
     } else {
@@ -755,13 +695,7 @@ function initCbmListener(){
   });
 }
 
-function toggleCbmPanel(){
-  const body    = document.getElementById('cbmBody');
-  const chevron = document.getElementById('cbmChevron');
-  const open    = body.style.display === 'flex';
-  body.style.display    = open ? 'none' : 'flex';
-  chevron.textContent   = open ? '▲' : '▼';
-}
+
 
 function addCbmEntry(){
   const last         = document.getElementById('cbmLast').value.trim();
@@ -802,6 +736,19 @@ function addCbmEntry(){
 }
 window.addCbmEntry = addCbmEntry;
 
+function openClientInfo(){
+  const modal = document.getElementById('ciModal');
+  modal.style.display = 'flex';
+  const d = document.getElementById('cbmDate');
+  if(d && !d.value) d.value = new Date().toISOString().split('T')[0];
+}
+window.openClientInfo = openClientInfo;
+
+function closeClientInfo(){
+  document.getElementById('ciModal').style.display = 'none';
+}
+window.closeClientInfo = closeClientInfo;
+
 function deleteCbmEntry(idx){
   if(!confirm('Remove this BM record?')) return;
   const r = cbmRecords[idx];
@@ -812,22 +759,26 @@ function deleteCbmEntry(idx){
 window.deleteCbmEntry = deleteCbmEntry;
 
 function renderCbmList(){
-  const list    = document.getElementById('cbmList');
-  const countEl = document.getElementById('cbmCount');
+  const list = document.getElementById('cbmList');
   if(!list) return;
-  if(countEl) countEl.textContent = cbmRecords.length;
-  if(!cbmRecords.length){
-    list.innerHTML = '<div class="cbm-empty">No records yet</div>';
+  const n = cbmRecords.length;
+  // Update both count badges
+  ['cbmCount','ciCount'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.textContent = n || '';
+  });
+  if(!n){
+    list.innerHTML = '<div style="font-size:10px;color:var(--muted);text-align:center;padding:20px;letter-spacing:0.1em">No records yet</div>';
     return;
   }
-  list.innerHTML = cbmRecords.map((r,i) => `
-    <div class="cbm-entry">
-      <span class="cbm-entry-num">${r.id}</span>
-      <span class="cbm-entry-name">${r.fullName || (r.firstName+' '+r.lastName)}</span>
-      <span class="cbm-entry-cell">${r.country||'—'}</span>
-      <span class="cbm-entry-cell">${r.cp||'—'}</span>
-      <span class="cbm-entry-cell">${r.municipality||'—'}</span>
-      <button class="cbm-entry-del" onclick="deleteCbmEntry(${i})" title="Remove">✕</button>
+  list.innerHTML = cbmRecords.map((r,i)=>`
+    <div style="display:grid;grid-template-columns:28px 1fr 90px 80px 90px 24px;gap:4px;padding:7px 12px;border-top:1px solid var(--border);align-items:center;font-size:10px">
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:14px;color:var(--muted)">${r.id}</span>
+      <span style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.fullName||(r.firstName+' '+r.lastName)}</span>
+      <span style="color:var(--muted);font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.country||'—'}</span>
+      <span style="color:var(--muted);font-size:9px">${r.cp||'—'}</span>
+      <span style="color:var(--muted);font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.municipality||'—'}</span>
+      <button onclick="deleteCbmEntry(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:0" title="Remove">✕</button>
     </div>`).join('');
 }
 
@@ -1031,8 +982,6 @@ function login(id){
   renderView();
   initCbmListener();
   // Show Client Info drawer and set today's date
-  const cbmDateEl = document.getElementById('cbmDate');
-  if(cbmDateEl) cbmDateEl.value = new Date().toISOString().split('T')[0];
 }
 
 function logout(){
@@ -1041,7 +990,6 @@ function logout(){
   sessionStorage.removeItem('ssTicketId');
   document.getElementById('counterView').classList.remove('visible');
   document.getElementById('loginScreen').classList.remove('hidden');
-  document.getElementById('cbmDrawer').style.display = 'none';
 
   buildLogin();
 }
