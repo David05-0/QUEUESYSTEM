@@ -687,6 +687,19 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const stateRef = db.ref('queueState');
 
+// ── Real-time connection state badge ──
+db.ref('.info/connected').on('value', snap => {
+  const badge = document.getElementById('fbBadge');
+  if (!badge) return;
+  if (snap.val() === true) {
+    badge.className = 'fb-badge live';
+    badge.innerHTML = '<span class="fb-dot"></span>Connected';
+  } else {
+    badge.className = 'fb-badge';
+    badge.innerHTML = '<span class="fb-dot"></span>Offline';
+  }
+});
+
 const COUNTER_NAMES = ['DMW Desk 2','DMW Desk 3','DMW Desk 4','DMW Desk 5'];
 const COLOR_HEX = {1:'#e67e22',2:'#2471a3',3:'#1e8449',4:'#7d3c98'};
 
@@ -930,8 +943,6 @@ function printCbmRecords(){
 // ── Firebase ──
 let _fbFirstLoad = true;
 stateRef.on('value',snap=>{
-  document.getElementById('fbBadge').className='fb-badge live';
-  document.getElementById('fbBadge').innerHTML='<span class="fb-dot"></span>Connected';
   const data=snap.val()||{};
   const newReset=data.resetFlag||null;
 
@@ -1040,14 +1051,29 @@ stateRef.on('value',snap=>{
   document.getElementById('fbBadge').innerHTML='<span class="fb-dot"></span>Offline';
 });
 
+let _saveRetryTimer = null;
 function saveShared(){
-  stateRef.set({
+  const payload = {
     ticketCounter: sharedTicketCounter,
     log:           sharedLog,
     lastUpdate:    Date.now(),
     resetFlag:     lastResetFlag,
     lastCall:      window._lastCall||null,
-    absentCounters: sharedAbsentCounters   // ← never wipe absent desk data
+    absentCounters: sharedAbsentCounters
+  };
+  return stateRef.set(payload).catch(err=>{
+    console.error('Firebase save error:', err);
+    const reason = err && err.code === 'PERMISSION_DENIED'
+      ? '⚠ Save failed — permission denied'
+      : '⚠ Failed to save — check connection';
+    showToast(reason);
+    // Auto-retry once after 4 seconds on network errors
+    if(err && err.code !== 'PERMISSION_DENIED'){
+      clearTimeout(_saveRetryTimer);
+      _saveRetryTimer = setTimeout(()=>{
+        stateRef.set(payload).catch(()=>{}); // silent retry
+      }, 4000);
+    }
   });
 }
 
