@@ -525,65 +525,6 @@
         </div>
       </div>
 
-      <!-- ══ BM Exception Panel ══ -->
-      <div class="cbm-panel" id="cbmPanel">
-        <div class="cbm-header" onclick="toggleCbmPanel()">
-          <div class="cbm-header-left">
-            <span class="cbm-header-icon">📋</span>
-            <span class="cbm-header-title">Client Info</span>
-            <span class="cbm-header-count" id="cbmCount">0</span>
-          </div>
-          <span class="cbm-chevron" id="cbmChevron">▼</span>
-        </div>
-        <div class="cbm-body" id="cbmBody">
-          <div class="cbm-form">
-            <div class="cbm-row cols2">
-              <div class="cbm-field">
-                <div class="cbm-lbl">Last Name</div>
-                <input class="cbm-input" id="cbmLast" placeholder="LAST NAME" maxlength="40" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
-              </div>
-              <div class="cbm-field">
-                <div class="cbm-lbl">First Name</div>
-                <input class="cbm-input" id="cbmFirst" placeholder="FIRST NAME" maxlength="40" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
-              </div>
-            </div>
-            <div class="cbm-row cols2">
-              <div class="cbm-field">
-                <div class="cbm-lbl">Date</div>
-                <input class="cbm-input" id="cbmDate" type="date">
-              </div>
-              <div class="cbm-field">
-                <div class="cbm-lbl">CP Number</div>
-                <input class="cbm-input" id="cbmCp" placeholder="09XXXXXXXXX" maxlength="15" autocomplete="off" oninput="this.classList.remove('error')">
-              </div>
-            </div>
-            <div class="cbm-row">
-              <div class="cbm-field">
-                <div class="cbm-lbl">Country of Destination</div>
-                <input class="cbm-input" id="cbmCountry" placeholder="E.G. SAUDI ARABIA" maxlength="40" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
-              </div>
-            </div>
-            <div class="cbm-row cols2">
-              <div class="cbm-field">
-                <div class="cbm-lbl">Municipality</div>
-                <input class="cbm-input" id="cbmMunicipality" placeholder="MUNICIPALITY" maxlength="40" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
-              </div>
-              <div class="cbm-field">
-                <div class="cbm-lbl">Province</div>
-                <input class="cbm-input" id="cbmProvince" placeholder="PROVINCE" maxlength="40" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
-              </div>
-            </div>
-            <button class="cbm-add-btn" onclick="addCbmEntry()">＋ Add Record</button>
-          </div>
-          <div class="cbm-list-wrap">
-            <div class="cbm-list-head">
-              <span>#</span><span>Name</span><span>Country</span><span>CP</span><span>Municipality</span><span></span>
-            </div>
-            <div id="cbmList"><div class="cbm-empty">No records yet</div></div>
-          </div>
-        </div>
-      </div>
-
     </div>
 
     <!-- PANE 3: UNASSIGNED POOL -->
@@ -636,6 +577,79 @@
     <div class="comply-notify-svc" id="complyNotifySvc"></div>
     <div class="comply-notify-msg">Client is ready — return to queue</div>
     <button class="comply-notify-dismiss" onclick="dismissComplyNotify()">✓ Got It</button>
+  </div>
+</div>
+
+<!-- ══ CLIENT INFO FIXED DRAWER ══ -->
+<div id="cbmDrawer" style="
+  position:fixed;
+  bottom:0;
+  left:0;
+  width:290px;
+  z-index:50;
+  background:#111118;
+  border-top:2px solid var(--teal);
+  border-right:1px solid var(--border);
+  box-shadow:0 -4px 24px rgba(0,0,0,0.5);
+  display:none;
+  flex-direction:column;
+  font-family:'DM Mono',monospace;
+">
+  <div onclick="toggleCbmPanel()" style="
+    display:flex;align-items:center;justify-content:space-between;
+    padding:9px 13px;background:rgba(14,154,181,0.09);cursor:pointer;user-select:none;
+  ">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:13px">📋</span>
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:0.08em;color:var(--teal)">Client Info</span>
+      <span id="cbmCount" style="font-size:9px;background:rgba(14,154,181,0.18);color:var(--teal);border:1px solid rgba(14,154,181,0.3);border-radius:20px;padding:1px 7px;letter-spacing:0.1em">0</span>
+    </div>
+    <span id="cbmChevron" style="font-size:10px;color:var(--muted);transition:transform 0.2s">▲</span>
+  </div>
+  <div id="cbmBody" style="display:none;flex-direction:column;max-height:70vh;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent">
+    <div style="padding:10px 12px;display:flex;flex-direction:column;gap:7px;border-bottom:1px solid var(--border)">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <div class="cbm-lbl">Last Name</div>
+          <input class="cbm-input" id="cbmLast" placeholder="LAST NAME" maxlength="40" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <div class="cbm-lbl">First Name</div>
+          <input class="cbm-input" id="cbmFirst" placeholder="FIRST NAME" maxlength="40" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <div class="cbm-lbl">Date</div>
+          <input class="cbm-input" id="cbmDate" type="date">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <div class="cbm-lbl">CP Number</div>
+          <input class="cbm-input" id="cbmCp" placeholder="09XXXXXXXXX" maxlength="15" autocomplete="off">
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <div class="cbm-lbl">Country of Destination</div>
+        <input class="cbm-input" id="cbmCountry" placeholder="E.G. SAUDI ARABIA" maxlength="40" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <div class="cbm-lbl">Municipality</div>
+          <input class="cbm-input" id="cbmMunicipality" placeholder="MUNICIPALITY" maxlength="40" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <div class="cbm-lbl">Province</div>
+          <input class="cbm-input" id="cbmProvince" placeholder="PROVINCE" maxlength="40" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
+        </div>
+      </div>
+      <button class="cbm-add-btn" onclick="addCbmEntry()">＋ Add Record</button>
+    </div>
+    <div style="max-height:180px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent">
+      <div style="display:grid;grid-template-columns:22px 1fr 70px 55px 60px 24px;gap:4px;padding:5px 10px;background:rgba(14,154,181,0.08);color:rgba(238,238,246,0.4);font-size:6.5px;letter-spacing:0.14em;text-transform:uppercase;position:sticky;top:0">
+        <span>#</span><span>Name</span><span>Country</span><span>CP</span><span>Municipality</span><span></span>
+      </div>
+      <div id="cbmList"><div class="cbm-empty">No records yet</div></div>
+    </div>
   </div>
 </div>
 
@@ -708,6 +722,10 @@ stateRef.on('value',snap=>{
       document.getElementById('cvName').textContent=COUNTER_NAMES[activeCounter-1];
       document.getElementById('cvDot').style.background=COLOR_HEX[activeCounter];
       initCbmListener();
+      const cbmDrawerR = document.getElementById('cbmDrawer');
+      if(cbmDrawerR) cbmDrawerR.style.display = 'flex';
+      const cbmDateR = document.getElementById('cbmDate');
+      if(cbmDateR) cbmDateR.value = new Date().toISOString().split('T')[0];
       document.getElementById('loginScreen').classList.add('hidden');
       renderView();
     } else {
@@ -734,8 +752,9 @@ function initCbmListener(){
 function toggleCbmPanel(){
   const body    = document.getElementById('cbmBody');
   const chevron = document.getElementById('cbmChevron');
-  const open    = body.classList.toggle('open');
-  chevron.classList.toggle('open', open);
+  const open    = body.style.display === 'flex';
+  body.style.display    = open ? 'none' : 'flex';
+  chevron.textContent   = open ? '▲' : '▼';
 }
 
 function addCbmEntry(){
@@ -1005,7 +1024,9 @@ function login(id){
   clearDisplay();
   renderView();
   initCbmListener();
-  // Set today's date default
+  // Show Client Info drawer and set today's date
+  const cbmDrawer = document.getElementById('cbmDrawer');
+  if(cbmDrawer) cbmDrawer.style.display = 'flex';
   const cbmDateEl = document.getElementById('cbmDate');
   if(cbmDateEl) cbmDateEl.value = new Date().toISOString().split('T')[0];
 }
@@ -1016,6 +1037,8 @@ function logout(){
   sessionStorage.removeItem('ssTicketId');
   document.getElementById('counterView').classList.remove('visible');
   document.getElementById('loginScreen').classList.remove('hidden');
+  const cbmDrawerL = document.getElementById('cbmDrawer');
+  if(cbmDrawerL) cbmDrawerL.style.display = 'none';
 
   buildLogin();
 }
