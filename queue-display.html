@@ -70,7 +70,7 @@
   .cv-logout:hover{color:var(--red);border-color:var(--red)}
 
   /* 3-pane body */
-  .cv-body{position:relative;z-index:1;flex:1;display:grid;grid-template-columns:1fr 290px 255px;overflow:hidden}
+  .cv-body{position:relative;z-index:1;flex:1;display:grid;grid-template-columns:1fr 290px 255px;overflow:hidden;isolation:auto}
 
   /* ══ PANE 1: NOW SERVING ══ */
   .cv-main{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px 28px;border-right:1px solid var(--border);gap:0;overflow:hidden}
@@ -176,7 +176,7 @@
   .unserved-reason{font-size:7px;letter-spacing:0.14em;text-transform:uppercase;padding:2px 6px;border-radius:2px;background:rgba(125,60,152,0.1);color:var(--c4);border:1px solid rgba(125,60,152,0.25);flex-shrink:0;align-self:flex-start}
 
   /* ══ PANE 2: QUEUE + HOLDS ══ */
-  .cv-sidebar{display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;background:rgba(10,10,15,0.25);border-right:1px solid var(--border);scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+  .cv-sidebar{display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;background:rgba(10,10,15,0.25);border-right:1px solid var(--border);scrollbar-width:thin;scrollbar-color:var(--border) transparent;padding-bottom:44px}
   .cv-sec{padding:11px 13px;border-bottom:1px solid var(--border);flex-shrink:0}
   .cv-sec.grow{flex-shrink:0;display:flex;flex-direction:column}
   .cv-sec-title{font-size:7.5px;letter-spacing:0.26em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:7px}
@@ -544,51 +544,19 @@
     </div>
 
   </div>
-</div>
-
-<!-- ── Transfer Modal ── -->
-<div class="tr-backdrop" id="trBackdrop">
-  <div class="tr-modal">
-    <div class="tr-hdr">
-      <div>
-        <div class="tr-hdr-title">↔ Transfer Ticket</div>
-        <div class="tr-hdr-sub">Select destination desk — client will be called by receiving counter</div>
-      </div>
-      <button class="tr-close" onclick="closeTransferModal()">✕</button>
-    </div>
-    <div class="tr-ticket-info">
-      <div class="tr-ticket-num" id="trTicketNum">—</div>
-      <div class="tr-ticket-svc" id="trTicketSvc"></div>
-      <div class="tr-ticket-cust" id="trTicketCust"></div>
-    </div>
-    <div class="tr-dest-section">
-      <div class="tr-dest-lbl">Transfer to which desk?</div>
-      <div class="tr-desk-grid" id="trDeskGrid"></div>
-      <button class="tr-pool-btn" onclick="executeTransfer(0)">↩ Return to Unassigned Pool</button>
-    </div>
-  </div>
-</div>
-
-<!-- ── Compliance Done Notification ── -->
-<div class="comply-notify-backdrop" id="complyNotifyBackdrop">
-  <div class="comply-notify-box">
-    <div class="comply-notify-icon">✅</div>
-    <div class="comply-notify-title">Compliance Done</div>
-    <div class="comply-notify-num" id="complyNotifyNum">—</div>
-    <div class="comply-notify-name" id="complyNotifyName"></div>
-    <div class="comply-notify-svc" id="complyNotifySvc"></div>
-    <div class="comply-notify-msg">Client is ready — return to queue</div>
-    <button class="comply-notify-dismiss" onclick="dismissComplyNotify()">✓ Got It</button>
-  </div>
-</div>
 
 <!-- ══ CLIENT INFO FIXED DRAWER ══ -->
-<div id="cbmDrawer" style="
+<div id="cbmDrawer"
+  ondragover="event.stopPropagation();event.preventDefault()"
+  ondrop="event.stopPropagation()"
+  onmousedown="event.stopPropagation()"
+  ontouchstart="event.stopPropagation()"
+  style="
   position:fixed;
   bottom:0;
   left:0;
   width:290px;
-  z-index:50;
+  z-index:9999;
   background:#111118;
   border-top:2px solid var(--teal);
   border-right:1px solid var(--border);
@@ -596,8 +564,9 @@
   display:flex;
   flex-direction:column;
   font-family:'DM Mono',monospace;
+  pointer-events:all;
 ">
-  <div onclick="toggleCbmPanel()" style="
+  <div onclick="toggleCbmPanel()" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()" style="
     display:flex;align-items:center;justify-content:space-between;
     padding:9px 13px;background:rgba(14,154,181,0.09);cursor:pointer;user-select:none;
   ">
@@ -652,6 +621,43 @@
       </div>
       <div id="cbmList"><div class="cbm-empty">No records yet</div></div>
     </div>
+  </div>
+</div>
+</div>
+
+<!-- ── Transfer Modal ── -->
+<div class="tr-backdrop" id="trBackdrop">
+  <div class="tr-modal">
+    <div class="tr-hdr">
+      <div>
+        <div class="tr-hdr-title">↔ Transfer Ticket</div>
+        <div class="tr-hdr-sub">Select destination desk — client will be called by receiving counter</div>
+      </div>
+      <button class="tr-close" onclick="closeTransferModal()">✕</button>
+    </div>
+    <div class="tr-ticket-info">
+      <div class="tr-ticket-num" id="trTicketNum">—</div>
+      <div class="tr-ticket-svc" id="trTicketSvc"></div>
+      <div class="tr-ticket-cust" id="trTicketCust"></div>
+    </div>
+    <div class="tr-dest-section">
+      <div class="tr-dest-lbl">Transfer to which desk?</div>
+      <div class="tr-desk-grid" id="trDeskGrid"></div>
+      <button class="tr-pool-btn" onclick="executeTransfer(0)">↩ Return to Unassigned Pool</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Compliance Done Notification ── -->
+<div class="comply-notify-backdrop" id="complyNotifyBackdrop">
+  <div class="comply-notify-box">
+    <div class="comply-notify-icon">✅</div>
+    <div class="comply-notify-title">Compliance Done</div>
+    <div class="comply-notify-num" id="complyNotifyNum">—</div>
+    <div class="comply-notify-name" id="complyNotifyName"></div>
+    <div class="comply-notify-svc" id="complyNotifySvc"></div>
+    <div class="comply-notify-msg">Client is ready — return to queue</div>
+    <button class="comply-notify-dismiss" onclick="dismissComplyNotify()">✓ Got It</button>
   </div>
 </div>
 
