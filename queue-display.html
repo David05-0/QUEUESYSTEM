@@ -519,8 +519,8 @@
       <div class="cbm-panel" id="cbmPanel">
         <div class="cbm-header" onclick="toggleCbmPanel()">
           <div class="cbm-header-left">
-            <span class="cbm-header-icon">🌿</span>
-            <span class="cbm-header-title">Balik Manggagawa</span>
+            <span class="cbm-header-icon">📋</span>
+            <span class="cbm-header-title">Client Info</span>
             <span class="cbm-header-count" id="cbmCount">0</span>
           </div>
           <span class="cbm-chevron" id="cbmChevron">▼</span>
@@ -569,7 +569,7 @@
             <div class="cbm-list-head">
               <span>#</span><span>Name</span><span>Country</span><span>CP</span><span>Municipality</span><span></span>
             </div>
-            <div id="cbmList"><div class="cbm-empty">No exceptions recorded yet</div></div>
+            <div id="cbmList"><div class="cbm-empty">No records yet</div></div>
           </div>
         </div>
       </div>
@@ -792,7 +792,7 @@ function renderCbmList(){
   if(!list) return;
   if(countEl) countEl.textContent = cbmRecords.length;
   if(!cbmRecords.length){
-    list.innerHTML = '<div class="cbm-empty">No exceptions recorded yet</div>';
+    list.innerHTML = '<div class="cbm-empty">No records yet</div>';
     return;
   }
   list.innerHTML = cbmRecords.map((r,i) => `
