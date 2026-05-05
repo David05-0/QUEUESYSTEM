@@ -1580,6 +1580,30 @@ let poolSearchQuery = '';
 let bmRecords = [];
 let bmSource  = 'queue';
 
+// ── One-time migration: push any localStorage BM data to Firebase ──
+(function migrateBmLocalStorage(){
+  const raw = localStorage.getItem('bmRecords');
+  if(!raw) return;
+  try {
+    const old = JSON.parse(raw);
+    if(!Array.isArray(old) || !old.length) return;
+    // Check Firebase first — only migrate if Firebase is empty
+    db.ref('bmRecords').once('value', snap => {
+      if(snap.val()) return; // Firebase already has data, skip
+      const obj = {};
+      old.forEach(r => {
+        const key = 'bm_' + (r.ts || Date.now() + Math.random());
+        if(!r.ts) r.ts = Date.now();
+        obj[key] = r;
+      });
+      db.ref('bmRecords').set(obj).then(() => {
+        localStorage.removeItem('bmRecords');
+        showToast('✓ BM records migrated to cloud (' + old.length + ' records)');
+      });
+    });
+  } catch(e){}
+})();
+
 // ── Firebase live listener — syncs BM records to all devices ──
 db.ref('bmRecords').on('value', snap => {
   const data = snap.val();
