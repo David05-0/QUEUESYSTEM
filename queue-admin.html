@@ -925,6 +925,18 @@ function renderPool(){
   else if(activeFilter==='c3')       filtered = log.filter(t=>t.counter===3);
   else if(activeFilter==='c4')       filtered = log.filter(t=>t.counter===4);
 
+  // Apply search filter (ticket number or name)
+  if(poolSearchQuery){
+    const q = poolSearchQuery.toLowerCase();
+    filtered = filtered.filter(t=>{
+      const num  = String(t.id).padStart(3,'0');
+      const name = (t.customer || ((t.firstName||'')+' '+(t.lastName||'')).trim()).toLowerCase();
+      return num.includes(q) || name.includes(q);
+    });
+  }
+  const countEl = document.getElementById('poolSearchCount');
+  if(countEl) countEl.textContent = poolSearchQuery ? `${filtered.length} result${filtered.length!==1?'s':''}` : '';
+
   badge.textContent = `${filtered.length} client${filtered.length!==1?'s':''}`;
   body.querySelectorAll('.client-card').forEach(e=>e.remove());
 
