@@ -22,6 +22,8 @@
   /* ══ LOGIN ══ */
   #loginScreen{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);gap:28px}
   #loginScreen.hidden{display:none}
+  #loginScreen:not(.hidden) ~ * #cbmDrawer,
+  body:has(#loginScreen:not(.hidden)) #cbmDrawer{display:none!important}
   .login-sup{font-size:10px;letter-spacing:0.3em;color:var(--accent);text-transform:uppercase;text-align:center}
   .login-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,7vw,72px);letter-spacing:0.06em;line-height:1;text-align:center}
   .login-title span{color:var(--accent)}
@@ -591,7 +593,7 @@
   border-top:2px solid var(--teal);
   border-right:1px solid var(--border);
   box-shadow:0 -4px 24px rgba(0,0,0,0.5);
-  display:none;
+  display:flex;
   flex-direction:column;
   font-family:'DM Mono',monospace;
 ">
@@ -722,8 +724,6 @@ stateRef.on('value',snap=>{
       document.getElementById('cvName').textContent=COUNTER_NAMES[activeCounter-1];
       document.getElementById('cvDot').style.background=COLOR_HEX[activeCounter];
       initCbmListener();
-      const cbmDrawerR = document.getElementById('cbmDrawer');
-      if(cbmDrawerR) cbmDrawerR.style.display = 'flex';
       const cbmDateR = document.getElementById('cbmDate');
       if(cbmDateR) cbmDateR.value = new Date().toISOString().split('T')[0];
       document.getElementById('loginScreen').classList.add('hidden');
@@ -1025,8 +1025,6 @@ function login(id){
   renderView();
   initCbmListener();
   // Show Client Info drawer and set today's date
-  const cbmDrawer = document.getElementById('cbmDrawer');
-  if(cbmDrawer) cbmDrawer.style.display = 'flex';
   const cbmDateEl = document.getElementById('cbmDate');
   if(cbmDateEl) cbmDateEl.value = new Date().toISOString().split('T')[0];
 }
@@ -1037,8 +1035,7 @@ function logout(){
   sessionStorage.removeItem('ssTicketId');
   document.getElementById('counterView').classList.remove('visible');
   document.getElementById('loginScreen').classList.remove('hidden');
-  const cbmDrawerL = document.getElementById('cbmDrawer');
-  if(cbmDrawerL) cbmDrawerL.style.display = 'none';
+  document.getElementById('cbmDrawer').style.display = 'none';
 
   buildLogin();
 }
