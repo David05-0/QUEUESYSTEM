@@ -524,9 +524,11 @@
         <span id="ciCount" style="font-size:9px;background:rgba(14,154,181,0.18);color:var(--teal);border:1px solid rgba(14,154,181,0.3);border-radius:20px;padding:2px 8px">0</span>
         <span id="ciCounterLabel" style="font-size:8px;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);margin-left:2px"></span>
       </div>
-      <div style="display:flex;align-items:center;gap:6px">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end">
         <button onclick="exportCbmCsv()" title="Export as CSV" style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(61,220,132,0.1);border:1px solid rgba(61,220,132,0.35);color:#3ddc84;border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.background='rgba(61,220,132,0.2)'" onmouseout="this.style.background='rgba(61,220,132,0.1)'">⬇ CSV</button>
         <button onclick="printCbmRecords()" title="Print records" style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(240,192,64,0.1);border:1px solid rgba(240,192,64,0.35);color:var(--accent);border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.background='rgba(240,192,64,0.2)'" onmouseout="this.style.background='rgba(240,192,64,0.1)'">🖨 Print</button>
+        <button onclick="restoreLocalBackup()" title="Restore from local backup" style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(36,113,163,0.12);border:1px solid rgba(36,113,163,0.4);color:var(--c2);border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.background='rgba(36,113,163,0.22)'" onmouseout="this.style.background='rgba(36,113,163,0.12)'">↺ Restore</button>
+        <button onclick="clearAllCbmRecords()" title="Clear all records" style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(255,95,95,0.08);border:1px solid rgba(255,95,95,0.35);color:var(--red);border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.background='rgba(255,95,95,0.18)'" onmouseout="this.style.background='rgba(255,95,95,0.08)'">🗑 Clear All</button>
         <button onclick="closeClientInfo()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:3px;padding:4px 10px;cursor:pointer;font-size:12px">✕</button>
       </div>
     </div>
@@ -794,6 +796,7 @@ function addCbmEntry(){
   const ref = db.ref('counterBmRecords/counter_' + activeCounter + '/bm_' + ts);
   ref.set(entry)
     .then(() => {
+      saveCbmLocalBackup();
       showToast('✓ Record saved');
       ['cbmFirst','cbmMiddle','cbmLast','cbmAge','cbmBirthplace','cbmPosition','cbmCp','cbmCountry','cbmMunicipality','cbmProvince','cbmRemarks'].forEach(id => {
         const el = document.getElementById(id);
@@ -851,6 +854,86 @@ function transferAllToCounter2(){
     });
 }
 window.transferAllToCounter2 = transferAllToCounter2;
+// ── Auto-save a local backup whenever records change ──
+function saveCbmLocalBackup(){
+  try {
+    const key = 'cbmBackup_counter_' + activeCounter;
+    localStorage.setItem(key, JSON.stringify({ ts: Date.now(), records: cbmRecords }));
+  } catch(e){ console.warn('Local backup failed:', e); }
+}
+
+// ── Restore from localStorage backup ──
+function restoreLocalBackup(){
+  if(!activeCounter){ showToast('⚠ Not logged in'); return; }
+  const key = 'cbmBackup_counter_' + activeCounter;
+  let backup;
+  try { backup = JSON.parse(localStorage.getItem(key)); } catch(e){ backup = null; }
+  if(!backup || !backup.records || !backup.records.length){
+    showToast('⚠ No local backup found for this counter');
+    return;
+  }
+  const savedAt = new Date(backup.ts).toLocaleString('en-PH');
+  const n = backup.records.length;
+  if(!confirm(
+    '⚠ RESTORE LOCAL BACKUP\n\n' +
+    'Saved: ' + savedAt + '\n' +
+    'Records: ' + n + '\n\n' +
+    'This will OVERWRITE the current Firebase records for ' + COUNTER_NAMES[activeCounter-1] + ' with the local backup.\n\n' +
+    'Continue?'
+  )) return;
+
+  const ref = db.ref('counterBmRecords/counter_' + activeCounter);
+  // First wipe then re-write all backup records
+  ref.remove().then(() => {
+    const writes = backup.records.map(r => {
+      const k = 'bm_' + (r.ts || Date.now() + Math.random());
+      return ref.child(k).set(r);
+    });
+    return Promise.all(writes);
+  }).then(() => {
+    showToast('✓ ' + n + ' record(s) restored from local backup');
+  }).catch(err => {
+    console.error('Restore error:', err);
+    showToast('⚠ Restore failed — check connection');
+  });
+}
+window.restoreLocalBackup = restoreLocalBackup;
+
+// ── Clear ALL records with strong warning ──
+function clearAllCbmRecords(){
+  if(!activeCounter){ showToast('⚠ Not logged in'); return; }
+  if(!cbmRecords.length){ showToast('⚠ No records to clear'); return; }
+  const n = cbmRecords.length;
+  const counterName = COUNTER_NAMES[activeCounter-1];
+  // Two-step confirmation
+  const step1 = confirm(
+    '⛔ WARNING — CLEAR ALL RECORDS\n\n' +
+    'You are about to permanently delete ALL ' + n + ' record(s) for ' + counterName + '.\n\n' +
+    'A local backup will be saved automatically before clearing.\n\n' +
+    'Click OK to continue to the final confirmation.'
+  );
+  if(!step1) return;
+  const step2 = confirm(
+    '⛔ FINAL CONFIRMATION\n\n' +
+    'Type-check: you have ' + n + ' record(s) on ' + counterName + '.\n\n' +
+    'This CANNOT be undone on Firebase — but you can restore from the local backup using the ↺ Restore button.\n\n' +
+    'Click OK to DELETE ALL records now.'
+  );
+  if(!step2) return;
+
+  // Save backup first, then delete
+  saveCbmLocalBackup();
+  db.ref('counterBmRecords/counter_' + activeCounter).remove()
+    .then(() => {
+      showToast('🗑 All ' + n + ' record(s) cleared — local backup saved (↺ Restore to undo)');
+    })
+    .catch(err => {
+      console.error('Clear error:', err);
+      showToast('⚠ Clear failed — check connection');
+    });
+}
+window.clearAllCbmRecords = clearAllCbmRecords;
+
 
 
 function deleteCbmEntry(idx){
