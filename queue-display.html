@@ -340,6 +340,10 @@
 
   @keyframes popIn{from{transform:scale(0.82);opacity:0}to{transform:scale(1);opacity:1}}
 
+  /* Client Info form validation */
+  #ciModal input.error{border-color:#ff5f5f!important;background:rgba(255,95,95,0.07)!important;animation:inputShake 0.3s ease}
+  @keyframes inputShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
 
   .toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--panel);border:1px solid var(--border);color:var(--text);padding:9px 22px;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:0.1em;opacity:0;transition:all 0.3s;pointer-events:none;z-index:99}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -529,11 +533,11 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div style="display:flex;flex-direction:column;gap:4px">
           <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Last Name</label>
-          <input id="cbmLast" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="LAST NAME" maxlength="40" oninput="this.value=this.value.toUpperCase()">
+          <input id="cbmLast" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="LAST NAME" maxlength="40" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
         </div>
         <div style="display:flex;flex-direction:column;gap:4px">
           <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">First Name</label>
-          <input id="cbmFirst" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="FIRST NAME" maxlength="40" oninput="this.value=this.value.toUpperCase()">
+          <input id="cbmFirst" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="FIRST NAME" maxlength="40" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
@@ -548,7 +552,7 @@
       </div>
       <div style="display:flex;flex-direction:column;gap:4px">
         <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Country of Destination</label>
-        <input id="cbmCountry" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="E.G. SAUDI ARABIA" maxlength="40" oninput="this.value=this.value.toUpperCase()">
+        <input id="cbmCountry" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="E.G. SAUDI ARABIA" maxlength="40" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div style="display:flex;flex-direction:column;gap:4px">
