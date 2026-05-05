@@ -340,6 +340,41 @@
 
   @keyframes popIn{from{transform:scale(0.82);opacity:0}to{transform:scale(1);opacity:1}}
 
+
+  /* ══ COUNTER BM PANEL ══ */
+  .cbm-panel{background:var(--panel);border-top:2px solid var(--teal);flex-shrink:0;display:flex;flex-direction:column;overflow:hidden}
+  .cbm-header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:rgba(14,154,181,0.07);cursor:pointer;user-select:none;flex-shrink:0}
+  .cbm-header-left{display:flex;align-items:center;gap:7px}
+  .cbm-header-icon{font-size:13px}
+  .cbm-header-title{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:0.08em;color:var(--teal)}
+  .cbm-header-count{font-size:9px;background:rgba(14,154,181,0.18);color:var(--teal);border:1px solid rgba(14,154,181,0.3);border-radius:20px;padding:1px 7px;letter-spacing:0.1em}
+  .cbm-chevron{font-size:10px;color:var(--muted);transition:transform 0.2s}
+  .cbm-chevron.open{transform:rotate(180deg)}
+  .cbm-body{display:none;flex-direction:column;gap:0;overflow:hidden}
+  .cbm-body.open{display:flex}
+  .cbm-form{padding:10px 12px;display:flex;flex-direction:column;gap:7px;border-bottom:1px solid var(--border)}
+  .cbm-row{display:grid;gap:7px}
+  .cbm-row.cols2{grid-template-columns:1fr 1fr}
+  .cbm-row.cols3{grid-template-columns:1fr 1fr 1fr}
+  .cbm-field{display:flex;flex-direction:column;gap:3px}
+  .cbm-lbl{font-size:7px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)}
+  .cbm-input{font-family:'DM Mono',monospace;font-size:11px;padding:6px 8px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;transition:border-color 0.13s;width:100%}
+  .cbm-input:focus{border-color:var(--teal)}
+  .cbm-input.error{border-color:var(--red);background:rgba(255,95,95,0.06);animation:inputShake 0.35s ease}
+  .cbm-select{font-family:'DM Mono',monospace;font-size:10px;padding:6px 8px;border:1.5px solid var(--border);background:#111118;color:var(--text);border-radius:3px;outline:none;cursor:pointer;transition:border-color 0.13s;width:100%}
+  .cbm-select:focus{border-color:var(--teal)}
+  .cbm-add-btn{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:0.1em;padding:9px;background:rgba(14,154,181,0.12);border:1.5px solid rgba(14,154,181,0.35);color:var(--teal);border-radius:3px;cursor:pointer;transition:all 0.15s;width:100%;margin-top:2px}
+  .cbm-add-btn:hover{background:rgba(14,154,181,0.22);border-color:var(--teal)}
+  .cbm-list-wrap{max-height:180px;overflow-y:auto;flex-shrink:0}
+  .cbm-list-head{display:grid;grid-template-columns:22px 1fr 70px 55px 60px 24px;gap:4px;padding:5px 10px;background:rgba(14,154,181,0.08);color:rgba(238,238,246,0.4);font-size:6.5px;letter-spacing:0.14em;text-transform:uppercase;position:sticky;top:0;z-index:1}
+  .cbm-entry{display:grid;grid-template-columns:22px 1fr 70px 55px 60px 24px;gap:4px;padding:5px 10px;border-top:1px solid var(--border);align-items:center;font-size:9px;transition:background 0.12s}
+  .cbm-entry:hover{background:rgba(14,154,181,0.04)}
+  .cbm-entry-num{font-family:'Bebas Neue',sans-serif;font-size:12px;color:var(--muted)}
+  .cbm-entry-name{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:9px}
+  .cbm-entry-cell{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:8px}
+  .cbm-entry-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;transition:color 0.13s;padding:0;justify-self:center}
+  .cbm-entry-del:hover{color:var(--red)}
+  .cbm-empty{font-size:9px;color:var(--muted);text-align:center;padding:14px;letter-spacing:0.1em}
   .toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--panel);border:1px solid var(--border);color:var(--text);padding:9px 22px;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:0.1em;opacity:0;transition:all 0.3s;pointer-events:none;z-index:99}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
@@ -480,6 +515,65 @@
         </div>
       </div>
 
+      <!-- ══ BM Exception Panel ══ -->
+      <div class="cbm-panel" id="cbmPanel">
+        <div class="cbm-header" onclick="toggleCbmPanel()">
+          <div class="cbm-header-left">
+            <span class="cbm-header-icon">🌿</span>
+            <span class="cbm-header-title">Balik Manggagawa</span>
+            <span class="cbm-header-count" id="cbmCount">0</span>
+          </div>
+          <span class="cbm-chevron" id="cbmChevron">▼</span>
+        </div>
+        <div class="cbm-body" id="cbmBody">
+          <div class="cbm-form">
+            <div class="cbm-row cols2">
+              <div class="cbm-field">
+                <div class="cbm-lbl">Last Name</div>
+                <input class="cbm-input" id="cbmLast" placeholder="LAST NAME" maxlength="40" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
+              </div>
+              <div class="cbm-field">
+                <div class="cbm-lbl">First Name</div>
+                <input class="cbm-input" id="cbmFirst" placeholder="FIRST NAME" maxlength="40" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
+              </div>
+            </div>
+            <div class="cbm-row cols2">
+              <div class="cbm-field">
+                <div class="cbm-lbl">Date</div>
+                <input class="cbm-input" id="cbmDate" type="date">
+              </div>
+              <div class="cbm-field">
+                <div class="cbm-lbl">CP Number</div>
+                <input class="cbm-input" id="cbmCp" placeholder="09XXXXXXXXX" maxlength="15" autocomplete="off" oninput="this.classList.remove('error')">
+              </div>
+            </div>
+            <div class="cbm-row">
+              <div class="cbm-field">
+                <div class="cbm-lbl">Country of Destination</div>
+                <input class="cbm-input" id="cbmCountry" placeholder="E.G. SAUDI ARABIA" maxlength="40" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
+              </div>
+            </div>
+            <div class="cbm-row cols2">
+              <div class="cbm-field">
+                <div class="cbm-lbl">Municipality</div>
+                <input class="cbm-input" id="cbmMunicipality" placeholder="MUNICIPALITY" maxlength="40" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
+              </div>
+              <div class="cbm-field">
+                <div class="cbm-lbl">Province</div>
+                <input class="cbm-input" id="cbmProvince" placeholder="PROVINCE" maxlength="40" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
+              </div>
+            </div>
+            <button class="cbm-add-btn" onclick="addCbmEntry()">＋ Add Record</button>
+          </div>
+          <div class="cbm-list-wrap">
+            <div class="cbm-list-head">
+              <span>#</span><span>Name</span><span>Country</span><span>CP</span><span>Municipality</span><span></span>
+            </div>
+            <div id="cbmList"><div class="cbm-empty">No exceptions recorded yet</div></div>
+          </div>
+        </div>
+      </div>
+
       <div class="cv-sec grow">
         <div class="cv-sec-title">My Queue <span style="font-size:6.5px;color:var(--muted);letter-spacing:0.06em;margin-left:3px">DRAG → HOLD ZONE</span></div>
         <div class="cv-queue-list" id="cvQueueList"
@@ -613,11 +707,106 @@ stateRef.on('value',snap=>{
       view.className=`visible c${activeCounter}`;
       document.getElementById('cvName').textContent=COUNTER_NAMES[activeCounter-1];
       document.getElementById('cvDot').style.background=COLOR_HEX[activeCounter];
+      initCbmListener();
       document.getElementById('loginScreen').classList.add('hidden');
       renderView();
     } else {
       refreshLoginCounts();
-      buildLogin();
+      
+// ══════════════════════════════════════════════
+// ── COUNTER BM EXCEPTION RECORDS ──
+// ══════════════════════════════════════════════
+let cbmRecords = [];
+
+// Firebase live listener — scoped to this counter only
+let cbmRef = null;
+function initCbmListener(){
+  if(cbmRef) cbmRef.off();
+  cbmRef = db.ref('counterBmRecords/counter_' + activeCounter);
+  cbmRef.on('value', snap => {
+    const data = snap.val();
+    cbmRecords = data ? Object.values(data).sort((a,b) => a.ts - b.ts) : [];
+    cbmRecords.forEach((r,i) => r.id = i + 1);
+    renderCbmList();
+  });
+}
+
+function toggleCbmPanel(){
+  const body    = document.getElementById('cbmBody');
+  const chevron = document.getElementById('cbmChevron');
+  const open    = body.classList.toggle('open');
+  chevron.classList.toggle('open', open);
+}
+
+function addCbmEntry(){
+  const last         = document.getElementById('cbmLast').value.trim();
+  const first        = document.getElementById('cbmFirst').value.trim();
+  const date         = document.getElementById('cbmDate').value;
+  const cp           = document.getElementById('cbmCp').value.trim();
+  const country      = document.getElementById('cbmCountry').value.trim();
+  const municipality = document.getElementById('cbmMunicipality').value.trim();
+  const province     = document.getElementById('cbmProvince').value.trim();
+
+  let valid = true;
+  if(!last)   { document.getElementById('cbmLast').classList.add('error');    valid=false; }
+  if(!first)  { document.getElementById('cbmFirst').classList.add('error');   valid=false; }
+  if(!country){ document.getElementById('cbmCountry').classList.add('error'); valid=false; }
+  if(!valid) return;
+
+  const ts = Date.now();
+  const entry = {
+    id: cbmRecords.length + 1,
+    lastName: last, firstName: first,
+    fullName: first + ' ' + last,
+    date: date || new Date().toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'}),
+    cp, country, municipality, province,
+    ts,
+    // keep compat fields for admin display
+    position:'', gender:'', age:'', region:'',
+    time: new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit',second:'2-digit'})
+  };
+
+  db.ref('counterBmRecords/counter_' + activeCounter + '/bm_' + ts).set(entry)
+    .then(() => {
+      showToast('✓ BM record added');
+      // Clear form
+      ['cbmLast','cbmFirst','cbmCp','cbmCountry','cbmMunicipality','cbmProvince'].forEach(id => document.getElementById(id).value='');
+      document.getElementById('cbmDate').value = new Date().toISOString().split('T')[0];
+    })
+    .catch(() => showToast('⚠ Failed to save record'));
+}
+window.addCbmEntry = addCbmEntry;
+
+function deleteCbmEntry(idx){
+  if(!confirm('Remove this BM record?')) return;
+  const r = cbmRecords[idx];
+  if(!r) return;
+  db.ref('counterBmRecords/counter_' + activeCounter + '/bm_' + r.ts).remove()
+    .catch(() => showToast('⚠ Failed to remove record'));
+}
+window.deleteCbmEntry = deleteCbmEntry;
+
+function renderCbmList(){
+  const list    = document.getElementById('cbmList');
+  const countEl = document.getElementById('cbmCount');
+  if(!list) return;
+  if(countEl) countEl.textContent = cbmRecords.length;
+  if(!cbmRecords.length){
+    list.innerHTML = '<div class="cbm-empty">No exceptions recorded yet</div>';
+    return;
+  }
+  list.innerHTML = cbmRecords.map((r,i) => `
+    <div class="cbm-entry">
+      <span class="cbm-entry-num">${r.id}</span>
+      <span class="cbm-entry-name">${r.fullName || (r.firstName+' '+r.lastName)}</span>
+      <span class="cbm-entry-cell">${r.country||'—'}</span>
+      <span class="cbm-entry-cell">${r.cp||'—'}</span>
+      <span class="cbm-entry-cell">${r.municipality||'—'}</span>
+      <button class="cbm-entry-del" onclick="deleteCbmEntry(${i})" title="Remove">✕</button>
+    </div>`).join('');
+}
+
+buildLogin();
     }
     return;
   }
@@ -815,6 +1004,10 @@ function login(id){
   document.getElementById('loginScreen').classList.add('hidden');
   clearDisplay();
   renderView();
+  initCbmListener();
+  // Set today's date default
+  const cbmDateEl = document.getElementById('cbmDate');
+  if(cbmDateEl) cbmDateEl.value = new Date().toISOString().split('T')[0];
 }
 
 function logout(){
