@@ -64,6 +64,9 @@
   .name-input{width:100%;font-family:'DM Mono',monospace;font-size:12px;padding:9px 11px;background:var(--bg);border:1.5px solid var(--rule);border-radius:3px;color:var(--ink);outline:none;transition:border-color 0.13s}
   .name-input:focus{border-color:var(--ink)}
   .name-input::placeholder{color:var(--muted)}
+  .name-input.error{border-color:var(--accent)!important;background:rgba(176,58,46,0.05)!important;animation:inputShake 0.35s ease}
+  @keyframes inputShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+  .name-input-lbl.error{color:var(--accent)!important}
   .name-input-lbl{font-size:7px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
 
   /* Priority */
@@ -297,8 +300,10 @@
   .bm-source-row{display:flex;gap:6px;margin-bottom:2px}
   .bm-source-btn{flex:1;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;border:1.5px solid var(--rule);background:transparent;color:var(--muted);border-radius:3px;padding:7px;cursor:pointer;transition:all 0.13s}
   .bm-source-btn.active{border-color:#4a7c4a;background:rgba(74,124,74,0.1);color:#4a7c4a}
-  .bm-queue-select{width:100%;font-family:'DM Mono',monospace;font-size:11px;padding:8px 10px;border:1.5px solid var(--rule);background:var(--bg);color:var(--ink);border-radius:3px;outline:none;cursor:pointer;transition:border-color 0.13s}
+  .bm-queue-select{width:100%;font-family:'DM Mono',monospace;font-size:11px;padding:4px 2px;border:1.5px solid var(--rule);background:var(--bg);color:var(--ink);border-radius:3px;outline:none;cursor:pointer;transition:border-color 0.13s;min-height:110px}
   .bm-queue-select:focus{border-color:#4a7c4a}
+  .bm-queue-select option{padding:6px 8px;cursor:pointer}
+  .bm-queue-select option:checked{background:#1a2a1a;color:#e8f5e8}
   .bm-field-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .bm-field{display:flex;flex-direction:column;gap:4px}
   .bm-field.full{grid-column:1/-1}
@@ -389,20 +394,18 @@
           </button>
         </div>
 
-        <div class="field-label">2 · Customer Name <span style="color:var(--muted)">(optional)</span></div>
-        <div class="name-row">
-          <div class="name-grid">
-            <div>
-              <div class="name-input-lbl">First Name</div>
-              <input type="text" class="name-input" id="custFirstName" placeholder="First name…" maxlength="30" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
-            </div>
-            <div>
-              <div class="name-input-lbl">Last Name</div>
-              <input type="text" class="name-input" id="custLastName" placeholder="Last name…" maxlength="30" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
-            </div>
+        <div class="field-label">2 · Customer Name <span style="color:var(--accent);font-size:8px">* Required</span></div>
+        <div class="name-grid">
+          <div>
+            <div class="name-input-lbl" id="lbl-lastName">Last Name</div>
+            <input type="text" class="name-input" id="custLastName" placeholder="Last name…" maxlength="30" autocomplete="off" style="text-transform:uppercase"
+              oninput="this.value=this.value.toUpperCase();this.classList.remove('error');document.getElementById('lbl-lastName').classList.remove('error')">
           </div>
-          <div class="name-input-lbl">Nickname <span style="color:var(--muted);font-size:6.5px">(used in announcement)</span></div>
-          <input type="text" class="name-input" id="custNickname" placeholder="Nickname…" maxlength="20" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
+          <div>
+            <div class="name-input-lbl" id="lbl-firstName">First Name</div>
+            <input type="text" class="name-input" id="custFirstName" placeholder="First name…" maxlength="30" autocomplete="off" style="text-transform:uppercase"
+              oninput="this.value=this.value.toUpperCase();this.classList.remove('error');document.getElementById('lbl-firstName').classList.remove('error')">
+          </div>
         </div>
 
         <div class="field-label">3 · Priority</div>
@@ -529,7 +532,7 @@
           <!-- From Queue: dropdown -->
           <div id="bmQueuePicker">
             <div class="bm-label" style="margin-bottom:5px">Select Client from Queue</div>
-            <select class="bm-queue-select" id="bmQueueSelect">
+            <select class="bm-queue-select" id="bmQueueSelect" size="5">
               <option value="">— Select a client —</option>
             </select>
           </div>
@@ -800,27 +803,53 @@ window.setFilter = setFilter;
 
 // ── Issue — counter is 0 (unassigned) ──
 function issueTicket(){
+  const lastEl  = document.getElementById('custLastName');
+  const firstEl = document.getElementById('custFirstName');
+  const lastName  = lastEl.value.trim();
+  const firstName = firstEl.value.trim();
+
+  // Reset errors
+  [lastEl, firstEl].forEach(el => el.classList.remove('error'));
+  ['lbl-lastName','lbl-firstName'].forEach(id => document.getElementById(id).classList.remove('error'));
+
+  // Validate
+  let valid = true;
+  if(!lastName){
+    lastEl.classList.add('error');
+    document.getElementById('lbl-lastName').classList.add('error');
+    valid = false;
+  }
+  if(!firstName){
+    firstEl.classList.add('error');
+    document.getElementById('lbl-firstName').classList.add('error');
+    valid = false;
+  }
+  if(!valid){
+    showToast('⚠ Last Name and First Name are required');
+    if(!lastName) lastEl.focus(); else firstEl.focus();
+    return;
+  }
+
   ticketCounter++;
   const now = new Date();
   const timeStr = [now.getHours(),now.getMinutes(),now.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':');
   const dateStr = now.toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'});
   const ticket = {
     id: ticketCounter,
-    counter: 0,            // 0 = unassigned, counter picks it up
+    counter: 0,
     service: selectedSvc,
-    firstName: document.getElementById('custFirstName').value.trim()||null,
-    lastName:  document.getElementById('custLastName').value.trim()||null,
-    nickname:  document.getElementById('custNickname').value.trim()||null,
-    customer:  [document.getElementById('custFirstName').value.trim(), document.getElementById('custLastName').value.trim()].filter(Boolean).join(' ')||null,
+    firstName, lastName,
+    nickname: firstName,
+    customer: `${firstName} ${lastName}`,
     priority: selectedPrio,
     time: timeStr, date: dateStr,
     startTime: Date.now(),
     served: false, compliance: false, paymentHold: false
   };
   log.unshift(ticket);
-  document.getElementById('custFirstName').value = '';
-  document.getElementById('custLastName').value  = '';
-  document.getElementById('custNickname').value  = '';
+  lastEl.value  = '';
+  firstEl.value = '';
+  [lastEl, firstEl].forEach(el => el.classList.remove('error'));
   saveState();
   showToast(`#${String(ticket.id).padStart(3,'0')} → Pool`);
 }
