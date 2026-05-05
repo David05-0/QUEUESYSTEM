@@ -531,57 +531,84 @@
       </div>
     </div>
     <div style="padding:16px 18px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--border)">
-      <!-- Row 1: Name -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <!-- Row 1: First / Middle / Last Name -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
         <div style="display:flex;flex-direction:column;gap:4px">
-          <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Last Name</label>
-          <input id="cbmLast" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="LAST NAME" maxlength="40" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
-        </div>
-        <div style="display:flex;flex-direction:column;gap:4px">
-          <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">First Name</label>
+          <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">First Name *</label>
           <input id="cbmFirst" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="FIRST NAME" maxlength="40" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
         </div>
-      </div>
-      <!-- Row 2: Gender / Age -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div style="display:flex;flex-direction:column;gap:4px">
-          <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Gender</label>
+          <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Middle Name</label>
+          <input id="cbmMiddle" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="MIDDLE NAME" maxlength="40" oninput="this.value=this.value.toUpperCase()">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Last Name *</label>
+          <input id="cbmLast" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="LAST NAME" maxlength="40" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
+        </div>
+      </div>
+      <!-- Row 2: Sex / Age / Birthplace -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Sex</label>
           <select id="cbmGender" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:#111118;color:var(--text);border-radius:3px;outline:none;width:100%;color-scheme:dark">
             <option value="">— Select —</option>
-            <option>Male</option><option>Female</option><option>Prefer not to say</option>
+            <option>Male</option><option>Female</option>
           </select>
         </div>
         <div style="display:flex;flex-direction:column;gap:4px">
           <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Age</label>
-          <input id="cbmAge" type="number" min="1" max="99" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="Age">
+          <input id="cbmAge" type="number" min="1" max="120" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="Age">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Birthplace</label>
+          <input id="cbmBirthplace" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="CITY / PROVINCE" maxlength="60" oninput="this.value=this.value.toUpperCase()">
         </div>
       </div>
-      <!-- Row 3: Position / Type -->
+      <!-- Row 3: Destination / Position -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Country of Destination *</label>
+          <input id="cbmCountry" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="E.G. SAUDI ARABIA" maxlength="40" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
+        </div>
         <div style="display:flex;flex-direction:column;gap:4px">
           <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Position / Job Title</label>
           <input id="cbmPosition" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="E.G. DOMESTIC WORKER" maxlength="60" oninput="this.value=this.value.toUpperCase()">
         </div>
+      </div>
+      <!-- Row 4: Municipality / Province / Region -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Municipality</label>
+          <input id="cbmMunicipality" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="MUNICIPALITY" maxlength="40" oninput="this.value=this.value.toUpperCase()">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Province</label>
+          <input id="cbmProvince" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="PROVINCE" maxlength="40" oninput="this.value=this.value.toUpperCase()">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Region</label>
+          <select id="cbmRegion" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:#111118;color:var(--text);border-radius:3px;outline:none;width:100%;color-scheme:dark">
+            <option value="">— Select —</option>
+            <option>NCR</option><option>CAR</option><option>Region I</option>
+            <option>Region II</option><option>Region III</option><option>Region IV-A</option>
+            <option>Region IV-B</option><option>Region V</option><option>Region VI</option>
+            <option>Region VII</option><option>Region VIII</option><option>Region IX</option>
+            <option>Region X</option><option>Region XI</option><option>Region XII</option>
+            <option>Region XIII</option><option>BARMM</option>
+          </select>
+        </div>
+      </div>
+      <!-- Row 5: Type / Date / CP -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
         <div style="display:flex;flex-direction:column;gap:4px">
           <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Type</label>
           <select id="cbmType" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:#111118;color:var(--text);border-radius:3px;outline:none;width:100%;color-scheme:dark">
             <option value="">— Select —</option>
-            <option>CE</option>
-            <option>TCW</option>
-            <option>CE/CJ</option>
-            <option>NRF</option>
-            <option>SE</option>
-            <option>SE/CP</option>
-            <option>SE/CJ</option>
-            <option>SE/WE</option>
-            <option>SE/RM</option>
-            <option>SE/WW</option>
-            <option>SE/WC</option>
+            <option>CE</option><option>TCW</option><option>CE/CJ</option><option>NRF</option>
+            <option>SE</option><option>SE/CP</option><option>SE/CJ</option><option>SE/WE</option>
+            <option>SE/RM</option><option>SE/WW</option><option>SE/WC</option>
           </select>
         </div>
-      </div>
-      <!-- Row 4: Date / CP -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div style="display:flex;flex-direction:column;gap:4px">
           <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Date</label>
           <input id="cbmDate" type="date" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%;color-scheme:dark">
@@ -591,40 +618,19 @@
           <input id="cbmCp" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="09XXXXXXXXX" maxlength="15">
         </div>
       </div>
-      <!-- Row 5: Country -->
+      <!-- Row 6: Remarks -->
       <div style="display:flex;flex-direction:column;gap:4px">
-        <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Country of Destination</label>
-        <input id="cbmCountry" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="E.G. SAUDI ARABIA" maxlength="40" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
+        <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Remarks</label>
+        <input id="cbmRemarks" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="OPTIONAL NOTES" maxlength="120" oninput="this.value=this.value.toUpperCase()">
       </div>
-      <!-- Row 6: Municipality / Province -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div style="display:flex;flex-direction:column;gap:4px">
-          <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Municipality</label>
-          <input id="cbmMunicipality" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="MUNICIPALITY" maxlength="40" oninput="this.value=this.value.toUpperCase()">
-        </div>
-        <div style="display:flex;flex-direction:column;gap:4px">
-          <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Province</label>
-          <input id="cbmProvince" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="PROVINCE" maxlength="40" oninput="this.value=this.value.toUpperCase()">
-        </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:2px">
+        <button onclick="addCbmEntry()" style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.1em;padding:11px;background:rgba(14,154,181,0.14);border:1.5px solid rgba(14,154,181,0.4);color:var(--teal);border-radius:3px;cursor:pointer;width:100%">＋ Add Record</button>
+        <button onclick="transferAllToCounter2()" id="btnTransferToC2" style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:0.08em;padding:11px;background:rgba(36,113,163,0.14);border:1.5px solid rgba(36,113,163,0.4);color:var(--c2);border-radius:3px;cursor:pointer;width:100%">↗ Send All to DMW Desk 3</button>
       </div>
-      <!-- Row 7: Region -->
-      <div style="display:flex;flex-direction:column;gap:4px">
-        <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Region</label>
-        <select id="cbmRegion" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:#111118;color:var(--text);border-radius:3px;outline:none;width:100%;color-scheme:dark">
-          <option value="">— Select —</option>
-          <option>NCR</option><option>CAR</option><option>Region I</option>
-          <option>Region II</option><option>Region III</option><option>Region IV-A</option>
-          <option>Region IV-B</option><option>Region V</option><option>Region VI</option>
-          <option>Region VII</option><option>Region VIII</option><option>Region IX</option>
-          <option>Region X</option><option>Region XI</option><option>Region XII</option>
-          <option>Region XIII</option><option>BARMM</option>
-        </select>
-      </div>
-      <button onclick="addCbmEntry()" style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.1em;padding:11px;background:rgba(14,154,181,0.14);border:1.5px solid rgba(14,154,181,0.4);color:var(--teal);border-radius:3px;cursor:pointer;width:100%;margin-top:2px">＋ Add Record</button>
     </div>
     <div style="overflow-y:auto;max-height:260px">
-      <div style="display:grid;grid-template-columns:26px 1fr 56px 48px 80px 70px 70px 22px;gap:3px;padding:6px 12px;background:rgba(14,154,181,0.07);color:rgba(238,238,246,0.4);font-size:6px;letter-spacing:0.12em;text-transform:uppercase;position:sticky;top:0">
-        <span>#</span><span>Name</span><span>Gender</span><span>Age</span><span>Type</span><span>Country</span><span>Region</span><span></span>
+      <div style="display:grid;grid-template-columns:22px 1fr 44px 32px 60px 60px 60px 22px;gap:2px;padding:6px 12px;background:rgba(14,154,181,0.07);color:rgba(238,238,246,0.4);font-size:6px;letter-spacing:0.12em;text-transform:uppercase;position:sticky;top:0">
+        <span>#</span><span>Name</span><span>Sex</span><span>Age</span><span>Destination</span><span>Position</span><span>Region</span><span></span>
       </div>
       <div id="cbmList" style="display:flex;flex-direction:column"></div>
     </div>
@@ -744,39 +750,44 @@ function initCbmListener(){
 }
 
 function addCbmEntry(){
-  const last         = document.getElementById('cbmLast').value.trim();
   const first        = document.getElementById('cbmFirst').value.trim();
+  const middle       = document.getElementById('cbmMiddle').value.trim();
+  const last         = document.getElementById('cbmLast').value.trim();
   const gender       = document.getElementById('cbmGender').value;
   const age          = document.getElementById('cbmAge').value.trim();
-  const position     = document.getElementById('cbmPosition').value.trim();
-  const type         = document.getElementById('cbmType').value;
-  const date         = document.getElementById('cbmDate').value;
-  const cp           = document.getElementById('cbmCp').value.trim();
+  const birthplace   = document.getElementById('cbmBirthplace').value.trim();
   const country      = document.getElementById('cbmCountry').value.trim();
+  const position     = document.getElementById('cbmPosition').value.trim();
   const municipality = document.getElementById('cbmMunicipality').value.trim();
   const province     = document.getElementById('cbmProvince').value.trim();
   const region       = document.getElementById('cbmRegion').value;
-  const counter      = activeCounter ? 'DMW Desk ' + (activeCounter + 1) : '';
+  const type         = document.getElementById('cbmType').value;
+  const date         = document.getElementById('cbmDate').value;
+  const cp           = document.getElementById('cbmCp').value.trim();
+  const remarks      = document.getElementById('cbmRemarks').value.trim();
+  const counter      = activeCounter ? COUNTER_NAMES[activeCounter-1] : '';
 
   let valid = true;
-  if(!last)   { document.getElementById('cbmLast').classList.add('error');    valid=false; }
   if(!first)  { document.getElementById('cbmFirst').classList.add('error');   valid=false; }
+  if(!last)   { document.getElementById('cbmLast').classList.add('error');    valid=false; }
   if(!country){ document.getElementById('cbmCountry').classList.add('error'); valid=false; }
-  if(!valid){ showToast('⚠ Last Name, First Name & Country are required'); return; }
+  if(!valid){ showToast('⚠ First Name, Last Name & Destination are required'); return; }
 
   if(!activeCounter){ showToast('⚠ No active counter — please log in first'); return; }
+
+  const ageNum = age ? parseInt(age) : null;
+  const ageBracket = !ageNum ? '' : ageNum <= 19 ? '19 & BELOW' : ageNum <= 34 ? '20 TO 34' : ageNum <= 64 ? '35 TO 64' : '65 AND ABOVE';
 
   const ts = Date.now();
   const entry = {
     id: cbmRecords.length + 1,
-    lastName: last, firstName: first,
-    fullName: first + ' ' + last,
-    gender, age: age ? parseInt(age) : '',
-    position, type,
-    date: date || new Date().toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'}),
-    cp, country, municipality, province,
-    region, counter,
-    ts,
+    firstName: first, middleName: middle, lastName: last,
+    fullName: [first, middle, last].filter(Boolean).join(' '),
+    gender, age: ageNum || '', ageBracket,
+    birthplace, country, position,
+    municipality, province, region,
+    type, date: date || new Date().toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'}),
+    cp, remarks, counter, ts,
     time: new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit',second:'2-digit'})
   };
 
@@ -784,7 +795,7 @@ function addCbmEntry(){
   ref.set(entry)
     .then(() => {
       showToast('✓ Record saved');
-      ['cbmLast','cbmFirst','cbmAge','cbmPosition','cbmCp','cbmCountry','cbmMunicipality','cbmProvince'].forEach(id => {
+      ['cbmFirst','cbmMiddle','cbmLast','cbmAge','cbmBirthplace','cbmPosition','cbmCp','cbmCountry','cbmMunicipality','cbmProvince','cbmRemarks'].forEach(id => {
         const el = document.getElementById(id);
         if(el) el.value = '';
       });
@@ -812,6 +823,33 @@ function openClientInfo(){
 function closeClientInfo(){
   document.getElementById('ciModal').style.display = 'none';
 }
+// ── Transfer all records from this counter to Counter 2 (DMW Desk 3) ──
+function transferAllToCounter2(){
+  if(!cbmRecords.length){ showToast('⚠ No records to transfer'); return; }
+  if(!activeCounter){ showToast('⚠ Not logged in'); return; }
+  if(activeCounter === 2){ showToast('⚠ Already on DMW Desk 3'); return; }
+  if(!confirm('Transfer all ' + cbmRecords.length + ' record(s) from ' + COUNTER_NAMES[activeCounter-1] + ' to DMW Desk 3?')) return;
+  const destRef = db.ref('counterBmRecords/counter_2');
+  const promises = cbmRecords.map(r => {
+    const key = 'bm_' + r.ts;
+    const entry = Object.assign({}, r, { counter: COUNTER_NAMES[1], transferredFrom: COUNTER_NAMES[activeCounter-1], transferredAt: Date.now() });
+    return destRef.child(key).set(entry);
+  });
+  Promise.all(promises)
+    .then(() => {
+      // Delete from source counter
+      return db.ref('counterBmRecords/counter_' + activeCounter).remove();
+    })
+    .then(() => {
+      showToast('✓ All records transferred to DMW Desk 3');
+    })
+    .catch(err => {
+      console.error('Transfer error:', err);
+      showToast('⚠ Transfer failed — check connection');
+    });
+}
+window.transferAllToCounter2 = transferAllToCounter2;
+
 
 function deleteCbmEntry(idx){
   if(!confirm('Remove this BM record?')) return;
@@ -834,14 +872,14 @@ function renderCbmList(){
     return;
   }
   list.innerHTML = cbmRecords.map((r,i)=>`
-    <div style="display:grid;grid-template-columns:26px 1fr 56px 48px 80px 70px 70px 22px;gap:3px;padding:7px 12px;border-top:1px solid var(--border);align-items:center;font-size:9.5px">
-      <span style="font-family:'Bebas Neue',sans-serif;font-size:14px;color:var(--muted)">${r.id}</span>
-      <span style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.fullName||(r.firstName+' '+r.lastName)}">${r.fullName||(r.firstName+' '+r.lastName)}</span>
-      <span style="color:var(--muted);font-size:8.5px">${r.gender||'—'}</span>
-      <span style="color:var(--muted);font-size:8.5px">${r.age||'—'}</span>
-      <span style="color:var(--muted);font-size:8.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.type||'—'}</span>
-      <span style="color:var(--muted);font-size:8.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.country||'—'}</span>
-      <span style="color:var(--muted);font-size:8.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.region||'—'}</span>
+    <div style="display:grid;grid-template-columns:22px 1fr 44px 32px 60px 60px 60px 22px;gap:2px;padding:7px 12px;border-top:1px solid var(--border);align-items:center;font-size:9px">
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--muted)">${r.id}</span>
+      <span style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.fullName||''}">${r.fullName||''}</span>
+      <span style="color:var(--muted);font-size:8px">${r.gender||'—'}</span>
+      <span style="color:var(--muted);font-size:8px">${r.age||'—'}</span>
+      <span style="color:var(--muted);font-size:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.country||''}">${r.country||'—'}</span>
+      <span style="color:var(--muted);font-size:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.position||'—'}</span>
+      <span style="color:var(--muted);font-size:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.region||'—'}</span>
       <button onclick="deleteCbmEntry(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:0" title="Remove">✕</button>
     </div>`).join('');
 }
@@ -849,23 +887,37 @@ function renderCbmList(){
 function exportCbmCsv(){
   if(!cbmRecords.length){ showToast('⚠ No records to export'); return; }
   const counterName = activeCounter ? COUNTER_NAMES[activeCounter-1] : 'Counter';
-  const headers = ['#','Last Name','First Name','Gender','Age','Position','Type','Date','CP Number','Country of Destination','Municipality','Province','Region','Counter'];
-  const rows = cbmRecords.map((r,i) => [
-    i+1,
-    r.lastName||'',
-    r.firstName||'',
-    r.gender||'',
-    r.age||'',
-    r.position||'',
-    r.type||'',
-    r.date||'',
-    r.cp||'',
-    r.country||'',
-    r.municipality||'',
-    r.province||'',
-    r.region||'',
-    r.counter||counterName
-  ].map(v => '"'+String(v).replace(/"/g,'""')+'"').join(','));
+  // Excel format: OFW'S INFORMATION + ADDRESS + REGION + AGE brackets + REMARKS
+  const headers = [
+    'FIRST NAME','MIDDLE NAME','LAST NAME','SEX','BIRTHPLACE','DESTINATION','POSITION',
+    'MUNICIPALITY','PROVINCE','REGION',
+    '19 & BELOW','20 TO 34','35 TO 64','65 AND ABOVE',
+    'REMARKS','TYPE','DATE','CP NUMBER','COUNTER'
+  ];
+  const rows = cbmRecords.map(r => {
+    const ageNum = r.age ? parseInt(r.age) : null;
+    return [
+      r.firstName||'',
+      r.middleName||'',
+      r.lastName||'',
+      r.gender||'',
+      r.birthplace||'',
+      r.country||'',
+      r.position||'',
+      r.municipality||'',
+      r.province||'',
+      r.region||'',
+      (ageNum && ageNum <= 19) ? '1' : '',
+      (ageNum && ageNum >= 20 && ageNum <= 34) ? '1' : '',
+      (ageNum && ageNum >= 35 && ageNum <= 64) ? '1' : '',
+      (ageNum && ageNum >= 65) ? '1' : '',
+      r.remarks||'',
+      r.type||'',
+      r.date||'',
+      r.cp||'',
+      r.counter||counterName
+    ].map(v => '"'+String(v).replace(/"/g,'""')+'"').join(',');
+  });
   const csv = '\ufeff' + [headers.map(h=>'"'+h+'"').join(','), ...rows].join('\r\n');
   const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
   const url = URL.createObjectURL(blob);
@@ -880,43 +932,58 @@ function printCbmRecords(){
   if(!cbmRecords.length){ showToast('⚠ No records to print'); return; }
   const counterName = activeCounter ? COUNTER_NAMES[activeCounter-1] : 'Counter';
   const date = new Date().toLocaleDateString('en-PH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  const rows = cbmRecords.map((r,i)=>`
-    <tr>
+  const rows = cbmRecords.map((r,i)=>{
+    const ageNum = r.age ? parseInt(r.age) : null;
+    const bracket = r.ageBracket || (!ageNum ? '' : ageNum<=19?'19 & BELOW':ageNum<=34?'20 TO 34':ageNum<=64?'35 TO 64':'65 AND ABOVE');
+    return `<tr>
       <td class="num">${i+1}</td>
-      <td>${r.lastName||''}</td>
       <td>${r.firstName||''}</td>
+      <td>${r.middleName||''}</td>
+      <td>${r.lastName||''}</td>
       <td>${r.gender||''}</td>
-      <td>${r.age||''}</td>
-      <td>${r.position||''}</td>
-      <td>${r.type||''}</td>
-      <td>${r.date||''}</td>
-      <td>${r.cp||''}</td>
+      <td>${r.birthplace||''}</td>
       <td>${r.country||''}</td>
+      <td>${r.position||''}</td>
       <td>${r.municipality||''}</td>
       <td>${r.province||''}</td>
       <td>${r.region||''}</td>
-    </tr>`).join('');
+      <td class="age-cell">${(ageNum && ageNum<=19)?ageNum:''}</td>
+      <td class="age-cell">${(ageNum && ageNum>=20 && ageNum<=34)?ageNum:''}</td>
+      <td class="age-cell">${(ageNum && ageNum>=35 && ageNum<=64)?ageNum:''}</td>
+      <td class="age-cell">${(ageNum && ageNum>=65)?ageNum:''}</td>
+      <td>${r.remarks||''}</td>
+    </tr>`;
+  }).join('');
   const win = window.open('','_blank');
   win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Client Info — ${counterName}</title>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:'Segoe UI',Arial,sans-serif;font-size:10px;color:#111;padding:20px 28px}
-    .hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid #0e9ab5}
-    .hdr-title{font-size:18px;font-weight:700;color:#0e9ab5;letter-spacing:0.04em}
-    .hdr-sub{font-size:10px;color:#555;margin-top:3px}
-    .hdr-meta{text-align:right;font-size:9px;color:#777;line-height:1.6}
+    body{font-family:'Segoe UI',Arial,sans-serif;font-size:8.5px;color:#111;padding:14px 20px}
+    .hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #2471a3}
+    .hdr-title{font-size:15px;font-weight:700;color:#2471a3;letter-spacing:0.04em}
+    .hdr-sub{font-size:9px;color:#555;margin-top:2px}
+    .hdr-meta{text-align:right;font-size:8px;color:#777;line-height:1.6}
     table{width:100%;border-collapse:collapse;margin-top:4px}
-    th{background:#0e9ab5;color:#fff;font-size:7.5px;letter-spacing:0.1em;text-transform:uppercase;padding:6px 6px;text-align:left;font-weight:600}
-    td{padding:5px 6px;border-bottom:1px solid #e8e8e8;vertical-align:top;font-size:9px}
-    tr:nth-child(even) td{background:#f7fafa}
-    tr:last-child td{border-bottom:none}
-    .num{color:#0e9ab5;font-weight:700;text-align:center}
-    .footer{margin-top:18px;font-size:8.5px;color:#aaa;text-align:right;border-top:1px solid #ddd;padding-top:8px}
-    @media print{body{padding:12px 16px} @page{margin:10mm;size:landscape}}
+    .group-hdr{background:#2471a3;color:#fff;font-size:6.5px;letter-spacing:0.14em;text-transform:uppercase;padding:4px 5px;text-align:center;font-weight:700}
+    .group-hdr.g-ofw{background:#c0392b}
+    .group-hdr.g-addr{background:#e67e22}
+    .group-hdr.g-reg{background:#7d3c98}
+    .group-hdr.g-age{background:#1e8449}
+    .group-hdr.g-rmk{background:#555}
+    th{background:#2471a3;color:#fff;font-size:6.5px;letter-spacing:0.08em;text-transform:uppercase;padding:5px 5px;text-align:left;font-weight:600;border:1px solid #1a5c8a}
+    th.age-th{background:#1e8449;border-color:#186038}
+    th.rmk-th{background:#555;border-color:#333}
+    td{padding:4px 5px;border:1px solid #e0e0e0;vertical-align:top;font-size:8px}
+    tr:nth-child(even) td{background:#f5f8fc}
+    tr:last-child td{border-bottom:1px solid #e0e0e0}
+    .num{color:#2471a3;font-weight:700;text-align:center;min-width:18px}
+    .age-cell{text-align:center;color:#1e8449;font-weight:600}
+    .footer{margin-top:14px;font-size:7.5px;color:#aaa;text-align:right;border-top:1px solid #ddd;padding-top:6px}
+    @media print{body{padding:8px 12px} @page{margin:8mm;size:landscape}}
   </style></head><body>
   <div class="hdr">
     <div>
-      <div class="hdr-title">📋 Client Info Records</div>
+      <div class="hdr-title">📋 OFW Client Info Records</div>
       <div class="hdr-sub">${counterName}</div>
     </div>
     <div class="hdr-meta">
@@ -925,12 +992,21 @@ function printCbmRecords(){
     </div>
   </div>
   <table>
-    <thead><tr>
-      <th style="width:24px;text-align:center">#</th>
-      <th>Last Name</th><th>First Name</th><th>Gender</th><th>Age</th>
-      <th>Position</th><th>Type</th><th>Date</th>
-      <th>CP#</th><th>Country</th><th>Municipality</th><th>Province</th><th>Region</th>
-    </tr></thead>
+    <thead>
+      <tr>
+        <th rowspan="2" class="num" style="width:18px">#</th>
+        <th colspan="6" class="group-hdr g-ofw">OFW's Information</th>
+        <th colspan="3" class="group-hdr g-addr">Address</th>
+        <th rowspan="2" class="group-hdr g-reg" style="vertical-align:middle">Region</th>
+        <th colspan="4" class="group-hdr g-age">Age</th>
+        <th rowspan="2" class="group-hdr g-rmk" style="vertical-align:middle">Remarks</th>
+      </tr>
+      <tr>
+        <th>First Name</th><th>Middle Name</th><th>Last Name</th><th>Sex</th><th>Birthplace</th><th>Destination</th>
+        <th>Position</th><th>Municipality</th><th>Province</th>
+        <th class="age-th">19 &amp; Below</th><th class="age-th">20–34</th><th class="age-th">35–64</th><th class="age-th">65+</th>
+      </tr>
+    </thead>
     <tbody>${rows}</tbody>
   </table>
   <div class="footer">Printed ${new Date().toLocaleString('en-PH')} · QueueSys</div>
