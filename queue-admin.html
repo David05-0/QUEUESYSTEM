@@ -929,9 +929,10 @@ function renderPool(){
   if(poolSearchQuery){
     const q = poolSearchQuery.toLowerCase();
     filtered = filtered.filter(t=>{
-      const num  = String(t.id).padStart(3,'0');
-      const name = (t.customer || ((t.firstName||'')+' '+(t.lastName||'')).trim()).toLowerCase();
-      return num.includes(q) || name.includes(q);
+      const numPadded = String(t.id).padStart(3,'0');
+      const numRaw    = String(t.id);
+      const name      = (t.customer || ((t.firstName||'')+' '+(t.lastName||'')).trim()).toLowerCase();
+      return numPadded.includes(q) || numRaw.includes(q) || name.includes(q);
     });
   }
   const countEl = document.getElementById('poolSearchCount');
@@ -1575,6 +1576,7 @@ function showToast(msg){
 // ══════════════════════════════════════════════
 // ── BM EXCEPTION RECORDS ──
 // ══════════════════════════════════════════════
+let poolSearchQuery = '';
 let bmRecords = JSON.parse(localStorage.getItem('bmRecords') || '[]');
 let bmSource  = 'queue';
 
