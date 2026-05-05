@@ -1574,13 +1574,27 @@ function showToast(msg){
 }
 
 // ══════════════════════════════════════════════
-// ── BM EXCEPTION RECORDS ──
+// ── BM EXCEPTION RECORDS ── (Firebase live sync)
 // ══════════════════════════════════════════════
 let poolSearchQuery = '';
-let bmRecords = JSON.parse(localStorage.getItem('bmRecords') || '[]');
+let bmRecords = [];
 let bmSource  = 'queue';
 
-function saveBmRecords(){ localStorage.setItem('bmRecords', JSON.stringify(bmRecords)); }
+// ── Firebase live listener — syncs BM records to all devices ──
+db.ref('bmRecords').on('value', snap => {
+  const data = snap.val();
+  bmRecords = data ? Object.values(data).sort((a,b) => a.ts - b.ts) : [];
+  // Re-number sequentially after sync
+  bmRecords.forEach((r,i) => r.id = i + 1);
+  renderBmList();
+});
+
+function saveBmRecords(){
+  // Write full array to Firebase as an object keyed by ts
+  const obj = {};
+  bmRecords.forEach(r => { obj['bm_' + r.ts] = r; });
+  db.ref('bmRecords').set(obj);
+}
 
 function setBmSource(src){
   bmSource = src;
@@ -1690,7 +1704,8 @@ function addBmEntry(){
   if(!valid){ showToast('⚠ Please fill in all fields'); return; }
 
   const now = new Date();
-  bmRecords.push({
+  const ts  = Date.now();
+  const entry = {
     id: bmRecords.length + 1,
     lastName, firstName,
     fullName: firstName + ' ' + lastName,
@@ -1699,9 +1714,11 @@ function addBmEntry(){
     region,
     time: [now.getHours(),now.getMinutes(),now.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':'),
     date: now.toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'}),
-    ts: Date.now()
-  });
-  saveBmRecords();
+    ts
+  };
+  // Write directly to Firebase — listener on all devices will pick it up instantly
+  db.ref('bmRecords/bm_' + ts).set(entry)
+    .catch(()=>showToast('⚠ Failed to save BM record'));
 
   document.getElementById('bmPosition').value = '';
   document.getElementById('bmCountry').value  = '';
@@ -1728,10 +1745,11 @@ window.addBmEntry = addBmEntry;
 
 function deleteBmEntry(idx){
   if(!confirm('Remove this exception record?')) return;
-  bmRecords.splice(idx,1);
-  bmRecords.forEach((r,i)=>r.id=i+1);
-  saveBmRecords();
-  renderBmList();
+  const r = bmRecords[idx];
+  if(!r) return;
+  db.ref('bmRecords/bm_' + r.ts).remove()
+    .catch(()=>showToast('⚠ Failed to remove record'));
+  // renderBmList will be called automatically by the Firebase listener
 }
 window.deleteBmEntry = deleteBmEntry;
 
@@ -1763,10 +1781,9 @@ function renderBmList(){
 function clearBmRecords(){
   if(!bmRecords.length) return;
   if(!confirm('Clear all ' + bmRecords.length + ' Balik Manggagawa exception records?')) return;
-  bmRecords = [];
-  saveBmRecords();
-  renderBmList();
-  showToast('Balik Manggagawa exception records cleared');
+  db.ref('bmRecords').remove()
+    .then(()=>showToast('Balik Manggagawa exception records cleared'))
+    .catch(()=>showToast('⚠ Failed to clear records'));
 }
 window.clearBmRecords = clearBmRecords;
 
@@ -1818,7 +1835,6 @@ function exportBmPrint(){
 }
 window.exportBmPrint = exportBmPrint;
 
-renderBmList();
 
 </script>
 </body>
