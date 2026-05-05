@@ -519,7 +519,11 @@
         <span style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:0.1em;color:var(--teal)">Client Info</span>
         <span id="ciCount" style="font-size:9px;background:rgba(14,154,181,0.18);color:var(--teal);border:1px solid rgba(14,154,181,0.3);border-radius:20px;padding:2px 8px">0</span>
       </div>
-      <button onclick="closeClientInfo()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:3px;padding:4px 10px;cursor:pointer;font-size:12px">✕</button>
+      <div style="display:flex;align-items:center;gap:6px">
+        <button onclick="exportCbmCsv()" title="Export as CSV" style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(61,220,132,0.1);border:1px solid rgba(61,220,132,0.35);color:#3ddc84;border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.background='rgba(61,220,132,0.2)'" onmouseout="this.style.background='rgba(61,220,132,0.1)'">⬇ CSV</button>
+        <button onclick="printCbmRecords()" title="Print records" style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(240,192,64,0.1);border:1px solid rgba(240,192,64,0.35);color:var(--accent);border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.background='rgba(240,192,64,0.2)'" onmouseout="this.style.background='rgba(240,192,64,0.1)'">🖨 Print</button>
+        <button onclick="closeClientInfo()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:3px;padding:4px 10px;cursor:pointer;font-size:12px">✕</button>
+      </div>
     </div>
     <div style="padding:16px 18px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--border)">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
@@ -742,6 +746,88 @@ function renderCbmList(){
       <span style="color:var(--muted);font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.municipality||'—'}</span>
       <button onclick="deleteCbmEntry(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:0" title="Remove">✕</button>
     </div>`).join('');
+}
+
+function exportCbmCsv(){
+  if(!cbmRecords.length){ showToast('⚠ No records to export'); return; }
+  const counterName = activeCounter ? COUNTER_NAMES[activeCounter-1] : 'Counter';
+  const headers = ['#','Last Name','First Name','Date','CP Number','Country of Destination','Municipality','Province'];
+  const rows = cbmRecords.map((r,i) => [
+    i+1,
+    r.lastName||'',
+    r.firstName||'',
+    r.date||'',
+    r.cp||'',
+    r.country||'',
+    r.municipality||'',
+    r.province||''
+  ].map(v => '"'+String(v).replace(/"/g,'""')+'"').join(','));
+  const csv = [headers.map(h=>'"'+h+'"').join(','), ...rows].join('\r\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const date = new Date().toLocaleDateString('en-PH',{year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\//g,'-');
+  a.href = url; a.download = `ClientInfo_${counterName.replace(/\s+/g,'_')}_${date}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+  showToast('✓ CSV downloaded');
+}
+
+function printCbmRecords(){
+  if(!cbmRecords.length){ showToast('⚠ No records to print'); return; }
+  const counterName = activeCounter ? COUNTER_NAMES[activeCounter-1] : 'Counter';
+  const date = new Date().toLocaleDateString('en-PH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const rows = cbmRecords.map((r,i)=>`
+    <tr>
+      <td>${i+1}</td>
+      <td>${r.lastName||''}</td>
+      <td>${r.firstName||''}</td>
+      <td>${r.date||''}</td>
+      <td>${r.cp||''}</td>
+      <td>${r.country||''}</td>
+      <td>${r.municipality||''}</td>
+      <td>${r.province||''}</td>
+    </tr>`).join('');
+  const win = window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Client Info — ${counterName}</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:#111;padding:20px 28px}
+    .hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid #0e9ab5}
+    .hdr-title{font-size:18px;font-weight:700;color:#0e9ab5;letter-spacing:0.04em}
+    .hdr-sub{font-size:10px;color:#555;margin-top:3px}
+    .hdr-meta{text-align:right;font-size:9px;color:#777;line-height:1.6}
+    table{width:100%;border-collapse:collapse;margin-top:4px}
+    th{background:#0e9ab5;color:#fff;font-size:8.5px;letter-spacing:0.1em;text-transform:uppercase;padding:7px 8px;text-align:left;font-weight:600}
+    td{padding:6px 8px;border-bottom:1px solid #e8e8e8;vertical-align:top}
+    tr:nth-child(even) td{background:#f7fafa}
+    tr:last-child td{border-bottom:none}
+    .num{color:#0e9ab5;font-weight:700;text-align:center}
+    .footer{margin-top:18px;font-size:8.5px;color:#aaa;text-align:right;border-top:1px solid #ddd;padding-top:8px}
+    @media print{body{padding:12px 16px} @page{margin:15mm}}
+  </style></head><body>
+  <div class="hdr">
+    <div>
+      <div class="hdr-title">📋 Client Info Records</div>
+      <div class="hdr-sub">${counterName}</div>
+    </div>
+    <div class="hdr-meta">
+      <div>${date}</div>
+      <div>${cbmRecords.length} record${cbmRecords.length!==1?'s':''}</div>
+    </div>
+  </div>
+  <table>
+    <thead><tr>
+      <th style="width:28px;text-align:center">#</th>
+      <th>Last Name</th><th>First Name</th><th>Date</th>
+      <th>CP Number</th><th>Country</th><th>Municipality</th><th>Province</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <div class="footer">Printed ${new Date().toLocaleString('en-PH')} · QueueSys</div>
+  </body></html>`);
+  win.document.close();
+  win.focus();
+  setTimeout(()=>{ win.print(); }, 400);
 }
 
 // ── Firebase ──
