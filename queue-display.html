@@ -174,9 +174,9 @@
   .unserved-reason{font-size:7px;letter-spacing:0.14em;text-transform:uppercase;padding:2px 6px;border-radius:2px;background:rgba(125,60,152,0.1);color:var(--c4);border:1px solid rgba(125,60,152,0.25);flex-shrink:0;align-self:flex-start}
 
   /* ══ PANE 2: QUEUE + HOLDS ══ */
-  .cv-sidebar{display:flex;flex-direction:column;overflow:hidden;background:rgba(10,10,15,0.25);border-right:1px solid var(--border)}
+  .cv-sidebar{display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;background:rgba(10,10,15,0.25);border-right:1px solid var(--border);scrollbar-width:thin;scrollbar-color:var(--border) transparent}
   .cv-sec{padding:11px 13px;border-bottom:1px solid var(--border);flex-shrink:0}
-  .cv-sec.grow{flex:1;overflow:hidden;display:flex;flex-direction:column}
+  .cv-sec.grow{flex-shrink:0;display:flex;flex-direction:column}
   .cv-sec-title{font-size:7.5px;letter-spacing:0.26em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:7px}
   .cv-sec-title::after{content:'';flex:1;height:1px;background:var(--border)}
   .cv-stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
@@ -217,7 +217,7 @@
   @keyframes waitPulse{0%,100%{opacity:1}50%{opacity:0.5}}
 
   /* Queue list */
-  .cv-queue-list{display:flex;flex-direction:column;gap:5px;overflow-y:auto;flex:1;scrollbar-width:thin;scrollbar-color:var(--border) transparent;padding-bottom:6px}
+  .cv-queue-list{display:flex;flex-direction:column;gap:5px;padding-bottom:6px}
   .cv-q-item{display:flex;align-items:center;padding:8px 10px;background:var(--panel);border:1px solid var(--border);border-radius:3px;gap:8px;animation:slideIn 0.2s ease;cursor:grab;user-select:none;transition:all 0.15s}
   .cv-q-item:hover{border-color:var(--muted)}
   .cv-q-item:active{cursor:grabbing;opacity:0.6}
@@ -342,7 +342,7 @@
 
 
   /* ══ COUNTER BM PANEL ══ */
-  .cbm-panel{background:var(--panel);border-top:2px solid var(--teal);flex-shrink:0;display:flex;flex-direction:column;overflow:hidden}
+  .cbm-panel{background:var(--panel);border-top:2px solid var(--teal);flex-shrink:0;display:flex;flex-direction:column}
   .cbm-header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:rgba(14,154,181,0.07);cursor:pointer;user-select:none;flex-shrink:0}
   .cbm-header-left{display:flex;align-items:center;gap:7px}
   .cbm-header-icon{font-size:13px}
@@ -350,7 +350,7 @@
   .cbm-header-count{font-size:9px;background:rgba(14,154,181,0.18);color:var(--teal);border:1px solid rgba(14,154,181,0.3);border-radius:20px;padding:1px 7px;letter-spacing:0.1em}
   .cbm-chevron{font-size:10px;color:var(--muted);transition:transform 0.2s}
   .cbm-chevron.open{transform:rotate(180deg)}
-  .cbm-body{display:none;flex-direction:column;gap:0;overflow:hidden}
+  .cbm-body{display:none;flex-direction:column;gap:0}
   .cbm-body.open{display:flex}
   .cbm-form{padding:10px 12px;display:flex;flex-direction:column;gap:7px;border-bottom:1px solid var(--border)}
   .cbm-row{display:grid;gap:7px}
@@ -515,6 +515,16 @@
         </div>
       </div>
 
+      <div class="cv-sec grow">
+        <div class="cv-sec-title">My Queue <span style="font-size:6.5px;color:var(--muted);letter-spacing:0.06em;margin-left:3px">DRAG → HOLD ZONE</span></div>
+        <div class="cv-queue-list" id="cvQueueList"
+          ondragover="onQueueOver(event)"
+          ondragleave="onQueueLeave(event)"
+          ondrop="onQueueDrop(event)">
+          <div class="cv-q-empty">No tickets — claim from pool →</div>
+        </div>
+      </div>
+
       <!-- ══ BM Exception Panel ══ -->
       <div class="cbm-panel" id="cbmPanel">
         <div class="cbm-header" onclick="toggleCbmPanel()">
@@ -571,16 +581,6 @@
             </div>
             <div id="cbmList"><div class="cbm-empty">No records yet</div></div>
           </div>
-        </div>
-      </div>
-
-      <div class="cv-sec grow">
-        <div class="cv-sec-title">My Queue <span style="font-size:6.5px;color:var(--muted);letter-spacing:0.06em;margin-left:3px">DRAG → HOLD ZONE</span></div>
-        <div class="cv-queue-list" id="cvQueueList"
-          ondragover="onQueueOver(event)"
-          ondragleave="onQueueLeave(event)"
-          ondrop="onQueueDrop(event)">
-          <div class="cv-q-empty">No tickets — claim from pool →</div>
         </div>
       </div>
 
