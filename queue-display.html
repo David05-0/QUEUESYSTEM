@@ -529,6 +529,8 @@
         <button onclick="exportCbmCsv()" title="Export as CSV" style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(61,220,132,0.1);border:1px solid rgba(61,220,132,0.35);color:#3ddc84;border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.background='rgba(61,220,132,0.2)'" onmouseout="this.style.background='rgba(61,220,132,0.1)'">⬇ Excel</button>
         <button onclick="printCbmRecords()" title="Print records" style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(240,192,64,0.1);border:1px solid rgba(240,192,64,0.35);color:var(--accent);border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.background='rgba(240,192,64,0.2)'" onmouseout="this.style.background='rgba(240,192,64,0.1)'">🖨 Print</button>
         <button onclick="restoreLocalBackup()" title="Restore from local backup" style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(36,113,163,0.12);border:1px solid rgba(36,113,163,0.4);color:var(--c2);border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.background='rgba(36,113,163,0.22)'" onmouseout="this.style.background='rgba(36,113,163,0.12)'">↺ Restore</button>
+        <button id="btnSaveForDay" onclick="openSaveForDayModal()" title="Save all records for the day to archive" style="display:none;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(125,60,152,0.12);border:1px solid rgba(125,60,152,0.45);color:var(--c4);border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.background='rgba(125,60,152,0.25)'" onmouseout="this.style.background='rgba(125,60,152,0.12)'">&#x1F4BE; Save for Day</button>
+        <button onclick="clearAllCbmRecords()" title="Clear all records"
         <button onclick="clearAllCbmRecords()" title="Clear all records" style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(255,95,95,0.08);border:1px solid rgba(255,95,95,0.35);color:var(--red);border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.background='rgba(255,95,95,0.18)'" onmouseout="this.style.background='rgba(255,95,95,0.08)'">🗑 Clear All</button>
         <button onclick="closeClientInfo()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:3px;padding:4px 10px;cursor:pointer;font-size:12px">✕</button>
       </div>
@@ -926,6 +928,7 @@ function openClientInfo(){
   if(d && !d.value) d.value = new Date().toISOString().split('T')[0];
   const lbl = document.getElementById('ciCounterLabel');
   if(lbl && activeCounter) lbl.textContent = '— ' + COUNTER_NAMES[activeCounter-1];
+  var sfdBtn=document.getElementById('btnSaveForDay');if(sfdBtn) sfdBtn.style.display=(activeCounter===1)?'':'none';
   switchCiTab('my');
   bindTransferLogListener();
   restoreDraft();
@@ -1150,16 +1153,13 @@ function bindTransferLogListener(){
     const refs = [2, 3, 4].map(cIdx => db.ref('transferLog/counter_' + cIdx));
     const handlers = refs.map(ref => {
       const handler = () => {
-        // Rebuild compiled + update transferred tab badge
         rebuildCompiledRecords();
-        // Also rebuild transferredRecords for the Transferred tab
         rebuildDesk2TransferredRecords();
       };
       ref.on('value', handler);
       return { ref, handler };
     });
     _trLogListener = () => handlers.forEach(({ ref, handler }) => ref.off('value', handler));
-    // Also do an immediate rebuild so badge/tab populate on open
     rebuildCompiledRecords();
     rebuildDesk2TransferredRecords();
   } else {
@@ -1176,28 +1176,6 @@ function bindTransferLogListener(){
     });
     _trLogListener = () => logRef.off('value');
   }
-}
-
-// ── Desk 2 only: fetch all incoming transferLog records and populate transferredRecords ──
-function rebuildDesk2TransferredRecords(){
-  if(activeCounter !== 1) return;
-  const fetchPromises = [2, 3, 4].map(cIdx =>
-    db.ref('transferLog/counter_' + cIdx).once('value').then(snap => {
-      const data = snap.val();
-      return data ? Object.values(data) : [];
-    })
-  );
-  Promise.all(fetchPromises).then(arrays => {
-    transferredRecords = [].concat(...arrays)
-      .sort((a,b) => (b.transferredAt||0) - (a.transferredAt||0));
-    const badge = document.getElementById('tabTrCount');
-    if(badge) badge.textContent = transferredRecords.length;
-    // Auto-render if transferred tab is currently visible
-    if(document.getElementById('ciTabTransferred') &&
-       document.getElementById('ciTabTransferred').style.display !== 'none'){
-      renderTrList();
-    }
-  });
 }
 
 function renderTrList(){
@@ -1347,10 +1325,9 @@ function renderCbmList(){
 
 function exportCbmCsv(){
   if(typeof XLSX === 'undefined'){ showToast('⚠ Excel library not loaded yet — try again'); return; }
-  // Counter 1 (Desk 2): always re-fetch compiled (own + ALL transferred) before exporting
   if(activeCounter === 1){
     showToast('⏳ Preparing all records for export…');
-    rebuildCompiledRecords().then(()=>{ _doExportRecords(compiledRecords); });
+    rebuildCompiledRecords().then(function(){ _doExportRecords(compiledRecords); });
     return;
   }
   _doExportRecords(cbmRecords);
@@ -2504,6 +2481,143 @@ function showToast(msg){
 }
 
 buildLogin();
+
+// ── Desk 2: populate Transferred tab from all incoming transferLog ──
+function rebuildDesk2TransferredRecords(){
+  if(activeCounter !== 1) return;
+  var fetchPromises = [2,3,4].map(function(cIdx){
+    return db.ref('transferLog/counter_'+cIdx).once('value').then(function(snap){
+      var data = snap.val();
+      return data ? Object.values(data) : [];
+    });
+  });
+  Promise.all(fetchPromises).then(function(arrays){
+    transferredRecords = [].concat.apply([],arrays)
+      .sort(function(a,b){ return (b.transferredAt||0)-(a.transferredAt||0); });
+    var badge = document.getElementById('tabTrCount');
+    if(badge) badge.textContent = transferredRecords.length;
+    var tab = document.getElementById('ciTabTransferred');
+    if(tab && tab.style.display !== 'none') renderTrList();
+  });
+}
+
+// ====================================================================
+//  SAVE FOR THE DAY - DMW Desk 2 (Counter 1) only
+// ====================================================================
+function openSaveForDayModal(){
+  showToast('Loading records...');
+  rebuildCompiledRecords().then(function(){
+    var own         = compiledRecords.filter(function(r){ return r._source==='own'; }).length;
+    var transferred = compiledRecords.filter(function(r){ return r._source==='transferred'; }).length;
+    var total       = compiledRecords.length;
+    document.getElementById('sfdOwnCount').textContent         = own;
+    document.getElementById('sfdTransferredCount').textContent = transferred;
+    document.getElementById('sfdTotalCount').textContent       = total;
+    var now     = new Date();
+    var dateKey = now.toISOString().slice(0,10);
+    document.getElementById('sfdDateLabel').textContent   = now.toLocaleDateString('en-PH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+    document.getElementById('sfdArchivePath').textContent = 'cbmDailyArchive / '+dateKey+' / ['+total+' records]';
+    document.getElementById('saveForDayBackdrop').style.display = 'flex';
+  });
+}
+function closeSaveForDayModal(){
+  document.getElementById('saveForDayBackdrop').style.display = 'none';
+}
+function confirmSaveForDay(){
+  var btn = document.getElementById('btnConfirmSaveDay');
+  btn.disabled = true;
+  btn.textContent = 'SAVING...';
+  rebuildCompiledRecords().then(function(){
+    if(!compiledRecords.length){
+      showToast('No records to save');
+      btn.disabled = false; btn.textContent = 'CONFIRM & SAVE';
+      return;
+    }
+    var now = new Date();
+    var dateKey = now.toISOString().slice(0,10);
+    var timeKey = [now.getHours(),now.getMinutes(),now.getSeconds()].map(function(v){return String(v).padStart(2,'0');}).join('');
+    var snap = {
+      savedAt:      now.getTime(),
+      savedAtLabel: now.toLocaleString('en-PH'),
+      dateKey:      dateKey,
+      totalRecords: compiledRecords.length,
+      ownRecords:   compiledRecords.filter(function(r){return r._source==='own';}).length,
+      transferred:  compiledRecords.filter(function(r){return r._source==='transferred';}).length,
+      records:      compiledRecords.map(function(r){return Object.assign({},r);})
+    };
+    db.ref('cbmDailyArchive/'+dateKey+'/'+dateKey+'_'+timeKey).set(snap)
+    .then(function(){ return db.ref('counterBmRecords/counter_1').remove(); })
+    .then(function(){
+      return Promise.all([2,3,4].map(function(cIdx){
+        return db.ref('transferLog/counter_'+cIdx).remove();
+      }));
+    })
+    .then(function(){
+      cbmRecords=[]; compiledRecords=[]; transferredRecords=[];
+      renderCbmList();
+      closeSaveForDayModal();
+      showToast('Saved '+snap.totalRecords+' records for '+dateKey+' — all counters cleared');
+      btn.disabled=false; btn.textContent='CONFIRM & SAVE';
+    })
+    .catch(function(err){
+      showToast('Save failed — '+(err.message||'check connection'));
+      btn.disabled=false; btn.textContent='CONFIRM & SAVE';
+    });
+  });
+}
+window.openSaveForDayModal=openSaveForDayModal;
+window.closeSaveForDayModal=closeSaveForDayModal;
+window.confirmSaveForDay=confirmSaveForDay;
+
 </script>
+
+<!-- SAVE FOR DAY MODAL -->
+<div id="saveForDayBackdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:9999;align-items:center;justify-content:center;backdrop-filter:blur(4px)">
+  <div style="background:#111118;border:1.5px solid rgba(125,60,152,0.6);border-radius:6px;width:min(500px,94vw);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.9);display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid rgba(125,60,152,0.3);background:rgba(125,60,152,0.1)">
+      <div style="display:flex;align-items:center;gap:9px">
+        <span style="font-size:18px">&#x1F4BE;</span>
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:0.1em;color:var(--c4)">SAVE FOR THE DAY</div>
+          <div style="font-size:7.5px;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);margin-top:1px">DMW DESK 2 &mdash; END OF DAY ARCHIVE</div>
+        </div>
+      </div>
+      <button onclick="closeSaveForDayModal()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:3px;padding:4px 10px;cursor:pointer;font-size:14px">&#x2715;</button>
+    </div>
+    <div style="padding:16px 18px;border-bottom:1px solid var(--border)">
+      <div style="font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">RECORDS SUMMARY</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        <div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:4px;padding:12px;text-align:center">
+          <div id="sfdOwnCount" style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:0.04em;color:var(--teal)">0</div>
+          <div style="font-size:7px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-top:2px">Own Records</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:4px;padding:12px;text-align:center">
+          <div id="sfdTransferredCount" style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:0.04em;color:var(--c2)">0</div>
+          <div style="font-size:7px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-top:2px">Transferred In</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:4px;padding:12px;text-align:center">
+          <div id="sfdTotalCount" style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:0.04em;color:var(--c4)">0</div>
+          <div style="font-size:7px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-top:2px">Total</div>
+        </div>
+      </div>
+      <div id="sfdDateLabel" style="margin-top:10px;font-size:9px;letter-spacing:0.1em;color:var(--muted);text-align:center"></div>
+    </div>
+    <div style="padding:14px 18px;border-bottom:1px solid var(--border);background:rgba(240,192,64,0.04)">
+      <div style="display:flex;align-items:flex-start;gap:10px">
+        <span style="font-size:16px;margin-top:1px">&#x1F4C2;</span>
+        <div>
+          <div style="font-size:9px;letter-spacing:0.1em;color:var(--accent);font-weight:500">Records will be archived to Firebase</div>
+          <div id="sfdArchivePath" style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);margin-top:3px"></div>
+          <div style="font-size:8px;color:var(--muted);margin-top:5px;line-height:1.5">After saving, all records in <span style="color:var(--text)">Counter 2</span> and all <span style="color:var(--text)">Transfer Logs</span> from Counters 2&ndash;4 will be cleared, ready for the next day.</div>
+        </div>
+      </div>
+    </div>
+    <div style="padding:14px 18px;display:flex;gap:8px">
+      <button onclick="closeSaveForDayModal()" style="flex:1;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;padding:11px;border-radius:3px;cursor:pointer;background:transparent;color:var(--muted);border:1.5px solid var(--border);transition:all 0.13s">&#x2715; Cancel</button>
+      <button id="btnConfirmSaveDay" onclick="confirmSaveForDay()" style="flex:2;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:0.1em;padding:12px;border-radius:3px;cursor:pointer;background:rgba(125,60,152,0.85);color:#fff;border:none;transition:all 0.13s">&#x1F4BE; CONFIRM &amp; SAVE</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
