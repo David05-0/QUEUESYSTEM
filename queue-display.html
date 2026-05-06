@@ -630,11 +630,29 @@
         <button onclick="transferAllToCounter2()" id="btnTransferToC2" style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:0.08em;padding:11px;background:rgba(36,113,163,0.14);border:1.5px solid rgba(36,113,163,0.4);color:var(--c2);border-radius:3px;cursor:pointer;width:100%">↗ Send All to DMW Desk 2</button>
       </div>
     </div>
-    <div style="overflow-y:auto;max-height:260px">
+    <!-- ── Tabs ── -->
+    <div style="display:flex;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.2)">
+      <button id="tabMyRecords" onclick="switchCiTab('my')" style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;padding:9px 16px;background:rgba(14,154,181,0.12);border:none;border-bottom:2px solid var(--teal);color:var(--teal);cursor:pointer;transition:all 0.15s">
+        📋 My Records <span id="tabMyCount" style="background:rgba(14,154,181,0.25);border-radius:10px;padding:1px 6px;margin-left:4px;font-size:7px">0</span>
+      </button>
+      <button id="tabTransferred" onclick="switchCiTab('transferred')" style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;padding:9px 16px;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer;transition:all 0.15s">
+        ↗ Transferred <span id="tabTrCount" style="background:rgba(255,255,255,0.06);border-radius:10px;padding:1px 6px;margin-left:4px;font-size:7px">0</span>
+      </button>
+    </div>
+    <!-- My Records tab -->
+    <div id="ciTabMy" style="overflow-y:auto;max-height:260px">
       <div style="display:grid;grid-template-columns:22px 1fr 44px 32px 60px 60px 60px 22px;gap:2px;padding:6px 12px;background:rgba(14,154,181,0.07);color:rgba(238,238,246,0.4);font-size:6px;letter-spacing:0.12em;text-transform:uppercase;position:sticky;top:0">
         <span>#</span><span>Name</span><span>Sex</span><span>Age</span><span>Destination</span><span>Position</span><span>Region</span><span></span>
       </div>
       <div id="cbmList" style="display:flex;flex-direction:column"></div>
+    </div>
+    <!-- Transferred Records tab -->
+    <div id="ciTabTransferred" style="display:none;overflow-y:auto;max-height:260px">
+      <div style="display:grid;grid-template-columns:22px 1fr 44px 32px 60px 70px 22px;gap:2px;padding:6px 12px;background:rgba(36,113,163,0.1);color:rgba(238,238,246,0.4);font-size:6px;letter-spacing:0.12em;text-transform:uppercase;position:sticky;top:0">
+        <span>#</span><span>Name</span><span>Sex</span><span>Age</span><span>Destination</span><span>Transferred At</span><span></span>
+      </div>
+      <div id="trList" style="display:flex;flex-direction:column"></div>
+      <div id="trEmpty" style="display:none;padding:28px;text-align:center;color:var(--muted);font-size:10px;letter-spacing:0.1em">No transferred records yet</div>
     </div>
   </div>
 </div>
@@ -821,6 +839,8 @@ function openClientInfo(){
   if(d && !d.value) d.value = new Date().toISOString().split('T')[0];
   const lbl = document.getElementById('ciCounterLabel');
   if(lbl && activeCounter) lbl.textContent = '— ' + COUNTER_NAMES[activeCounter-1];
+  switchCiTab('my');
+  bindTransferLogListener();
 }
 
 function closeClientInfo(){
@@ -831,12 +851,17 @@ function transferAllToCounter2(){
   if(!cbmRecords.length){ showToast('⚠ No records to transfer'); return; }
   if(!activeCounter){ showToast('⚠ Not logged in'); return; }
   if(activeCounter === 1){ showToast('⚠ Already on DMW Desk 2'); return; }
-  if(!confirm('Transfer all ' + cbmRecords.length + ' record(s) from ' + COUNTER_NAMES[activeCounter-1] + ' to DMW Desk 2?\n\nYour records will be kept — only a copy is sent.')) return;
-  const destRef = db.ref('counterBmRecords/counter_1');
+  const n = cbmRecords.length;
+  if(!confirm('Transfer all ' + n + ' record(s) from ' + COUNTER_NAMES[activeCounter-1] + ' to DMW Desk 2?\n\nThe originals will be MOVED to Desk 2.\nA copy will remain visible in your Transferred tab.')) return;
+  const destRef  = db.ref('counterBmRecords/counter_1');
+  const logRef   = db.ref('transferLog/counter_' + activeCounter);
+  const srcRef   = db.ref('counterBmRecords/counter_' + activeCounter);
   const now = Date.now();
-  const promises = cbmRecords.map(r => {
-    // Use a unique key so it never overwrites existing Desk 2 records
-    const key = 'bm_' + r.ts + '_from' + activeCounter;
+  const snapshot = cbmRecords.slice(); // copy before async
+
+  // Step 1: write all to Desk 2
+  const destWrites = snapshot.map(r => {
+    const key   = 'bm_' + r.ts + '_from' + activeCounter;
     const entry = Object.assign({}, r, {
       counter: COUNTER_NAMES[0],
       transferredFrom: COUNTER_NAMES[activeCounter-1],
@@ -844,9 +869,27 @@ function transferAllToCounter2(){
     });
     return destRef.child(key).set(entry);
   });
-  Promise.all(promises)
+
+  Promise.all(destWrites)
     .then(() => {
-      showToast('✓ ' + cbmRecords.length + ' record(s) copied to DMW Desk 2');
+      // Step 2: write transfer log on source counter (for Transferred tab)
+      const logWrites = snapshot.map(r => {
+        const logKey   = 'tr_' + r.ts;
+        const logEntry = Object.assign({}, r, {
+          transferredFrom: COUNTER_NAMES[activeCounter-1],
+          transferredTo:   COUNTER_NAMES[0],
+          transferredAt:   now
+        });
+        return logRef.child(logKey).set(logEntry);
+      });
+      return Promise.all(logWrites);
+    })
+    .then(() => {
+      // Step 3: delete originals from source counter
+      return srcRef.remove();
+    })
+    .then(() => {
+      showToast('✓ ' + n + ' record(s) transferred to DMW Desk 2');
     })
     .catch(err => {
       console.error('Transfer error:', err);
@@ -861,6 +904,84 @@ function saveCbmLocalBackup(){
     localStorage.setItem(key, JSON.stringify({ ts: Date.now(), records: cbmRecords }));
   } catch(e){ console.warn('Local backup failed:', e); }
 }
+
+// ── Client Info tab switching ──
+let _trLogListener = null;
+let transferredRecords = [];
+
+function switchCiTab(tab){
+  const myTab  = document.getElementById('ciTabMy');
+  const trTab  = document.getElementById('ciTabTransferred');
+  const btnMy  = document.getElementById('tabMyRecords');
+  const btnTr  = document.getElementById('tabTransferred');
+  if(!myTab || !trTab) return;
+  if(tab === 'my'){
+    myTab.style.display = '';
+    trTab.style.display = 'none';
+    btnMy.style.borderBottomColor = 'var(--teal)';
+    btnMy.style.color = 'var(--teal)';
+    btnMy.style.background = 'rgba(14,154,181,0.12)';
+    btnTr.style.borderBottomColor = 'transparent';
+    btnTr.style.color = 'var(--muted)';
+    btnTr.style.background = 'none';
+  } else {
+    myTab.style.display = 'none';
+    trTab.style.display = '';
+    btnTr.style.borderBottomColor = 'var(--c2)';
+    btnTr.style.color = 'var(--c2)';
+    btnTr.style.background = 'rgba(36,113,163,0.12)';
+    btnMy.style.borderBottomColor = 'transparent';
+    btnMy.style.color = 'var(--muted)';
+    btnMy.style.background = 'none';
+    renderTrList();
+  }
+}
+window.switchCiTab = switchCiTab;
+
+function bindTransferLogListener(){
+  if(!activeCounter) return;
+  if(_trLogListener){ _trLogListener(); _trLogListener = null; }
+  const logRef = db.ref('transferLog/counter_' + activeCounter);
+  logRef.on('value', snap => {
+    const data = snap.val() || {};
+    transferredRecords = Object.values(data).sort((a,b) => (b.transferredAt||0) - (a.transferredAt||0));
+    const badge = document.getElementById('tabTrCount');
+    if(badge) badge.textContent = transferredRecords.length;
+    // re-render if tab is open
+    if(document.getElementById('ciTabTransferred') && document.getElementById('ciTabTransferred').style.display !== 'none'){
+      renderTrList();
+    }
+  });
+  _trLogListener = () => logRef.off('value');
+}
+
+function renderTrList(){
+  const list  = document.getElementById('trList');
+  const empty = document.getElementById('trEmpty');
+  if(!list) return;
+  if(!transferredRecords.length){
+    list.innerHTML = '';
+    if(empty) empty.style.display = '';
+    return;
+  }
+  if(empty) empty.style.display = 'none';
+  list.innerHTML = transferredRecords.map((r,i) => {
+    const ts = r.transferredAt ? new Date(r.transferredAt).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+    return `<div style="display:grid;grid-template-columns:22px 1fr 44px 32px 60px 70px 22px;gap:2px;padding:7px 12px;border-top:1px solid var(--border);align-items:center;font-size:9px;background:rgba(36,113,163,0.04)">
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:13px;color:rgba(36,113,163,0.7)">${i+1}</span>
+      <div style="overflow:hidden">
+        <div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.fullName||''}">${r.fullName||''}</div>
+        <div style="font-size:7px;color:var(--muted);margin-top:1px">→ ${r.transferredTo||'DMW Desk 2'}</div>
+      </div>
+      <span style="color:var(--muted);font-size:8px">${r.gender||'—'}</span>
+      <span style="color:var(--muted);font-size:8px">${r.age||'—'}</span>
+      <span style="color:var(--muted);font-size:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.country||''}">${r.country||'—'}</span>
+      <span style="color:rgba(36,113,163,0.9);font-size:7.5px">${ts}</span>
+      <span title="Transferred — cannot delete" style="color:rgba(255,255,255,0.1);font-size:11px;cursor:default">↗</span>
+    </div>`;
+  }).join('');
+}
+window.renderTrList = renderTrList;
 
 // ── Restore from localStorage backup ──
 function restoreLocalBackup(){
@@ -967,6 +1088,9 @@ function renderCbmList(){
       <span style="color:var(--muted);font-size:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.region||'—'}</span>
       <button onclick="deleteCbmEntry(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:0" title="Remove">✕</button>
     </div>`).join('');
+  // update My Records tab badge
+  const myBadge = document.getElementById('tabMyCount');
+  if(myBadge) myBadge.textContent = cbmRecords.length;
 }
 
 function exportCbmCsv(){
