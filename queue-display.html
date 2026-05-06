@@ -363,6 +363,7 @@
   .comply-notify-dismiss{margin-top:4px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:0.12em;background:var(--teal);color:#fff;border:none;border-radius:4px;padding:12px 40px;cursor:pointer;transition:all 0.15s}
   .comply-notify-dismiss:hover{filter:brightness(1.15);transform:translateY(-1px)}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -525,7 +526,7 @@
         <span id="ciCounterLabel" style="font-size:8px;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);margin-left:2px"></span>
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end">
-        <button onclick="exportCbmCsv()" title="Export as CSV" style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(61,220,132,0.1);border:1px solid rgba(61,220,132,0.35);color:#3ddc84;border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.background='rgba(61,220,132,0.2)'" onmouseout="this.style.background='rgba(61,220,132,0.1)'">⬇ CSV</button>
+        <button onclick="exportCbmCsv()" title="Export as CSV" style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(61,220,132,0.1);border:1px solid rgba(61,220,132,0.35);color:#3ddc84;border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.background='rgba(61,220,132,0.2)'" onmouseout="this.style.background='rgba(61,220,132,0.1)'">⬇ Excel</button>
         <button onclick="printCbmRecords()" title="Print records" style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(240,192,64,0.1);border:1px solid rgba(240,192,64,0.35);color:var(--accent);border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.background='rgba(240,192,64,0.2)'" onmouseout="this.style.background='rgba(240,192,64,0.1)'">🖨 Print</button>
         <button onclick="restoreLocalBackup()" title="Restore from local backup" style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(36,113,163,0.12);border:1px solid rgba(36,113,163,0.4);color:var(--c2);border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.background='rgba(36,113,163,0.22)'" onmouseout="this.style.background='rgba(36,113,163,0.12)'">↺ Restore</button>
         <button onclick="clearAllCbmRecords()" title="Clear all records" style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(255,95,95,0.08);border:1px solid rgba(255,95,95,0.35);color:var(--red);border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.background='rgba(255,95,95,0.18)'" onmouseout="this.style.background='rgba(255,95,95,0.08)'">🗑 Clear All</button>
@@ -1215,69 +1216,146 @@ function renderCbmList(){
 
 function exportCbmCsv(){
   if(!cbmRecords.length){ showToast('⚠ No records to export'); return; }
+  if(typeof XLSX === 'undefined'){ showToast('⚠ Excel library not loaded yet — try again'); return; }
+
   const counterName = activeCounter ? COUNTER_NAMES[activeCounter-1] : 'Counter';
-  const CRLF = '\r\n';
-  function esc(v){ return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }
 
-  // ── Row 1: Group headers (match Excel merged cell layout) ──
-  // Columns: A-G = OFW's Information (7), H-I = Address (2), J = Region (1),
-  //          K = AGE label (1), L-P = age brackets (5), Q = Remarks (1)
-  //          R = Type, S = Date, T = CP Number, U = Counter
-  const row1 = [
-    "OFW'S INFORMATION","","","","","","",   // A-G (7 cols)
-    "ADDRESS","",                              // H-I (2 cols)
-    "REGION",                                  // J
-    "AGE","","","","","",                      // K-P (6 cols: AGE + 5 brackets)
-    "REMARKS",                                 // Q
-    "","","",""                                // R-U (Type, Date, CP, Counter)
-  ].map(esc).join(',');
+  // ── Column layout (21 total) ──
+  // A-G  = OFW Info (7)   H-I = Address (2)   J = Region (1)
+  // K    = AGE raw (1)    L-P = brackets (5)  Q = Remarks (1)
+  // R-U  = Type, Date, CP, Counter (4)
 
-  // ── Row 2: Sub-headers ──
-  const row2 = [
-    "FIRST NAME","MIDDLE NAME","LAST NAME","SEX","BIRTHPLACE","DESTINATION","POSITION",
-    "MUNICIPALITY","PROVINCE",
-    "REGION",
-    "AGE","19 & BELOW","20 TO 34","35 TO 49","50 TO 64","65 AND ABOVE",
-    "REMARKS",
-    "TYPE","DATE","CP NUMBER","COUNTER"
-  ].map(esc).join(',');
+  const wb  = XLSX.utils.book_new();
+  const ws  = {};
 
-  // ── Rows 3+: Data ──
-  const dataRows = cbmRecords.map(r => {
-    const ageNum = r.age ? parseInt(r.age) : null;
-    return [
-      r.firstName||'',
-      r.middleName||'',
-      r.lastName||'',
-      r.gender||'',
-      r.birthplace||'',
-      r.country||'',
-      r.position||'',
-      r.municipality||'',
-      r.province||'',
-      r.region||'',
-      ageNum ? String(ageNum) : '',
-      (ageNum && ageNum <= 19)                   ? '1' : '',
-      (ageNum && ageNum >= 20 && ageNum <= 34)   ? '1' : '',
-      (ageNum && ageNum >= 35 && ageNum <= 49)   ? '1' : '',
-      (ageNum && ageNum >= 50 && ageNum <= 64)   ? '1' : '',
-      (ageNum && ageNum >= 65)                   ? '1' : '',
-      r.remarks||'',
-      r.type||'',
-      r.date||'',
-      r.cp||'',
-      r.counter||counterName
-    ].map(esc).join(',');
+  // ── Helper: cell ref ──
+  const C = (r, c) => XLSX.utils.encode_cell({ r, c }); // 0-indexed
+
+  // ── Row 0 (Excel row 1): Group headers ──
+  const groupHeaders = [
+    { col: 0,  span: 6,  label: "OFW'S INFORMATION",  bg: 'FFD9E8F5' }, // light blue
+    { col: 7,  span: 1,  label: 'ADDRESS',              bg: 'FFFCE4D6' }, // light orange
+    { col: 9,  span: 0,  label: 'REGION',               bg: 'FFE2EFDA' }, // light green
+    { col: 10, span: 5,  label: 'AGE',                  bg: 'FFFFE699' }, // yellow
+    { col: 16, span: 0,  label: 'REMARKS',              bg: 'FFFFFFCC' }, // pale yellow
+  ];
+
+  // Fill row 0 across all 21 cols (blank + styled for merged spans)
+  for(let c = 0; c < 21; c++){
+    ws[C(0,c)] = { v: '', t: 's', s: {} };
+  }
+  groupHeaders.forEach(g => {
+    ws[C(0, g.col)] = {
+      v: g.label, t: 's',
+      s: {
+        fill: { fgColor: { rgb: g.bg } },
+        font: { bold: true, sz: 10, color: { rgb: 'FF000000' } },
+        alignment: { horizontal: 'center', vertical: 'center' },
+        border: { bottom: { style: 'thin', color: { rgb: 'FF000000' } } }
+      }
+    };
   });
 
-  const csv = '\ufeff' + [row1, row2, ...dataRows].join(CRLF);
-  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  // ── Row 1 (Excel row 2): Sub-headers ──
+  const subHeaders = [
+    'FIRST NAME','MIDDLE NAME','LAST NAME','SEX','BIRTHPLACE','DESTINATION','POSITION',
+    'MUNICIPALITY','PROVINCE',
+    'REGION',
+    'AGE','19 & BELOW','20 TO 34','35 TO 64','50 TO 64','65 AND ABOVE',
+    'REMARKS',
+    'TYPE','DATE','CP NUMBER','COUNTER'
+  ];
+  const subHeaderColors = [
+    'FFD9E8F5','FFD9E8F5','FFD9E8F5','FFD9E8F5','FFD9E8F5','FFD9E8F5','FFD9E8F5', // OFW info
+    'FFFCE4D6','FFFCE4D6',                                                           // Address
+    'FFE2EFDA',                                                                      // Region
+    'FFFFE699','FFFFE699','FFFFE699','FFFFE699','FFFFE699','FFFFE699',               // Age
+    'FFFFFFCC',                                                                      // Remarks
+    'FFF2F2F2','FFF2F2F2','FFF2F2F2','FFF2F2F2'                                     // Meta
+  ];
+  subHeaders.forEach((h, c) => {
+    ws[C(1,c)] = {
+      v: h, t: 's',
+      s: {
+        fill: { fgColor: { rgb: subHeaderColors[c] || 'FFF2F2F2' } },
+        font: { bold: true, sz: 9 },
+        alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+        border: {
+          top:    { style: 'thin', color: { rgb: 'FF000000' } },
+          bottom: { style: 'thin', color: { rgb: 'FF000000' } },
+          left:   { style: 'thin', color: { rgb: 'FFAAAAAA' } },
+          right:  { style: 'thin', color: { rgb: 'FFAAAAAA' } }
+        }
+      }
+    };
+  });
+
+  // ── Rows 2+ (Excel row 3+): Data ──
+  cbmRecords.forEach((r, ri) => {
+    const ageNum = r.age ? parseInt(r.age) : null;
+    const rowBg  = ri % 2 === 0 ? 'FFFFFFFF' : 'FFF7F9FB';
+    const vals = [
+      r.firstName||'',  r.middleName||'',  r.lastName||'',
+      r.gender||'',     r.birthplace||'',  r.country||'',    r.position||'',
+      r.municipality||'', r.province||'',
+      r.region||'',
+      ageNum ? ageNum : '',
+      (ageNum && ageNum <= 19)                 ? 1 : '',
+      (ageNum && ageNum >= 20 && ageNum <= 34) ? 1 : '',
+      (ageNum && ageNum >= 35 && ageNum <= 64) ? 1 : '',
+      (ageNum && ageNum >= 50 && ageNum <= 64) ? 1 : '',
+      (ageNum && ageNum >= 65)                 ? 1 : '',
+      r.remarks||'',
+      r.type||'', r.date||'', r.cp||'', r.counter||counterName
+    ];
+    vals.forEach((v, c) => {
+      const isNum = typeof v === 'number';
+      ws[C(ri+2, c)] = {
+        v, t: isNum ? 'n' : 's',
+        s: {
+          fill: { fgColor: { rgb: rowBg } },
+          font: { sz: 9 },
+          alignment: { vertical: 'center', wrapText: false },
+          border: {
+            bottom: { style: 'thin', color: { rgb: 'FFE0E0E0' } },
+            right:  { style: 'thin', color: { rgb: 'FFE0E0E0' } }
+          }
+        }
+      };
+    });
+  });
+
+  // ── Worksheet range ──
+  ws['!ref'] = XLSX.utils.encode_range({ r: 0, c: 0 }, { r: Math.max(2, cbmRecords.length + 1), c: 20 });
+
+  // ── Merged cells: group header row ──
+  ws['!merges'] = [
+    { s:{r:0,c:0},  e:{r:0,c:6}  },   // OFW's Information A-G
+    { s:{r:0,c:7},  e:{r:0,c:8}  },   // Address H-I
+    { s:{r:0,c:9},  e:{r:0,c:9}  },   // Region (no merge needed but consistent)
+    { s:{r:0,c:10}, e:{r:0,c:15} },   // Age K-P
+    { s:{r:0,c:16}, e:{r:0,c:16} },   // Remarks
+  ];
+
+  // ── Column widths ──
+  ws['!cols'] = [
+    {wch:14},{wch:14},{wch:14},{wch:6},{wch:14},{wch:14},{wch:20}, // OFW info
+    {wch:14},{wch:12},                                               // Address
+    {wch:10},                                                        // Region
+    {wch:5},{wch:9},{wch:9},{wch:9},{wch:9},{wch:9},               // Age cols
+    {wch:22},                                                        // Remarks
+    {wch:8},{wch:12},{wch:13},{wch:12}                               // Meta
+  ];
+
+  // ── Row heights ──
+  ws['!rows'] = [{ hpt: 22 }, { hpt: 30 }];
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Client Info');
+
   const date = new Date().toLocaleDateString('en-PH',{year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\//g,'-');
-  a.href = url; a.download = `ClientInfo_${counterName.replace(/\s+/g,'_')}_${date}.csv`;
-  a.click(); URL.revokeObjectURL(url);
-  showToast('✓ CSV downloaded');
+  const fname = 'ClientInfo_' + counterName.replace(/\s+/g,'_') + '_' + date + '.xlsx';
+  XLSX.writeFile(wb, fname, { cellStyles: true, bookSST: false });
+  showToast('✓ Excel file downloaded');
 }
 
 function printCbmRecords(){
