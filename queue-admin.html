@@ -559,11 +559,11 @@
             <div class="bm-field-grid">
               <div class="bm-field">
                 <div class="bm-label">Last Name</div>
-                <input class="bm-input" id="bmLastName" placeholder="Last name…" maxlength="40" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
+                <input class="bm-input" id="bmLastName" placeholder="Last name…" maxlength="40" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error');scheduleBmDraft()">
               </div>
               <div class="bm-field">
                 <div class="bm-label">First Name</div>
-                <input class="bm-input" id="bmFirstName" placeholder="First name…" maxlength="40" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
+                <input class="bm-input" id="bmFirstName" placeholder="First name…" maxlength="40" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error');scheduleBmDraft()">
               </div>
             </div>
           </div>
@@ -572,15 +572,15 @@
           <div class="bm-field-grid">
             <div class="bm-field full">
               <div class="bm-label">Position / Job Title</div>
-              <input class="bm-input" id="bmPosition" placeholder="e.g. Domestic Worker…" maxlength="60" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
+              <input class="bm-input" id="bmPosition" placeholder="e.g. Domestic Worker…" maxlength="60" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error');scheduleBmDraft()">
             </div>
             <div class="bm-field">
               <div class="bm-label">Country of Destination</div>
-              <input class="bm-input" id="bmCountry" placeholder="e.g. Saudi Arabia…" maxlength="40" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
+              <input class="bm-input" id="bmCountry" placeholder="e.g. Saudi Arabia…" maxlength="40" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.classList.remove('error');scheduleBmDraft()">
             </div>
             <div class="bm-field">
               <div class="bm-label">Region</div>
-              <select class="bm-select" id="bmRegion">
+              <select class="bm-select" id="bmRegion" onchange="scheduleBmDraft()">
                 <option value="">— Select —</option>
                 <option>NCR</option><option>CAR</option><option>Region I</option>
                 <option>Region II</option><option>Region III</option><option>Region IV-A</option>
@@ -592,14 +592,14 @@
             </div>
             <div class="bm-field">
               <div class="bm-label">Gender</div>
-              <select class="bm-select" id="bmGender">
+              <select class="bm-select" id="bmGender" onchange="scheduleBmDraft()">
                 <option value="">— Select —</option>
                 <option>Male</option><option>Female</option><option>Prefer not to say</option>
               </select>
             </div>
             <div class="bm-field">
               <div class="bm-label">Age</div>
-              <input class="bm-input" id="bmAge" type="number" min="1" max="99" placeholder="Age…" oninput="this.classList.remove('error')">
+              <input class="bm-input" id="bmAge" type="number" min="1" max="99" placeholder="Age…" oninput="this.classList.remove('error');scheduleBmDraft()">
             </div>
           </div>
 
@@ -1611,6 +1611,8 @@ db.ref('bmRecords').on('value', snap => {
   bmRecords.forEach((r,i) => r.id = i + 1);
   renderBmList();
 });
+// Restore any unsubmitted draft after page loads
+setTimeout(restoreBmDraft, 800);
 
 function saveBmRecords(){
   // Write full array to Firebase as an object keyed by ts
@@ -1761,6 +1763,8 @@ function addBmEntry(){
     renderBmClientList();
   }
 
+  saveBmLocalBackup();
+  clearBmDraft();
   renderBmList();
   showToast('✓ Balik Manggagawa recorded — ' + firstName + ' ' + lastName);
 }
@@ -1801,38 +1805,167 @@ function renderBmList(){
   });
 }
 
-function restoreBmFromDevice(){
-  // Check ALL possible localStorage keys for BM data
-  const keys = ['bmRecords', 'bm_records', 'bmexception', 'BMRecords'];
-  let found = null;
-  for(const k of keys){
-    const raw = localStorage.getItem(k);
-    if(raw){ try{ const d=JSON.parse(raw); if(Array.isArray(d)&&d.length){found={key:k,data:d}; break;} }catch(e){} }
+// ════════════════════════════════════════════════════════
+// BROWNOUT-RESISTANT STORAGE — IndexedDB + localStorage fallback
+// ════════════════════════════════════════════════════════
+let _bmIdb = null;
+const BM_IDB_NAME    = 'QueueSysBM';
+const BM_IDB_VERSION = 1;
+const BM_IDB_STORE   = 'backups';
+
+function openBmIDB(){
+  return new Promise((resolve, reject) => {
+    if(_bmIdb){ resolve(_bmIdb); return; }
+    const req = indexedDB.open(BM_IDB_NAME, BM_IDB_VERSION);
+    req.onupgradeneeded = e => {
+      const d = e.target.result;
+      if(!d.objectStoreNames.contains(BM_IDB_STORE))
+        d.createObjectStore(BM_IDB_STORE, { keyPath: 'key' });
+    };
+    req.onsuccess = e => { _bmIdb = e.target.result; resolve(_bmIdb); };
+    req.onerror   = e => reject(e.target.error);
+  });
+}
+function bmIdbSet(key, value){
+  return openBmIDB().then(d => new Promise((res, rej) => {
+    const tx = d.transaction(BM_IDB_STORE, 'readwrite');
+    tx.objectStore(BM_IDB_STORE).put({ key, value }).onsuccess = res;
+    tx.onerror = e => rej(e.target.error);
+  }));
+}
+function bmIdbGet(key){
+  return openBmIDB().then(d => new Promise((res, rej) => {
+    const req = d.transaction(BM_IDB_STORE, 'readonly').objectStore(BM_IDB_STORE).get(key);
+    req.onsuccess = e => res(e.target.result ? e.target.result.value : null);
+    req.onerror   = e => rej(e.target.error);
+  }));
+}
+
+// Write to BOTH IndexedDB and localStorage — whichever survives wins
+async function saveBmLocalBackup(){
+  const payload = { ts: Date.now(), records: bmRecords };
+  try { await bmIdbSet('bmBackup', payload); } catch(e){ console.warn('BM IDB backup failed:', e); }
+  try { localStorage.setItem('bmBackup', JSON.stringify(payload)); } catch(e){ console.warn('BM LS backup failed:', e); }
+}
+
+// ── BM Draft autosave — every keystroke ──
+const BM_DRAFT_FIELDS = ['bmPosition','bmCountry','bmRegion','bmGender','bmAge','bmLastName','bmFirstName'];
+let _bmDraftTimer = null;
+
+function saveBmDraft(){
+  const draft = {};
+  BM_DRAFT_FIELDS.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) draft[id] = el.value;
+  });
+  const payload = { ts: Date.now(), draft, source: bmSource };
+  bmIdbSet('bmDraft', payload).catch(()=>{});
+  try { localStorage.setItem('bmDraft', JSON.stringify(payload)); } catch(e){}
+}
+function scheduleBmDraft(){
+  clearTimeout(_bmDraftTimer);
+  _bmDraftTimer = setTimeout(saveBmDraft, 10000);
+  // Immediate IDB write on every change
+  const draft = {};
+  BM_DRAFT_FIELDS.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) draft[id] = el.value;
+  });
+  bmIdbSet('bmDraft', { ts: Date.now(), draft, source: bmSource }).catch(()=>{});
+}
+window.scheduleBmDraft = scheduleBmDraft;
+
+async function restoreBmDraft(){
+  let payload = null;
+  try { payload = await bmIdbGet('bmDraft'); } catch(e){}
+  if(!payload){ try { payload = JSON.parse(localStorage.getItem('bmDraft')); } catch(e){} }
+  if(!payload || !payload.draft) return;
+  if(Date.now() - payload.ts > 8 * 3600 * 1000) return; // older than 8h — skip
+  const draft = payload.draft;
+  let hasData = false;
+  BM_DRAFT_FIELDS.forEach(id => {
+    if(draft[id]){
+      const el = document.getElementById(id);
+      if(el){ el.value = draft[id]; hasData = true; }
+    }
+  });
+  if(hasData){
+    // If draft was in manual mode, switch to it
+    if(payload.source === 'manual') setBmSource('manual');
+    const age = Math.round((Date.now() - payload.ts) / 60000);
+    showToast('↺ BM draft restored (' + age + ' min ago)');
   }
-  if(!found){
-    alert('No local BM records found on this device.\n\nThe data may already be in the cloud, or it was stored on a different device.');
+}
+function clearBmDraft(){
+  bmIdbSet('bmDraft', null).catch(()=>{});
+  try { localStorage.removeItem('bmDraft'); } catch(e){}
+}
+
+// ── Restore from IndexedDB backup (localStorage fallback) ──
+async function restoreBmFromDevice(){
+  // Try IDB first
+  let backup = null;
+  try { backup = await bmIdbGet('bmBackup'); } catch(e){}
+  // Fallback to localStorage (new key first, legacy keys second)
+  if(!backup || !backup.records || !backup.records.length){
+    const lsKeys = ['bmBackup','bmRecords','bm_records','bmexception','BMRecords'];
+    for(const k of lsKeys){
+      try {
+        const raw = localStorage.getItem(k);
+        if(!raw) continue;
+        const parsed = JSON.parse(raw);
+        // new format: { ts, records[] }
+        if(parsed && parsed.records && parsed.records.length){ backup = parsed; break; }
+        // legacy format: plain array
+        if(Array.isArray(parsed) && parsed.length){ backup = { ts: Date.now(), records: parsed, _legacy: true }; break; }
+      } catch(e){}
+    }
+  }
+  if(!backup || !backup.records || !backup.records.length){
+    alert('No local BM backup found on this device.\n\nThe data may already be in the cloud, or it was stored on a different device/browser.');
     return;
   }
-  if(!confirm('Found ' + found.data.length + ' local BM record(s).\nMerge them into the cloud? This will not delete existing cloud records.')) return;
+  const savedAt = backup.ts ? new Date(backup.ts).toLocaleString('en-PH') : 'unknown';
+  const n       = backup.records.length;
+  const src     = backup._legacy ? 'localStorage (legacy)' : 'IndexedDB (brownout-safe)';
+  if(!confirm(
+    '⚠ RESTORE BM BACKUP\n\n' +
+    'Source: ' + src + '\n' +
+    'Saved:  ' + savedAt + '\n' +
+    'Records: ' + n + '\n\n' +
+    'This will MERGE these records into Firebase.\nExisting cloud records will NOT be overwritten.\n\nContinue?'
+  )) return;
   const updates = {};
-  found.data.forEach(r => {
+  backup.records.forEach(r => {
     if(!r.ts) r.ts = Date.now() + Math.floor(Math.random()*9999);
     updates['bmRecords/bm_' + r.ts] = r;
   });
   db.ref().update(updates)
-    .then(() => {
-      localStorage.removeItem(found.key);
-      showToast('✓ ' + found.data.length + ' records restored to cloud');
-    })
+    .then(() => showToast('✓ ' + n + ' BM record(s) restored from ' + src))
     .catch(() => showToast('⚠ Restore failed — check Firebase connection'));
 }
 window.restoreBmFromDevice = restoreBmFromDevice;
 
-function clearBmRecords(){
-  if(!bmRecords.length) return;
-  if(!confirm('Clear all ' + bmRecords.length + ' Balik Manggagawa exception records?')) return;
+async function clearBmRecords(){
+  if(!bmRecords.length){ showToast('⚠ No records to clear'); return; }
+  const n = bmRecords.length;
+  const step1 = confirm(
+    '⛔ WARNING — CLEAR ALL BM RECORDS\n\n' +
+    'You are about to permanently delete ALL ' + n + ' Balik Manggagawa exception record(s).\n\n' +
+    'A local backup will be saved automatically before clearing.\n\n' +
+    'Click OK to continue to the final confirmation.'
+  );
+  if(!step1) return;
+  const step2 = confirm(
+    '⛔ FINAL CONFIRMATION\n\n' +
+    'You have ' + n + ' BM record(s) that will be permanently deleted from Firebase.\n\n' +
+    'You can recover them using the ♻ Restore Local button after clearing.\n\n' +
+    'Click OK to DELETE ALL records now.'
+  );
+  if(!step2) return;
+  await saveBmLocalBackup();
   db.ref('bmRecords').remove()
-    .then(()=>showToast('Balik Manggagawa exception records cleared'))
+    .then(()=>showToast('🗑 ' + n + ' BM record(s) cleared — backup saved (♻ Restore Local to undo)'))
     .catch(()=>showToast('⚠ Failed to clear records'));
 }
 window.clearBmRecords = clearBmRecords;
