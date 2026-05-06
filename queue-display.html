@@ -805,27 +805,54 @@ function initCbmListener(){
 
 // ── Desk 2: merge own records + all incoming transfers into compiledRecords ──
 function rebuildCompiledRecords(){
-  if(activeCounter !== 1) return;
-  // Start with own records
+  if(activeCounter !== 1) return Promise.resolve();
   const own = cbmRecords.map(r => Object.assign({}, r, { _source: 'own' }));
-  // Gather all transferLog entries from counters 3-5
   const fetchPromises = [2, 3, 4].map(cIdx =>
     db.ref('transferLog/counter_' + cIdx).once('value').then(snap => {
       const data = snap.val();
       return data ? Object.values(data).map(r => Object.assign({}, r, { _source: 'transferred' })) : [];
     })
   );
-  Promise.all(fetchPromises).then(arrays => {
+  return Promise.all(fetchPromises).then(arrays => {
     const transferred = [].concat(...arrays);
     compiledRecords = [...own, ...transferred].sort((a,b) => (a.ts||0) - (b.ts||0));
     compiledRecords.forEach((r,i) => r.id = i + 1);
-    // Re-render transferred tab badge
     const badge = document.getElementById('tabTrCount');
     if(badge) badge.textContent = transferred.length;
-    // Update compiled count badge
     const compBadge = document.getElementById('tabCompiledCount');
     if(compBadge) compBadge.textContent = compiledRecords.length;
+    // Auto-render if compiled tab is currently visible
+    const compTab = document.getElementById('ciTabCompiled');
+    if(compTab && compTab.style.display !== 'none') _renderCompiledListNow();
   });
+}
+
+function _renderCompiledListNow(){
+  const list  = document.getElementById('compiledList');
+  const empty = document.getElementById('compiledEmpty');
+  if(!list) return;
+  if(!compiledRecords.length){
+    list.innerHTML = '';
+    if(empty) empty.style.display = '';
+    return;
+  }
+  if(empty) empty.style.display = 'none';
+  list.innerHTML = compiledRecords.map((r,i) => {
+    const srcColor = r._source === 'transferred' ? 'rgba(36,113,163,0.8)' : 'rgba(61,220,132,0.8)';
+    const srcLabel = r._source === 'transferred' ? '↗ ' + (r.transferredFrom||'Other').replace('DMW ','') : '✓ Own';
+    return `<div style="display:grid;grid-template-columns:22px 1fr 44px 32px 60px 60px 50px 22px;gap:2px;padding:7px 12px;border-top:1px solid var(--border);align-items:center;font-size:9px;background:${r._source==='transferred'?'rgba(36,113,163,0.04)':''}">
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--muted)">${r.id}</span>
+      <div style="overflow:hidden">
+        <div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.fullName||''}">${r.fullName||''}</div>
+      </div>
+      <span style="color:var(--muted);font-size:8px">${r.gender||'—'}</span>
+      <span style="color:var(--muted);font-size:8px">${r.age||'—'}</span>
+      <span style="color:var(--muted);font-size:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.country||'—'}</span>
+      <span style="color:var(--muted);font-size:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.position||'—'}</span>
+      <span style="color:${srcColor};font-size:7px;font-weight:600">${srcLabel}</span>
+      <span></span>
+    </div>`;
+  }).join('');
 }
 
 function addCbmEntry(){
@@ -1107,52 +1134,45 @@ window.switchCiTab = switchCiTab;
 
 function renderCompiledList(){
   const list  = document.getElementById('compiledList');
-  const empty = document.getElementById('compiledEmpty');
   if(!list) return;
-  // Trigger rebuild then render
-  rebuildCompiledRecords().then ? rebuildCompiledRecords() : null;
-  setTimeout(() => {
-    if(!compiledRecords.length){
-      list.innerHTML = '';
-      if(empty) empty.style.display = '';
-      return;
-    }
-    if(empty) empty.style.display = 'none';
-    list.innerHTML = compiledRecords.map((r,i) => {
-      const srcColor = r._source === 'transferred' ? 'rgba(36,113,163,0.8)' : 'rgba(61,220,132,0.8)';
-      const srcLabel = r._source === 'transferred' ? '↗ ' + (r.transferredFrom||'Other').replace('DMW ','') : '✓ Own';
-      return `<div style="display:grid;grid-template-columns:22px 1fr 44px 32px 60px 60px 50px 22px;gap:2px;padding:7px 12px;border-top:1px solid var(--border);align-items:center;font-size:9px;background:${r._source==='transferred'?'rgba(36,113,163,0.04)':''}">
-        <span style="font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--muted)">${r.id}</span>
-        <div style="overflow:hidden">
-          <div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.fullName||''}">${r.fullName||''}</div>
-        </div>
-        <span style="color:var(--muted);font-size:8px">${r.gender||'—'}</span>
-        <span style="color:var(--muted);font-size:8px">${r.age||'—'}</span>
-        <span style="color:var(--muted);font-size:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.country||'—'}</span>
-        <span style="color:var(--muted);font-size:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.position||'—'}</span>
-        <span style="color:${srcColor};font-size:7px;font-weight:600">${srcLabel}</span>
-        <span></span>
-      </div>`;
-    }).join('');
-  }, 300);
+  // Show a loading indicator while fetching
+  list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:9px;letter-spacing:0.1em">Loading…</div>';
+  rebuildCompiledRecords().then(() => _renderCompiledListNow());
 }
 window.renderCompiledList = renderCompiledList;
 
 function bindTransferLogListener(){
   if(!activeCounter) return;
   if(_trLogListener){ _trLogListener(); _trLogListener = null; }
-  const logRef = db.ref('transferLog/counter_' + activeCounter);
-  logRef.on('value', snap => {
-    const data = snap.val() || {};
-    transferredRecords = Object.values(data).sort((a,b) => (b.transferredAt||0) - (a.transferredAt||0));
-    const badge = document.getElementById('tabTrCount');
-    if(badge) badge.textContent = transferredRecords.length;
-    // re-render if tab is open
-    if(document.getElementById('ciTabTransferred') && document.getElementById('ciTabTransferred').style.display !== 'none'){
-      renderTrList();
-    }
-  });
-  _trLogListener = () => logRef.off('value');
+
+  if(activeCounter === 1){
+    // Desk 2: listen to transferLog from counters 2,3,4 (incoming transfers)
+    const refs = [2, 3, 4].map(cIdx => db.ref('transferLog/counter_' + cIdx));
+    const handlers = refs.map(ref => {
+      const handler = () => {
+        // Rebuild compiled + update transferred tab badge
+        rebuildCompiledRecords();
+      };
+      ref.on('value', handler);
+      return { ref, handler };
+    });
+    _trLogListener = () => handlers.forEach(({ ref, handler }) => ref.off('value', handler));
+    // Also do an immediate rebuild so badge/tab populate on open
+    rebuildCompiledRecords();
+  } else {
+    // Counters 3-5: listen to their own transferLog (sent history)
+    const logRef = db.ref('transferLog/counter_' + activeCounter);
+    logRef.on('value', snap => {
+      const data = snap.val() || {};
+      transferredRecords = Object.values(data).sort((a,b) => (b.transferredAt||0) - (a.transferredAt||0));
+      const badge = document.getElementById('tabTrCount');
+      if(badge) badge.textContent = transferredRecords.length;
+      if(document.getElementById('ciTabTransferred') && document.getElementById('ciTabTransferred').style.display !== 'none'){
+        renderTrList();
+      }
+    });
+    _trLogListener = () => logRef.off('value');
+  }
 }
 
 function renderTrList(){
