@@ -537,59 +537,59 @@
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
         <div style="display:flex;flex-direction:column;gap:4px">
           <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">First Name *</label>
-          <input id="cbmFirst" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="FIRST NAME" maxlength="40" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
+          <input id="cbmFirst" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="FIRST NAME" maxlength="40" oninput="this.value=this.value.toUpperCase();this.classList.remove('error');scheduleDraft()">
         </div>
         <div style="display:flex;flex-direction:column;gap:4px">
           <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Middle Name</label>
-          <input id="cbmMiddle" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="MIDDLE NAME" maxlength="40" oninput="this.value=this.value.toUpperCase()">
+          <input id="cbmMiddle" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="MIDDLE NAME" maxlength="40" oninput="this.value=this.value.toUpperCase();scheduleDraft()">
         </div>
         <div style="display:flex;flex-direction:column;gap:4px">
           <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Last Name *</label>
-          <input id="cbmLast" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="LAST NAME" maxlength="40" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
+          <input id="cbmLast" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="LAST NAME" maxlength="40" oninput="this.value=this.value.toUpperCase();this.classList.remove('error');scheduleDraft()">
         </div>
       </div>
       <!-- Row 2: Sex / Age / Birthplace -->
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
         <div style="display:flex;flex-direction:column;gap:4px">
           <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Sex</label>
-          <select id="cbmGender" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:#111118;color:var(--text);border-radius:3px;outline:none;width:100%;color-scheme:dark">
+          <select id="cbmGender" onchange="scheduleDraft()" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:#111118;color:var(--text);border-radius:3px;outline:none;width:100%;color-scheme:dark">
             <option value="">— Select —</option>
             <option>Male</option><option>Female</option>
           </select>
         </div>
         <div style="display:flex;flex-direction:column;gap:4px">
           <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Age</label>
-          <input id="cbmAge" type="number" min="1" max="120" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="Age">
+          <input id="cbmAge" type="number" min="1" max="120" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="Age" oninput="scheduleDraft()">
         </div>
         <div style="display:flex;flex-direction:column;gap:4px">
           <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Birthplace</label>
-          <input id="cbmBirthplace" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="CITY / PROVINCE" maxlength="60" oninput="this.value=this.value.toUpperCase()">
+          <input id="cbmBirthplace" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="CITY / PROVINCE" maxlength="60" oninput="this.value=this.value.toUpperCase();scheduleDraft()">
         </div>
       </div>
       <!-- Row 3: Destination / Position -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div style="display:flex;flex-direction:column;gap:4px">
           <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Country of Destination *</label>
-          <input id="cbmCountry" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="E.G. SAUDI ARABIA" maxlength="40" oninput="this.value=this.value.toUpperCase();this.classList.remove('error')">
+          <input id="cbmCountry" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="E.G. SAUDI ARABIA" maxlength="40" oninput="this.value=this.value.toUpperCase();this.classList.remove('error');scheduleDraft()">
         </div>
         <div style="display:flex;flex-direction:column;gap:4px">
           <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Position / Job Title</label>
-          <input id="cbmPosition" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="E.G. DOMESTIC WORKER" maxlength="60" oninput="this.value=this.value.toUpperCase()">
+          <input id="cbmPosition" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="E.G. DOMESTIC WORKER" maxlength="60" oninput="this.value=this.value.toUpperCase();scheduleDraft()">
         </div>
       </div>
       <!-- Row 4: Municipality / Province / Region -->
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
         <div style="display:flex;flex-direction:column;gap:4px">
           <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Municipality</label>
-          <input id="cbmMunicipality" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="MUNICIPALITY" maxlength="40" oninput="this.value=this.value.toUpperCase()">
+          <input id="cbmMunicipality" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="MUNICIPALITY" maxlength="40" oninput="this.value=this.value.toUpperCase();scheduleDraft()">
         </div>
         <div style="display:flex;flex-direction:column;gap:4px">
           <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Province</label>
-          <input id="cbmProvince" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="PROVINCE" maxlength="40" oninput="this.value=this.value.toUpperCase()">
+          <input id="cbmProvince" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="PROVINCE" maxlength="40" oninput="this.value=this.value.toUpperCase();scheduleDraft()">
         </div>
         <div style="display:flex;flex-direction:column;gap:4px">
           <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Region</label>
-          <select id="cbmRegion" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:#111118;color:var(--text);border-radius:3px;outline:none;width:100%;color-scheme:dark">
+          <select id="cbmRegion" onchange="scheduleDraft()" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:#111118;color:var(--text);border-radius:3px;outline:none;width:100%;color-scheme:dark">
             <option value="">— Select —</option>
             <option>NCR</option><option>CAR</option><option>Region I</option>
             <option>Region II</option><option>Region III</option><option>Region IV-A</option>
@@ -604,7 +604,7 @@
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
         <div style="display:flex;flex-direction:column;gap:4px">
           <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Type</label>
-          <select id="cbmType" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:#111118;color:var(--text);border-radius:3px;outline:none;width:100%;color-scheme:dark">
+          <select id="cbmType" onchange="scheduleDraft()" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:#111118;color:var(--text);border-radius:3px;outline:none;width:100%;color-scheme:dark">
             <option value="">— Select —</option>
             <option>CE</option><option>TCW</option><option>CE/CJ</option><option>NRF</option>
             <option>SE</option><option>SE/CP</option><option>SE/CJ</option><option>SE/WE</option>
@@ -613,17 +613,17 @@
         </div>
         <div style="display:flex;flex-direction:column;gap:4px">
           <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Date</label>
-          <input id="cbmDate" type="date" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%;color-scheme:dark">
+          <input id="cbmDate" type="date" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%;color-scheme:dark" onchange="scheduleDraft()">
         </div>
         <div style="display:flex;flex-direction:column;gap:4px">
           <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">CP Number</label>
-          <input id="cbmCp" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="09XXXXXXXXX" maxlength="15">
+          <input id="cbmCp" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="09XXXXXXXXX" maxlength="15" oninput="scheduleDraft()">
         </div>
       </div>
       <!-- Row 6: Remarks -->
       <div style="display:flex;flex-direction:column;gap:4px">
         <label style="font-size:7.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Remarks</label>
-        <input id="cbmRemarks" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="OPTIONAL NOTES" maxlength="120" oninput="this.value=this.value.toUpperCase()">
+        <input id="cbmRemarks" style="font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:3px;outline:none;width:100%" placeholder="OPTIONAL NOTES" maxlength="120" oninput="this.value=this.value.toUpperCase();scheduleDraft()">
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:2px">
         <button onclick="addCbmEntry()" style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.1em;padding:11px;background:rgba(14,154,181,0.14);border:1.5px solid rgba(14,154,181,0.4);color:var(--teal);border-radius:3px;cursor:pointer;width:100%">＋ Add Record</button>
@@ -815,6 +815,7 @@ function addCbmEntry(){
   ref.set(entry)
     .then(() => {
       saveCbmLocalBackup();
+      clearDraft();
       showToast('✓ Record saved');
       ['cbmFirst','cbmMiddle','cbmLast','cbmAge','cbmBirthplace','cbmPosition','cbmCp','cbmCountry','cbmMunicipality','cbmProvince','cbmRemarks'].forEach(id => {
         const el = document.getElementById(id);
@@ -841,6 +842,7 @@ function openClientInfo(){
   if(lbl && activeCounter) lbl.textContent = '— ' + COUNTER_NAMES[activeCounter-1];
   switchCiTab('my');
   bindTransferLogListener();
+  restoreDraft();
 }
 
 function closeClientInfo(){
@@ -897,12 +899,123 @@ function transferAllToCounter2(){
     });
 }
 window.transferAllToCounter2 = transferAllToCounter2;
-// ── Auto-save a local backup whenever records change ──
-function saveCbmLocalBackup(){
-  try {
-    const key = 'cbmBackup_counter_' + activeCounter;
-    localStorage.setItem(key, JSON.stringify({ ts: Date.now(), records: cbmRecords }));
-  } catch(e){ console.warn('Local backup failed:', e); }
+// ════════════════════════════════════════════════════════
+// BROWNOUT-RESISTANT STORAGE — IndexedDB + localStorage fallback
+// ════════════════════════════════════════════════════════
+let _idb = null;
+const IDB_NAME    = 'QueueSysDB';
+const IDB_VERSION = 1;
+const IDB_STORE   = 'backups';
+
+function openIDB(){
+  return new Promise((resolve, reject) => {
+    if(_idb){ resolve(_idb); return; }
+    const req = indexedDB.open(IDB_NAME, IDB_VERSION);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if(!db.objectStoreNames.contains(IDB_STORE)){
+        db.createObjectStore(IDB_STORE, { keyPath: 'key' });
+      }
+    };
+    req.onsuccess = e => { _idb = e.target.result; resolve(_idb); };
+    req.onerror   = e => reject(e.target.error);
+  });
+}
+
+function idbSet(key, value){
+  return openIDB().then(db => new Promise((resolve, reject) => {
+    const tx  = db.transaction(IDB_STORE, 'readwrite');
+    const st  = tx.objectStore(IDB_STORE);
+    const req = st.put({ key, value });
+    req.onsuccess = () => resolve();
+    req.onerror   = e => reject(e.target.error);
+  }));
+}
+
+function idbGet(key){
+  return openIDB().then(db => new Promise((resolve, reject) => {
+    const tx  = db.transaction(IDB_STORE, 'readonly');
+    const st  = tx.objectStore(IDB_STORE);
+    const req = st.get(key);
+    req.onsuccess = e => resolve(e.target.result ? e.target.result.value : null);
+    req.onerror   = e => reject(e.target.error);
+  }));
+}
+
+// Write to BOTH IndexedDB and localStorage — whichever survives wins
+async function saveCbmLocalBackup(){
+  if(!activeCounter) return;
+  const key     = 'cbmBackup_counter_' + activeCounter;
+  const payload = { ts: Date.now(), records: cbmRecords };
+  // IndexedDB (primary — survives hard shutdowns)
+  try { await idbSet(key, payload); } catch(e){ console.warn('IDB backup failed:', e); }
+  // localStorage (fallback)
+  try { localStorage.setItem(key, JSON.stringify(payload)); } catch(e){ console.warn('LS backup failed:', e); }
+}
+
+// ── Draft autosave — saves form fields every keystroke (debounced 10s) ──
+let _draftTimer = null;
+const DRAFT_FIELDS = ['cbmFirst','cbmMiddle','cbmLast','cbmGender','cbmAge','cbmBirthplace',
+                      'cbmCountry','cbmPosition','cbmMunicipality','cbmProvince','cbmRegion',
+                      'cbmType','cbmDate','cbmCp','cbmRemarks'];
+
+function saveDraft(){
+  if(!activeCounter) return;
+  const draft = {};
+  DRAFT_FIELDS.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) draft[id] = el.value;
+  });
+  const key     = 'cbmDraft_counter_' + activeCounter;
+  const payload = { ts: Date.now(), draft };
+  // Both stores
+  idbSet(key, payload).catch(()=>{});
+  try { localStorage.setItem(key, JSON.stringify(payload)); } catch(e){}
+}
+
+function scheduleDraft(){
+  clearTimeout(_draftTimer);
+  _draftTimer = setTimeout(saveDraft, 10000); // 10 s debounce
+  // also save immediately to IDB on every change for max safety
+  const key = 'cbmDraft_counter_' + activeCounter;
+  const draft = {};
+  DRAFT_FIELDS.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) draft[id] = el.value;
+  });
+  idbSet(key, { ts: Date.now(), draft }).catch(()=>{});
+}
+
+async function restoreDraft(){
+  if(!activeCounter) return;
+  const key = 'cbmDraft_counter_' + activeCounter;
+  let payload = null;
+  try { payload = await idbGet(key); } catch(e){}
+  if(!payload){
+    try { payload = JSON.parse(localStorage.getItem(key)); } catch(e){}
+  }
+  if(!payload || !payload.draft) return;
+  // Only restore if draft is less than 8 hours old
+  if(Date.now() - payload.ts > 8 * 3600 * 1000) return;
+  const draft = payload.draft;
+  let hasData = false;
+  DRAFT_FIELDS.forEach(id => {
+    if(draft[id]){
+      const el = document.getElementById(id);
+      if(el){ el.value = draft[id]; hasData = true; }
+    }
+  });
+  if(hasData){
+    const age = Math.round((Date.now() - payload.ts) / 60000);
+    showToast('↺ Draft restored (' + age + ' min ago)');
+  }
+}
+
+function clearDraft(){
+  if(!activeCounter) return;
+  const key = 'cbmDraft_counter_' + activeCounter;
+  idbSet(key, null).catch(()=>{});
+  try { localStorage.removeItem(key); } catch(e){}
 }
 
 // ── Client Info tab switching ──
@@ -983,36 +1096,43 @@ function renderTrList(){
 }
 window.renderTrList = renderTrList;
 
-// ── Restore from localStorage backup ──
-function restoreLocalBackup(){
+// ── Restore from IndexedDB backup (localStorage fallback) ──
+async function restoreLocalBackup(){
   if(!activeCounter){ showToast('⚠ Not logged in'); return; }
   const key = 'cbmBackup_counter_' + activeCounter;
-  let backup;
-  try { backup = JSON.parse(localStorage.getItem(key)); } catch(e){ backup = null; }
+
+  // Try IDB first, then localStorage
+  let backup = null;
+  try { backup = await idbGet(key); } catch(e){}
+  if(!backup){
+    try { backup = JSON.parse(localStorage.getItem(key)); } catch(e){}
+  }
+
   if(!backup || !backup.records || !backup.records.length){
     showToast('⚠ No local backup found for this counter');
     return;
   }
   const savedAt = new Date(backup.ts).toLocaleString('en-PH');
-  const n = backup.records.length;
+  const n       = backup.records.length;
+  const source  = backup._source === 'idb' ? 'IndexedDB (brownout-safe)' : 'localStorage';
   if(!confirm(
     '⚠ RESTORE LOCAL BACKUP\n\n' +
-    'Saved: ' + savedAt + '\n' +
+    'Source: ' + source + '\n' +
+    'Saved:  ' + savedAt + '\n' +
     'Records: ' + n + '\n\n' +
-    'This will OVERWRITE the current Firebase records for ' + COUNTER_NAMES[activeCounter-1] + ' with the local backup.\n\n' +
+    'This will OVERWRITE current Firebase records for ' + COUNTER_NAMES[activeCounter-1] + '.\n\n' +
     'Continue?'
   )) return;
 
   const ref = db.ref('counterBmRecords/counter_' + activeCounter);
-  // First wipe then re-write all backup records
   ref.remove().then(() => {
     const writes = backup.records.map(r => {
-      const k = 'bm_' + (r.ts || Date.now() + Math.random());
+      const k = 'bm_' + (r.ts || (Date.now() + Math.random()));
       return ref.child(k).set(r);
     });
     return Promise.all(writes);
   }).then(() => {
-    showToast('✓ ' + n + ' record(s) restored from local backup');
+    showToast('✓ ' + n + ' record(s) restored from ' + source);
   }).catch(err => {
     console.error('Restore error:', err);
     showToast('⚠ Restore failed — check connection');
@@ -1021,7 +1141,7 @@ function restoreLocalBackup(){
 window.restoreLocalBackup = restoreLocalBackup;
 
 // ── Clear ALL records with strong warning ──
-function clearAllCbmRecords(){
+async function clearAllCbmRecords(){
   if(!activeCounter){ showToast('⚠ Not logged in'); return; }
   if(!cbmRecords.length){ showToast('⚠ No records to clear'); return; }
   const n = cbmRecords.length;
@@ -1042,8 +1162,8 @@ function clearAllCbmRecords(){
   );
   if(!step2) return;
 
-  // Save backup first, then delete
-  saveCbmLocalBackup();
+  // Save backup first (await IDB write), then delete
+  await saveCbmLocalBackup();
   db.ref('counterBmRecords/counter_' + activeCounter).remove()
     .then(() => {
       showToast('🗑 All ' + n + ' record(s) cleared — local backup saved (↺ Restore to undo)');
