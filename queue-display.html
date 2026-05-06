@@ -639,6 +639,10 @@
       <button id="tabTransferred" onclick="switchCiTab('transferred')" style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;padding:9px 16px;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer;transition:all 0.15s">
         ↗ Transferred <span id="tabTrCount" style="background:rgba(255,255,255,0.06);border-radius:10px;padding:1px 6px;margin-left:4px;font-size:7px">0</span>
       </button>
+      <!-- Desk 2 only: compiled tab -->
+      <button id="tabCompiled" onclick="switchCiTab('compiled')" style="display:none;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;padding:9px 16px;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer;transition:all 0.15s">
+        📊 All Records <span id="tabCompiledCount" style="background:rgba(255,255,255,0.06);border-radius:10px;padding:1px 6px;margin-left:4px;font-size:7px">0</span>
+      </button>
     </div>
     <!-- My Records tab -->
     <div id="ciTabMy" style="overflow-y:auto;max-height:260px">
@@ -654,6 +658,14 @@
       </div>
       <div id="trList" style="display:flex;flex-direction:column"></div>
       <div id="trEmpty" style="display:none;padding:28px;text-align:center;color:var(--muted);font-size:10px;letter-spacing:0.1em">No transferred records yet</div>
+    </div>
+    <!-- Desk 2 Compiled tab -->
+    <div id="ciTabCompiled" style="display:none;overflow-y:auto;max-height:260px">
+      <div style="display:grid;grid-template-columns:22px 1fr 44px 32px 60px 60px 50px 22px;gap:2px;padding:6px 12px;background:rgba(61,220,132,0.08);color:rgba(238,238,246,0.4);font-size:6px;letter-spacing:0.12em;text-transform:uppercase;position:sticky;top:0">
+        <span>#</span><span>Name</span><span>Sex</span><span>Age</span><span>Destination</span><span>Position</span><span>Source</span><span></span>
+      </div>
+      <div id="compiledList" style="display:flex;flex-direction:column"></div>
+      <div id="compiledEmpty" style="display:none;padding:28px;text-align:center;color:var(--muted);font-size:10px;letter-spacing:0.1em">No compiled records yet</div>
     </div>
   </div>
 </div>
@@ -756,17 +768,63 @@ setInterval(updateClock,1000); updateClock();
 // ══════════════════════════════════════════════
 // ── COUNTER BM EXCEPTION RECORDS ──
 // ══════════════════════════════════════════════
-let cbmRecords = [];
-let cbmRef = null;
+let cbmRecords      = [];   // own records for current counter
+let compiledRecords = [];   // Desk 2 only: own + all transferred combined
+let cbmRef          = null;
+let _desk2TransferListeners = []; // Firebase listeners for Desk 2 incoming transfers
 
 function initCbmListener(){
+  // Detach old listeners
   if(cbmRef) cbmRef.off();
+  _desk2TransferListeners.forEach(fn => fn());
+  _desk2TransferListeners = [];
+
   cbmRef = db.ref('counterBmRecords/counter_' + activeCounter);
   cbmRef.on('value', snap => {
     const data = snap.val();
     cbmRecords = data ? Object.values(data).sort((a,b) => a.ts - b.ts) : [];
     cbmRecords.forEach((r,i) => r.id = i + 1);
     renderCbmList();
+    if(activeCounter === 1) rebuildCompiledRecords();
+  });
+
+  // ── Desk 2 only: also listen to transferLog from counters 3-5 ──
+  if(activeCounter === 1){
+    // Counters 3,4,5 = indices 2,3,4 in Firebase = counter_2, counter_3, counter_4
+    [2, 3, 4].forEach(cIdx => {
+      const ref = db.ref('transferLog/counter_' + cIdx);
+      ref.on('value', () => rebuildCompiledRecords());
+      _desk2TransferListeners.push(() => ref.off('value'));
+    });
+  }
+
+  // Show/hide transfer button: only visible for counters 3-5
+  const btn = document.getElementById('btnTransferToC2');
+  if(btn) btn.style.display = activeCounter === 1 ? 'none' : '';
+}
+
+// ── Desk 2: merge own records + all incoming transfers into compiledRecords ──
+function rebuildCompiledRecords(){
+  if(activeCounter !== 1) return;
+  // Start with own records
+  const own = cbmRecords.map(r => Object.assign({}, r, { _source: 'own' }));
+  // Gather all transferLog entries from counters 3-5
+  const fetchPromises = [2, 3, 4].map(cIdx =>
+    db.ref('transferLog/counter_' + cIdx).once('value').then(snap => {
+      const data = snap.val();
+      return data ? Object.values(data).map(r => Object.assign({}, r, { _source: 'transferred' })) : [];
+    })
+  );
+  Promise.all(fetchPromises).then(arrays => {
+    const transferred = [].concat(...arrays);
+    compiledRecords = [...own, ...transferred].sort((a,b) => (a.ts||0) - (b.ts||0));
+    compiledRecords.forEach((r,i) => r.id = i + 1);
+    // Re-render transferred tab badge
+    const badge = document.getElementById('tabTrCount');
+    if(badge) badge.textContent = transferred.length;
+    // Update compiled count badge
+    const compBadge = document.getElementById('tabCompiledCount');
+    if(compBadge) compBadge.textContent = compiledRecords.length;
   });
 }
 
@@ -844,6 +902,9 @@ function openClientInfo(){
   switchCiTab('my');
   bindTransferLogListener();
   restoreDraft();
+  // Show/hide compiled tab based on counter
+  const compBtn = document.getElementById('tabCompiled');
+  if(compBtn) compBtn.style.display = activeCounter === 1 ? '' : 'none';
 }
 
 function closeClientInfo(){
@@ -1024,33 +1085,71 @@ let _trLogListener = null;
 let transferredRecords = [];
 
 function switchCiTab(tab){
-  const myTab  = document.getElementById('ciTabMy');
-  const trTab  = document.getElementById('ciTabTransferred');
-  const btnMy  = document.getElementById('tabMyRecords');
-  const btnTr  = document.getElementById('tabTransferred');
-  if(!myTab || !trTab) return;
+  const myTab   = document.getElementById('ciTabMy');
+  const trTab   = document.getElementById('ciTabTransferred');
+  const compTab = document.getElementById('ciTabCompiled');
+  const btnMy   = document.getElementById('tabMyRecords');
+  const btnTr   = document.getElementById('tabTransferred');
+  const btnComp = document.getElementById('tabCompiled');
+  if(!myTab) return;
+
+  // Hide all
+  myTab.style.display   = 'none';
+  if(trTab)   trTab.style.display   = 'none';
+  if(compTab) compTab.style.display = 'none';
+
+  // Reset all buttons
+  [btnMy, btnTr, btnComp].forEach(b => {
+    if(b){ b.style.borderBottomColor='transparent'; b.style.color='var(--muted)'; b.style.background='none'; }
+  });
+
   if(tab === 'my'){
     myTab.style.display = '';
-    trTab.style.display = 'none';
-    btnMy.style.borderBottomColor = 'var(--teal)';
-    btnMy.style.color = 'var(--teal)';
-    btnMy.style.background = 'rgba(14,154,181,0.12)';
-    btnTr.style.borderBottomColor = 'transparent';
-    btnTr.style.color = 'var(--muted)';
-    btnTr.style.background = 'none';
-  } else {
-    myTab.style.display = 'none';
-    trTab.style.display = '';
-    btnTr.style.borderBottomColor = 'var(--c2)';
-    btnTr.style.color = 'var(--c2)';
-    btnTr.style.background = 'rgba(36,113,163,0.12)';
-    btnMy.style.borderBottomColor = 'transparent';
-    btnMy.style.color = 'var(--muted)';
-    btnMy.style.background = 'none';
+    if(btnMy){ btnMy.style.borderBottomColor='var(--teal)'; btnMy.style.color='var(--teal)'; btnMy.style.background='rgba(14,154,181,0.12)'; }
+  } else if(tab === 'transferred'){
+    if(trTab) trTab.style.display = '';
+    if(btnTr){ btnTr.style.borderBottomColor='var(--c2)'; btnTr.style.color='var(--c2)'; btnTr.style.background='rgba(36,113,163,0.12)'; }
     renderTrList();
+  } else if(tab === 'compiled'){
+    if(compTab) compTab.style.display = '';
+    if(btnComp){ btnComp.style.borderBottomColor='#3ddc84'; btnComp.style.color='#3ddc84'; btnComp.style.background='rgba(61,220,132,0.10)'; }
+    renderCompiledList();
   }
 }
 window.switchCiTab = switchCiTab;
+
+function renderCompiledList(){
+  const list  = document.getElementById('compiledList');
+  const empty = document.getElementById('compiledEmpty');
+  if(!list) return;
+  // Trigger rebuild then render
+  rebuildCompiledRecords().then ? rebuildCompiledRecords() : null;
+  setTimeout(() => {
+    if(!compiledRecords.length){
+      list.innerHTML = '';
+      if(empty) empty.style.display = '';
+      return;
+    }
+    if(empty) empty.style.display = 'none';
+    list.innerHTML = compiledRecords.map((r,i) => {
+      const srcColor = r._source === 'transferred' ? 'rgba(36,113,163,0.8)' : 'rgba(61,220,132,0.8)';
+      const srcLabel = r._source === 'transferred' ? '↗ ' + (r.transferredFrom||'Other').replace('DMW ','') : '✓ Own';
+      return `<div style="display:grid;grid-template-columns:22px 1fr 44px 32px 60px 60px 50px 22px;gap:2px;padding:7px 12px;border-top:1px solid var(--border);align-items:center;font-size:9px;background:${r._source==='transferred'?'rgba(36,113,163,0.04)':''}">
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--muted)">${r.id}</span>
+        <div style="overflow:hidden">
+          <div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.fullName||''}">${r.fullName||''}</div>
+        </div>
+        <span style="color:var(--muted);font-size:8px">${r.gender||'—'}</span>
+        <span style="color:var(--muted);font-size:8px">${r.age||'—'}</span>
+        <span style="color:var(--muted);font-size:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.country||'—'}</span>
+        <span style="color:var(--muted);font-size:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.position||'—'}</span>
+        <span style="color:${srcColor};font-size:7px;font-weight:600">${srcLabel}</span>
+        <span></span>
+      </div>`;
+    }).join('');
+  }, 300);
+}
+window.renderCompiledList = renderCompiledList;
 
 function bindTransferLogListener(){
   if(!activeCounter) return;
@@ -1215,7 +1314,9 @@ function renderCbmList(){
 }
 
 function exportCbmCsv(){
-  if(!cbmRecords.length){ showToast('⚠ No records to export'); return; }
+  // Desk 2 exports compiled (own + transferred); others export own only
+  const recordsToExport = (activeCounter === 1 && compiledRecords.length) ? compiledRecords : cbmRecords;
+  if(!recordsToExport.length){ showToast('⚠ No records to export'); return; }
   if(typeof XLSX === 'undefined'){ showToast('⚠ Excel library not loaded yet — try again'); return; }
 
   const counterName = activeCounter ? COUNTER_NAMES[activeCounter-1] : 'Counter';
@@ -1291,7 +1392,7 @@ function exportCbmCsv(){
   });
 
   // ── Rows 2+ (Excel row 3+): Data ──
-  cbmRecords.forEach((r, ri) => {
+  recordsToExport.forEach((r, ri) => {
     const ageNum = r.age ? parseInt(r.age) : null;
     const rowBg  = ri % 2 === 0 ? 'FFFFFFFF' : 'FFF7F9FB';
     const vals = [
@@ -1359,10 +1460,11 @@ function exportCbmCsv(){
 }
 
 function printCbmRecords(){
-  if(!cbmRecords.length){ showToast('⚠ No records to print'); return; }
+  const recordsToExport = (activeCounter === 1 && compiledRecords.length) ? compiledRecords : cbmRecords;
+  if(!recordsToExport.length){ showToast('⚠ No records to print'); return; }
   const counterName = activeCounter ? COUNTER_NAMES[activeCounter-1] : 'Counter';
   const date = new Date().toLocaleDateString('en-PH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  const rows = cbmRecords.map((r,i)=>{
+  const rows = recordsToExport.map((r,i)=>{
     const ageNum = r.age ? parseInt(r.age) : null;
     const bracket = r.ageBracket || (!ageNum ? '' : ageNum<=19?'19 & BELOW':ageNum<=34?'20 TO 34':ageNum<=49?'35 TO 49':ageNum<=64?'50 TO 64':'65 AND ABOVE');
     return `<tr>
@@ -1422,7 +1524,7 @@ function printCbmRecords(){
     </div>
     <div class="hdr-meta">
       <div>${date}</div>
-      <div>${cbmRecords.length} record${cbmRecords.length!==1?'s':''}</div>
+      <div>${recordsToExport.length} record${recordsToExport.length!==1?'s':''}</div>
     </div>
   </div>
   <table>
