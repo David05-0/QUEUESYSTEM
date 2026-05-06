@@ -1346,8 +1346,17 @@ function renderCbmList(){
 }
 
 function exportCbmCsv(){
-  // Desk 2 exports compiled (own + transferred); others export own only
-  const recordsToExport = (activeCounter === 1 && compiledRecords.length) ? compiledRecords : cbmRecords;
+  if(typeof XLSX === 'undefined'){ showToast('⚠ Excel library not loaded yet — try again'); return; }
+  // Counter 1 (Desk 2): always re-fetch compiled (own + ALL transferred) before exporting
+  if(activeCounter === 1){
+    showToast('⏳ Preparing all records for export…');
+    rebuildCompiledRecords().then(()=>{ _doExportRecords(compiledRecords); });
+    return;
+  }
+  _doExportRecords(cbmRecords);
+}
+
+function _doExportRecords(recordsToExport){
   if(!recordsToExport.length){ showToast('⚠ No records to export'); return; }
   if(typeof XLSX === 'undefined'){ showToast('⚠ Excel library not loaded yet — try again'); return; }
 
@@ -1459,7 +1468,7 @@ function exportCbmCsv(){
   });
 
   // ── Worksheet range ──
-  ws['!ref'] = XLSX.utils.encode_range({ r: 0, c: 0 }, { r: Math.max(2, cbmRecords.length + 1), c: 20 });
+  ws['!ref'] = XLSX.utils.encode_range({ r: 0, c: 0 }, { r: Math.max(2, recordsToExport.length + 1), c: 20 });
 
   // ── Merged cells: group header row ──
   ws['!merges'] = [
