@@ -1152,6 +1152,8 @@ function bindTransferLogListener(){
       const handler = () => {
         // Rebuild compiled + update transferred tab badge
         rebuildCompiledRecords();
+        // Also rebuild transferredRecords for the Transferred tab
+        rebuildDesk2TransferredRecords();
       };
       ref.on('value', handler);
       return { ref, handler };
@@ -1159,6 +1161,7 @@ function bindTransferLogListener(){
     _trLogListener = () => handlers.forEach(({ ref, handler }) => ref.off('value', handler));
     // Also do an immediate rebuild so badge/tab populate on open
     rebuildCompiledRecords();
+    rebuildDesk2TransferredRecords();
   } else {
     // Counters 3-5: listen to their own transferLog (sent history)
     const logRef = db.ref('transferLog/counter_' + activeCounter);
@@ -1173,6 +1176,28 @@ function bindTransferLogListener(){
     });
     _trLogListener = () => logRef.off('value');
   }
+}
+
+// ── Desk 2 only: fetch all incoming transferLog records and populate transferredRecords ──
+function rebuildDesk2TransferredRecords(){
+  if(activeCounter !== 1) return;
+  const fetchPromises = [2, 3, 4].map(cIdx =>
+    db.ref('transferLog/counter_' + cIdx).once('value').then(snap => {
+      const data = snap.val();
+      return data ? Object.values(data) : [];
+    })
+  );
+  Promise.all(fetchPromises).then(arrays => {
+    transferredRecords = [].concat(...arrays)
+      .sort((a,b) => (b.transferredAt||0) - (a.transferredAt||0));
+    const badge = document.getElementById('tabTrCount');
+    if(badge) badge.textContent = transferredRecords.length;
+    // Auto-render if transferred tab is currently visible
+    if(document.getElementById('ciTabTransferred') &&
+       document.getElementById('ciTabTransferred').style.display !== 'none'){
+      renderTrList();
+    }
+  });
 }
 
 function renderTrList(){
