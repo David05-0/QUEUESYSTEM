@@ -796,7 +796,7 @@ function addCbmEntry(){
   if(!activeCounter){ showToast('⚠ No active counter — please log in first'); return; }
 
   const ageNum = age ? parseInt(age) : null;
-  const ageBracket = !ageNum ? '' : ageNum <= 19 ? '19 & BELOW' : ageNum <= 34 ? '20 TO 34' : ageNum <= 64 ? '35 TO 64' : '65 AND ABOVE';
+  const ageBracket = !ageNum ? '' : ageNum <= 19 ? '19 & BELOW' : ageNum <= 34 ? '20 TO 34' : ageNum <= 49 ? '35 TO 49' : ageNum <= 64 ? '50 TO 64' : '65 AND ABOVE';
 
   const ts = Date.now();
   const entry = {
@@ -1216,14 +1216,34 @@ function renderCbmList(){
 function exportCbmCsv(){
   if(!cbmRecords.length){ showToast('⚠ No records to export'); return; }
   const counterName = activeCounter ? COUNTER_NAMES[activeCounter-1] : 'Counter';
-  // Excel format: OFW'S INFORMATION + ADDRESS + REGION + AGE brackets + REMARKS
-  const headers = [
-    'FIRST NAME','MIDDLE NAME','LAST NAME','SEX','BIRTHPLACE','DESTINATION','POSITION',
-    'MUNICIPALITY','PROVINCE','REGION',
-    'AGE','19 & BELOW','20 TO 34','35 TO 64','65 AND ABOVE',
-    'REMARKS','TYPE','DATE','CP NUMBER','COUNTER'
-  ];
-  const rows = cbmRecords.map(r => {
+  const CRLF = '\r\n';
+  function esc(v){ return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }
+
+  // ── Row 1: Group headers (match Excel merged cell layout) ──
+  // Columns: A-G = OFW's Information (7), H-I = Address (2), J = Region (1),
+  //          K = AGE label (1), L-P = age brackets (5), Q = Remarks (1)
+  //          R = Type, S = Date, T = CP Number, U = Counter
+  const row1 = [
+    "OFW'S INFORMATION","","","","","","",   // A-G (7 cols)
+    "ADDRESS","",                              // H-I (2 cols)
+    "REGION",                                  // J
+    "AGE","","","","","",                      // K-P (6 cols: AGE + 5 brackets)
+    "REMARKS",                                 // Q
+    "","","",""                                // R-U (Type, Date, CP, Counter)
+  ].map(esc).join(',');
+
+  // ── Row 2: Sub-headers ──
+  const row2 = [
+    "FIRST NAME","MIDDLE NAME","LAST NAME","SEX","BIRTHPLACE","DESTINATION","POSITION",
+    "MUNICIPALITY","PROVINCE",
+    "REGION",
+    "AGE","19 & BELOW","20 TO 34","35 TO 49","50 TO 64","65 AND ABOVE",
+    "REMARKS",
+    "TYPE","DATE","CP NUMBER","COUNTER"
+  ].map(esc).join(',');
+
+  // ── Rows 3+: Data ──
+  const dataRows = cbmRecords.map(r => {
     const ageNum = r.age ? parseInt(r.age) : null;
     return [
       r.firstName||'',
@@ -1239,16 +1259,18 @@ function exportCbmCsv(){
       ageNum ? String(ageNum) : '',
       (ageNum && ageNum <= 19)                   ? '1' : '',
       (ageNum && ageNum >= 20 && ageNum <= 34)   ? '1' : '',
-      (ageNum && ageNum >= 35 && ageNum <= 64)   ? '1' : '',
+      (ageNum && ageNum >= 35 && ageNum <= 49)   ? '1' : '',
+      (ageNum && ageNum >= 50 && ageNum <= 64)   ? '1' : '',
       (ageNum && ageNum >= 65)                   ? '1' : '',
       r.remarks||'',
       r.type||'',
       r.date||'',
       r.cp||'',
       r.counter||counterName
-    ].map(v => '"'+String(v).replace(/"/g,'""')+'"').join(',');
+    ].map(esc).join(',');
   });
-  const csv = '\ufeff' + [headers.map(h=>'"'+h+'"').join(','), ...rows].join('\r\n');
+
+  const csv = '\ufeff' + [row1, row2, ...dataRows].join(CRLF);
   const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -1264,7 +1286,7 @@ function printCbmRecords(){
   const date = new Date().toLocaleDateString('en-PH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   const rows = cbmRecords.map((r,i)=>{
     const ageNum = r.age ? parseInt(r.age) : null;
-    const bracket = r.ageBracket || (!ageNum ? '' : ageNum<=19?'19 & BELOW':ageNum<=34?'20 TO 34':ageNum<=64?'35 TO 64':'65 AND ABOVE');
+    const bracket = r.ageBracket || (!ageNum ? '' : ageNum<=19?'19 & BELOW':ageNum<=34?'20 TO 34':ageNum<=49?'35 TO 49':ageNum<=64?'50 TO 64':'65 AND ABOVE');
     return `<tr>
       <td class="num">${i+1}</td>
       <td>${r.firstName||''}</td>
@@ -1280,7 +1302,8 @@ function printCbmRecords(){
       <td class="age-cell age-total">${ageNum||''}</td>
       <td class="age-cell">${(ageNum && ageNum<=19)?ageNum:''}</td>
       <td class="age-cell">${(ageNum && ageNum>=20 && ageNum<=34)?ageNum:''}</td>
-      <td class="age-cell">${(ageNum && ageNum>=35 && ageNum<=64)?ageNum:''}</td>
+      <td class="age-cell">${(ageNum && ageNum>=35 && ageNum<=49)?ageNum:''}</td>
+      <td class="age-cell">${(ageNum && ageNum>=50 && ageNum<=64)?ageNum:''}</td>
       <td class="age-cell">${(ageNum && ageNum>=65)?ageNum:''}</td>
       <td>${r.remarks||''}</td>
     </tr>`;
@@ -1331,13 +1354,13 @@ function printCbmRecords(){
         <th colspan="6" class="group-hdr g-ofw">OFW's Information</th>
         <th colspan="3" class="group-hdr g-addr">Address</th>
         <th rowspan="2" class="group-hdr g-reg" style="vertical-align:middle">Region</th>
-        <th colspan="5" class="group-hdr g-age">Age</th>
+        <th colspan="6" class="group-hdr g-age">Age</th>
         <th rowspan="2" class="group-hdr g-rmk" style="vertical-align:middle">Remarks</th>
       </tr>
       <tr>
         <th>First Name</th><th>Middle Name</th><th>Last Name</th><th>Sex</th><th>Birthplace</th><th>Destination</th>
         <th>Position</th><th>Municipality</th><th>Province</th>
-        <th class="age-th age-total-th">Age</th><th class="age-th">19 &amp; Below</th><th class="age-th">20–34</th><th class="age-th">35–64</th><th class="age-th">65+</th>
+        <th class="age-th age-total-th">Age</th><th class="age-th">19 &amp; Below</th><th class="age-th">20–34</th><th class="age-th">35–49</th><th class="age-th">50–64</th><th class="age-th">65+</th>
       </tr>
     </thead>
     <tbody>${rows}</tbody>
