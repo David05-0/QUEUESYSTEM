@@ -530,6 +530,7 @@
         <button onclick="printCbmRecords()" title="Print records" style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(240,192,64,0.1);border:1px solid rgba(240,192,64,0.35);color:var(--accent);border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.background='rgba(240,192,64,0.2)'" onmouseout="this.style.background='rgba(240,192,64,0.1)'">🖨 Print</button>
         <button onclick="restoreLocalBackup()" title="Restore from local backup" style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(36,113,163,0.12);border:1px solid rgba(36,113,163,0.4);color:var(--c2);border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.background='rgba(36,113,163,0.22)'" onmouseout="this.style.background='rgba(36,113,163,0.12)'">↺ Restore</button>
         <button id="btnSaveForDay" onclick="openSaveForDayModal()" title="Save all records for the day to archive" style="display:none;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(125,60,152,0.12);border:1px solid rgba(125,60,152,0.45);color:var(--c4);border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.background='rgba(125,60,152,0.25)'" onmouseout="this.style.background='rgba(125,60,152,0.12)'">&#x1F4BE; Save for Day</button>
+        <button onclick="clearAllCbmRecords()" title="Clear all records"
         <button onclick="clearAllCbmRecords()" title="Clear all records" style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(255,95,95,0.08);border:1px solid rgba(255,95,95,0.35);color:var(--red);border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.background='rgba(255,95,95,0.18)'" onmouseout="this.style.background='rgba(255,95,95,0.08)'">🗑 Clear All</button>
         <button onclick="closeClientInfo()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:3px;padding:4px 10px;cursor:pointer;font-size:12px">✕</button>
       </div>
@@ -833,10 +834,10 @@ function rebuildCompiledRecords(){
     const saved           = arrays[3];
     compiledRecords = [...own, ...liveTransferred, ...saved].sort((a,b) => (a.ts||0) - (b.ts||0));
 
-    // De-duplicate by Firebase key ts+fullName
+    // De-duplicate by ts+fullName+savedDate (include savedDate so same person on different days isn't dropped)
     const seen = new Set();
     compiledRecords = compiledRecords.filter(r => {
-      const key = (r.ts||'') + '|' + (r.fullName||'');
+      const key = (r.ts||'') + '|' + (r.fullName||'') + '|' + (r.savedDate||'');
       if(seen.has(key)) return false;
       seen.add(key); return true;
     });
@@ -1154,65 +1155,10 @@ function switchCiTab(tab){
   } else if(tab === 'compiled'){
     if(compTab) compTab.style.display = '';
     if(btnComp){ btnComp.style.borderBottomColor='#3ddc84'; btnComp.style.color='#3ddc84'; btnComp.style.background='rgba(61,220,132,0.10)'; }
-    // Fetch ALL sources: allRecords (saved) + live transferLog + own cbmRecords
+    // Use rebuildCompiledRecords which correctly merges: own records + live transferLog (today) + allRecords (past days saved)
     const compList = document.getElementById('compiledList');
-    const compEmpty = document.getElementById('compiledEmpty');
     if(compList) compList.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:9px;letter-spacing:0.1em">Loading…</div>';
-
-    var allRecordsPromise = new Promise(function(resolve){
-      db.ref('allRecords').once('value', function(snap){
-        var data = snap.val();
-        resolve(data ? Object.values(data) : []);
-      }, function(){ resolve([]); });
-    });
-    var transferPromises = [2,3,4].map(function(cIdx){
-      return new Promise(function(resolve){
-        db.ref('transferLog/counter_'+cIdx).once('value', function(snap){
-          var data = snap.val();
-          resolve(data ? Object.values(data) : []);
-        }, function(){ resolve([]); });
-      });
-    });
-    Promise.all([allRecordsPromise].concat(transferPromises)).then(function(results){
-      var saved       = results[0].map(function(r){ return Object.assign({},r,{_source:r._source||'saved'}); });
-      var transferred = [].concat(results[1],results[2],results[3]).map(function(r){ return Object.assign({},r,{_source:'transferred'}); });
-      var own         = cbmRecords.map(function(r){ return Object.assign({},r,{_source:'own'}); });
-      var allRows     = own.concat(transferred).concat(saved);
-      // De-duplicate by ts+fullName
-      var seen = new Set();
-      allRows = allRows.filter(function(r){
-        var key = (r.ts||'')+'|'+(r.fullName||'');
-        if(seen.has(key)) return false;
-        seen.add(key); return true;
-      });
-      allRows.sort(function(a,b){ return (a.ts||0)-(b.ts||0); });
-      allRows.forEach(function(r,i){ r.id=i+1; });
-      var compBadge = document.getElementById('tabCompiledCount');
-      if(compBadge) compBadge.textContent = allRows.length;
-      if(!compList) return;
-      if(!allRows.length){
-        compList.innerHTML = '';
-        if(compEmpty) compEmpty.style.display = '';
-        return;
-      }
-      if(compEmpty) compEmpty.style.display = 'none';
-      compList.innerHTML = allRows.map(function(r){
-        var srcColor = r._source==='transferred' ? 'rgba(36,113,163,0.8)' : r._source==='saved' ? 'rgba(240,192,64,0.9)' : 'rgba(61,220,132,0.8)';
-        var srcLabel = r._source==='transferred' ? '\u2197 '+(r.transferredFrom||'Other').replace('DMW ','') : r._source==='saved' ? '\uD83D\uDCBE '+(r.savedDate||'Saved') : '\u2713 Own';
-        return '<div style="display:grid;grid-template-columns:22px 1fr 44px 32px 60px 60px 50px;gap:2px;padding:7px 12px;border-top:1px solid var(--border);align-items:center;font-size:9px">'
-          +'<span style="font-family:Bebas Neue,sans-serif;font-size:13px;color:var(--muted)">'+r.id+'</span>'
-          +'<span style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(r.fullName||'—')+'</span>'
-          +'<span style="color:var(--muted);font-size:8px">'+(r.gender||'—')+'</span>'
-          +'<span style="color:var(--muted);font-size:8px">'+(r.age||'—')+'</span>'
-          +'<span style="color:var(--muted);font-size:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(r.country||'—')+'</span>'
-          +'<span style="color:var(--muted);font-size:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(r.position||'—')+'</span>'
-          +'<span style="color:'+srcColor+';font-size:7px;font-weight:600">'+srcLabel+'</span>'
-          +'</div>';
-      }).join('');
-    }).catch(function(err){
-      console.error('[AllRecords] Firebase read error:', err);
-      if(compList) compList.innerHTML = '<div style="padding:20px;text-align:center;color:var(--red);font-size:9px">Load error — check connection</div>';
-    });
+    rebuildCompiledRecords().then(function(){ _renderCompiledListNow(); });
   }
 }
 window.switchCiTab = switchCiTab;
