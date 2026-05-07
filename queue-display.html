@@ -805,25 +805,38 @@ function initCbmListener(){
   if(btn) btn.style.display = activeCounter === 1 ? 'none' : '';
 }
 
-// ── Desk 2: merge own records + all incoming transfers into compiledRecords ──
+// ── Desk 2: merge own + transferred (live) + allRecords (permanent saved) ──
 function rebuildCompiledRecords(){
   if(activeCounter !== 1) return Promise.resolve();
   const own = cbmRecords.map(r => Object.assign({}, r, { _source: 'own' }));
-  const fetchPromises = [2, 3, 4].map(cIdx =>
+  // Fetch live transfer logs
+  const transferPromises = [2, 3, 4].map(cIdx =>
     db.ref('transferLog/counter_' + cIdx).once('value').then(snap => {
       const data = snap.val();
       return data ? Object.values(data).map(r => Object.assign({}, r, { _source: 'transferred' })) : [];
     })
   );
-  return Promise.all(fetchPromises).then(arrays => {
-    const transferred = [].concat(...arrays);
-    compiledRecords = [...own, ...transferred].sort((a,b) => (a.ts||0) - (b.ts||0));
+  // Also fetch permanently saved allRecords
+  const allRecordsPromise = db.ref('allRecords').once('value').then(snap => {
+    const data = snap.val();
+    return data ? Object.values(data).map(r => Object.assign({}, r, { _source: r._source || 'saved' })) : [];
+  });
+  return Promise.all([...transferPromises, allRecordsPromise]).then(arrays => {
+    const liveTransferred = [].concat(...arrays.slice(0,3));
+    const saved           = arrays[3];
+    compiledRecords = [...own, ...liveTransferred, ...saved].sort((a,b) => (a.ts||0) - (b.ts||0));
+    // De-duplicate by ts+fullName (in case a record was saved then re-added)
+    const seen = new Set();
+    compiledRecords = compiledRecords.filter(r => {
+      const key = (r.ts||'') + '|' + (r.fullName||'');
+      if(seen.has(key)) return false;
+      seen.add(key); return true;
+    });
     compiledRecords.forEach((r,i) => r.id = i + 1);
     const badge = document.getElementById('tabTrCount');
-    if(badge) badge.textContent = transferred.length;
+    if(badge) badge.textContent = liveTransferred.length;
     const compBadge = document.getElementById('tabCompiledCount');
     if(compBadge) compBadge.textContent = compiledRecords.length;
-    // Auto-render if compiled tab is currently visible
     const compTab = document.getElementById('ciTabCompiled');
     if(compTab && compTab.style.display !== 'none') _renderCompiledListNow();
   });
@@ -2545,7 +2558,15 @@ function confirmSaveForDay(){
       transferred:  compiledRecords.filter(function(r){return r._source==='transferred';}).length,
       records:      compiledRecords.map(function(r){return Object.assign({},r);})
     };
-    db.ref('cbmDailyArchive/'+dateKey+'/'+dateKey+'_'+timeKey).set(snap)
+    // Step 1: Archive daily snapshot
+    var archiveWrite = db.ref('cbmDailyArchive/'+dateKey+'/'+dateKey+'_'+timeKey).set(snap);
+    // Step 2: Push every record into permanent allRecords node
+    var allRecordWrites = snap.records.map(function(r){
+      var record = Object.assign({}, r, { savedDate: dateKey, savedAt: snap.savedAt });
+      var key = 'rec_' + (r.ts || Date.now()) + '_' + Math.random().toString(36).slice(2,6);
+      return db.ref('allRecords/' + key).set(record);
+    });
+    Promise.all([archiveWrite].concat(allRecordWrites))
     .then(function(){ return db.ref('counterBmRecords/counter_1').remove(); })
     .then(function(){
       return Promise.all([2,3,4].map(function(cIdx){
@@ -2555,8 +2576,10 @@ function confirmSaveForDay(){
     .then(function(){
       cbmRecords=[]; compiledRecords=[]; transferredRecords=[];
       renderCbmList();
+      // Rebuild All Records tab so saved records appear immediately
+      rebuildCompiledRecords();
       closeSaveForDayModal();
-      showToast('Saved '+snap.totalRecords+' records for '+dateKey+' — all counters cleared');
+      showToast('Saved '+snap.totalRecords+' records for '+dateKey+' — visible in All Records');
       btn.disabled=false; btn.textContent='CONFIRM & SAVE';
     })
     .catch(function(err){
