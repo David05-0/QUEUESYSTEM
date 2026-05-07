@@ -790,14 +790,17 @@ function initCbmListener(){
     if(activeCounter === 1) rebuildCompiledRecords();
   });
 
-  // ── Desk 2 only: also listen to transferLog from counters 3-5 ──
+  // ── Desk 2 only: also listen to transferLog from counters 3-5 + allRecords ──
   if(activeCounter === 1){
-    // Counters 3,4,5 = indices 2,3,4 in Firebase = counter_2, counter_3, counter_4
     [2, 3, 4].forEach(cIdx => {
       const ref = db.ref('transferLog/counter_' + cIdx);
       ref.on('value', () => rebuildCompiledRecords());
       _desk2TransferListeners.push(() => ref.off('value'));
     });
+    // Live listener on allRecords — so saved records appear immediately in All Records tab
+    const allRef = db.ref('allRecords');
+    allRef.on('value', () => rebuildCompiledRecords());
+    _desk2TransferListeners.push(() => allRef.off('value'));
   }
 
   // Show/hide transfer button: only visible for counters 3-5
