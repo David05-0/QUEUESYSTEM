@@ -856,8 +856,8 @@ function _renderCompiledListNow(){
   }
   if(empty) empty.style.display = 'none';
   list.innerHTML = compiledRecords.map((r,i) => {
-    const srcColor = r._source === 'transferred' ? 'rgba(36,113,163,0.8)' : 'rgba(61,220,132,0.8)';
-    const srcLabel = r._source === 'transferred' ? '↗ ' + (r.transferredFrom||'Other').replace('DMW ','') : '✓ Own';
+    const srcColor = r._source === 'transferred' ? 'rgba(36,113,163,0.8)' : r._source === 'saved' ? 'rgba(240,192,64,0.9)' : 'rgba(61,220,132,0.8)';
+    const srcLabel = r._source === 'transferred' ? '\u2197 ' + (r.transferredFrom||'Other').replace('DMW ','') : r._source === 'saved' ? '\uD83D\uDCBE ' + (r.savedDate||'Saved') : '\u2713 Own';
     return `<div style="display:grid;grid-template-columns:22px 1fr 44px 32px 60px 60px 50px 22px;gap:2px;padding:7px 12px;border-top:1px solid var(--border);align-items:center;font-size:9px;background:${r._source==='transferred'?'rgba(36,113,163,0.04)':''}">
       <span style="font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--muted)">${r.id}</span>
       <div style="overflow:hidden">
@@ -2561,33 +2561,52 @@ function confirmSaveForDay(){
       transferred:  compiledRecords.filter(function(r){return r._source==='transferred';}).length,
       records:      compiledRecords.map(function(r){return Object.assign({},r);})
     };
-    // Step 1: Archive daily snapshot
-    var archiveWrite = db.ref('cbmDailyArchive/'+dateKey+'/'+dateKey+'_'+timeKey).set(snap);
-    // Step 2: Push every record into permanent allRecords node
+    // Step 1: Write all records to permanent allRecords FIRST
     var allRecordWrites = snap.records.map(function(r){
-      var record = Object.assign({}, r, { savedDate: dateKey, savedAt: snap.savedAt });
+      var record = Object.assign({}, r, { savedDate: dateKey, savedAt: snap.savedAt, _source: 'saved' });
       var key = 'rec_' + (r.ts || Date.now()) + '_' + Math.random().toString(36).slice(2,6);
       return db.ref('allRecords/' + key).set(record);
     });
-    Promise.all([archiveWrite].concat(allRecordWrites))
-    .then(function(){ return db.ref('counterBmRecords/counter_1').remove(); })
+    // Step 2: Archive daily snapshot simultaneously
+    var archiveWrite = db.ref('cbmDailyArchive/'+dateKey+'/'+dateKey+'_'+timeKey).set(snap);
+
+    Promise.all(allRecordWrites.concat([archiveWrite]))
+    .then(function(){
+      // Step 3: DETACH all listeners BEFORE clearing so they don't race
+      if(cbmRef) cbmRef.off();
+      _desk2TransferListeners.forEach(function(fn){ fn(); });
+      _desk2TransferListeners = [];
+
+      // Step 4: Clear working nodes
+      return db.ref('counterBmRecords/counter_1').remove();
+    })
     .then(function(){
       return Promise.all([2,3,4].map(function(cIdx){
         return db.ref('transferLog/counter_'+cIdx).remove();
       }));
     })
     .then(function(){
-      cbmRecords=[]; compiledRecords=[]; transferredRecords=[];
+      // Step 5: Reset local state
+      cbmRecords=[]; transferredRecords=[];
+
+      // Step 6: Rebuild from allRecords only (live nodes are now empty)
+      return rebuildCompiledRecords();
+    })
+    .then(function(){
       renderCbmList();
-      // Rebuild All Records tab so saved records appear immediately
-      rebuildCompiledRecords();
+      // Step 7: Re-attach listeners for new records coming in
+      initCbmListener();
       closeSaveForDayModal();
-      showToast('Saved '+snap.totalRecords+' records for '+dateKey+' — visible in All Records');
+      var total = snap.totalRecords;
+      showToast('Saved '+total+' record'+(total!==1?'s':'')+' for '+dateKey+' — visible in All Records');
       btn.disabled=false; btn.textContent='CONFIRM & SAVE';
     })
     .catch(function(err){
+      console.error('Save for day error:', err);
       showToast('Save failed — '+(err.message||'check connection'));
       btn.disabled=false; btn.textContent='CONFIRM & SAVE';
+      // Re-attach listeners even on failure
+      initCbmListener();
     });
   });
 }
