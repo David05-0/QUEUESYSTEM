@@ -812,6 +812,7 @@ function initCbmListener(){
 function rebuildCompiledRecords(){
   if(activeCounter !== 1) return Promise.resolve();
   const own = cbmRecords.map(r => Object.assign({}, r, { _source: 'own' }));
+
   // Fetch live transfer logs
   const transferPromises = [2, 3, 4].map(cIdx =>
     db.ref('transferLog/counter_' + cIdx).once('value').then(snap => {
@@ -819,16 +820,21 @@ function rebuildCompiledRecords(){
       return data ? Object.values(data).map(r => Object.assign({}, r, { _source: 'transferred' })) : [];
     })
   );
-  // Also fetch permanently saved allRecords
-  const allRecordsPromise = db.ref('allRecords').once('value').then(snap => {
-    const data = snap.val();
-    return data ? Object.values(data).map(r => Object.assign({}, r, { _source: r._source || 'saved' })) : [];
+
+  // Fetch permanently saved allRecords — force server read to bypass cache
+  const allRecordsPromise = new Promise(function(resolve) {
+    db.ref('allRecords').once('value', function(snap) {
+      const data = snap.val();
+      resolve(data ? Object.values(data).map(r => Object.assign({}, r, { _source: r._source || 'saved' })) : []);
+    }, function(){ resolve([]); });
   });
+
   return Promise.all([...transferPromises, allRecordsPromise]).then(arrays => {
     const liveTransferred = [].concat(...arrays.slice(0,3));
     const saved           = arrays[3];
     compiledRecords = [...own, ...liveTransferred, ...saved].sort((a,b) => (a.ts||0) - (b.ts||0));
-    // De-duplicate by ts+fullName (in case a record was saved then re-added)
+
+    // De-duplicate by Firebase key ts+fullName
     const seen = new Set();
     compiledRecords = compiledRecords.filter(r => {
       const key = (r.ts||'') + '|' + (r.fullName||'');
@@ -836,10 +842,13 @@ function rebuildCompiledRecords(){
       seen.add(key); return true;
     });
     compiledRecords.forEach((r,i) => r.id = i + 1);
+
     const badge = document.getElementById('tabTrCount');
     if(badge) badge.textContent = liveTransferred.length;
     const compBadge = document.getElementById('tabCompiledCount');
     if(compBadge) compBadge.textContent = compiledRecords.length;
+
+    // Always render if All Records tab is open
     const compTab = document.getElementById('ciTabCompiled');
     if(compTab && compTab.style.display !== 'none') _renderCompiledListNow();
   });
@@ -1146,7 +1155,10 @@ function switchCiTab(tab){
   } else if(tab === 'compiled'){
     if(compTab) compTab.style.display = '';
     if(btnComp){ btnComp.style.borderBottomColor='#3ddc84'; btnComp.style.color='#3ddc84'; btnComp.style.background='rgba(61,220,132,0.10)'; }
-    renderCompiledList();
+    // Force fresh rebuild every time tab is clicked — never use stale cache
+    const compList = document.getElementById('compiledList');
+    if(compList) compList.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:9px;letter-spacing:0.1em">Loading…</div>';
+    rebuildCompiledRecords().then(function(){ _renderCompiledListNow(); });
   }
 }
 window.switchCiTab = switchCiTab;
