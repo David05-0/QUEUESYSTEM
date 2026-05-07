@@ -1155,10 +1155,46 @@ function switchCiTab(tab){
   } else if(tab === 'compiled'){
     if(compTab) compTab.style.display = '';
     if(btnComp){ btnComp.style.borderBottomColor='#3ddc84'; btnComp.style.color='#3ddc84'; btnComp.style.background='rgba(61,220,132,0.10)'; }
-    // Force fresh rebuild every time tab is clicked — never use stale cache
+    // Direct read from Firebase allRecords — show whatever is there immediately
     const compList = document.getElementById('compiledList');
+    const compEmpty = document.getElementById('compiledEmpty');
     if(compList) compList.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:9px;letter-spacing:0.1em">Loading…</div>';
-    rebuildCompiledRecords().then(function(){ _renderCompiledListNow(); });
+    db.ref('allRecords').once('value', function(snap){
+      const data = snap.val();
+      console.log('[AllRecords] Firebase raw data:', data);
+      const saved = data ? Object.values(data) : [];
+      console.log('[AllRecords] saved count:', saved.length);
+      // Merge with live own + transferred
+      const own = cbmRecords.map(function(r){ return Object.assign({},r,{_source:'own'}); });
+      const allRows = own.concat(saved.map(function(r){ return Object.assign({},r,{_source:r._source||'saved'}); }));
+      allRows.sort(function(a,b){ return (a.ts||0)-(b.ts||0); });
+      allRows.forEach(function(r,i){ r.id=i+1; });
+      const compBadge = document.getElementById('tabCompiledCount');
+      if(compBadge) compBadge.textContent = allRows.length;
+      if(!compList) return;
+      if(!allRows.length){
+        compList.innerHTML = '';
+        if(compEmpty) compEmpty.style.display = '';
+        return;
+      }
+      if(compEmpty) compEmpty.style.display = 'none';
+      compList.innerHTML = allRows.map(function(r){
+        const srcColor = r._source==='transferred' ? 'rgba(36,113,163,0.8)' : r._source==='saved' ? 'rgba(240,192,64,0.9)' : 'rgba(61,220,132,0.8)';
+        const srcLabel = r._source==='transferred' ? '↗ '+(r.transferredFrom||'Other').replace('DMW ','') : r._source==='saved' ? '?? '+(r.savedDate||'Saved') : '✓ Own';
+        return '<div style="display:grid;grid-template-columns:22px 1fr 44px 32px 60px 60px 50px;gap:2px;padding:7px 12px;border-top:1px solid var(--border);align-items:center;font-size:9px">'
+          +'<span style="font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--muted)">'+r.id+'</span>'
+          +'<span style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+( r.fullName||'')+'</span>'
+          +'<span style="color:var(--muted);font-size:8px">'+(r.gender||'—')+'</span>'
+          +'<span style="color:var(--muted);font-size:8px">'+(r.age||'—')+'</span>'
+          +'<span style="color:var(--muted);font-size:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(r.country||'—')+'</span>'
+          +'<span style="color:var(--muted);font-size:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(r.position||'—')+'</span>'
+          +'<span style="color:'+srcColor+';font-size:7px;font-weight:600">'+srcLabel+'</span>'
+          +'</div>';
+      }).join('');
+    }, function(err){
+      console.error('[AllRecords] Firebase read error:', err);
+      if(compList) compList.innerHTML = '<div style="padding:20px;text-align:center;color:var(--red);font-size:9px">Error: '+err.message+'</div>';
+    });
   }
 }
 window.switchCiTab = switchCiTab;
