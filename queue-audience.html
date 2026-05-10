@@ -239,8 +239,14 @@ function startDisplay(){
   } catch(e){ console.warn('AudioContext:', e); }
   if(window.speechSynthesis){
     window.speechSynthesis.cancel();
+    // Pre-load voices by speaking a silent utterance
     var w = new SpeechSynthesisUtterance(' ');
-    w.volume = 0.01; window.speechSynthesis.speak(w);
+    w.volume = 0.01;
+    window.speechSynthesis.speak(w);
+    // Aggressively pre-cache voices list
+    window.speechSynthesis.getVoices();
+    setTimeout(function(){ window.speechSynthesis.getVoices(); }, 500);
+    setTimeout(function(){ window.speechSynthesis.getVoices(); }, 1500);
   }
 }
 document.getElementById('startBtn').addEventListener('click', startDisplay);
@@ -557,28 +563,25 @@ function playChime(){
 function doSpeak(ticket, onDone){
   if(!audioUnlocked || !window.speechSynthesis){ if(onDone) onDone(); return; }
   var cname = COUNTER_NAMES[ticket.counter-1];
+
   function toTitleCase(str){
-    // Roman numeral suffixes (I, II, III, IV, V, VI etc.) must stay fully uppercase
-    // and be spoken as letters, not as a word.
     var ROMAN = /\b(I{1,3}|IV|VI{0,3}|IX|XI{0,2}|XII)\b/gi;
     return str.toLowerCase()
       .replace(/\b\w/g, function(c){ return c.toUpperCase(); })
       .replace(ROMAN, function(m){ return m.toUpperCase(); });
   }
-  var rawName = ticket.nickname || ticket.customer || null;
-  // Convert Roman numeral suffixes to phonetic form so TTS speaks them correctly.
-  // e.g. "Juan II" → "Juan the Second", "Jose III" → "Jose the Third"
   function romanToPhonetic(str){
     var map = {
       'XII':'the Twelfth','XI':'the Eleventh','IX':'the Ninth','VIII':'the Eighth',
       'VII':'the Seventh','VI':'the Sixth','IV':'the Fourth','V':'the Fifth',
       'III':'the Third','II':'the Second','I':'the First'
     };
-    // Only match Roman numerals that appear as a standalone suffix (at end or before comma/space)
     return str.replace(/\b(XII|XI|IX|VIII|VII|VI|IV|V|III|II|I)\b/g, function(m){
       return map[m.toUpperCase()] || m;
     });
   }
+
+  var rawName = ticket.nickname || ticket.customer || null;
   var spokenName = rawName ? romanToPhonetic(toTitleCase(rawName.trim())) : null;
   var subjectPart = spokenName ? spokenName : ('Number ' + ticket.id);
   var svcPart = ticket.service ? (' for ' + ticket.service) : '';
@@ -586,60 +589,60 @@ function doSpeak(ticket, onDone){
     ? ('Priority customer. ' + subjectPart + ', please proceed to ' + cname + svcPart + '.')
     : (subjectPart + ', please proceed to ' + cname + svcPart + '.');
 
-  if(window.speechSynthesis.paused) window.speechSynthesis.resume();
   window.speechSynthesis.cancel();
+  if(window.speechSynthesis.paused) window.speechSynthesis.resume();
 
-  function trySpeak(attemptsLeft){
+  function getVoice(){
     var voices = window.speechSynthesis.getVoices();
-    if(!voices.length && attemptsLeft > 0){ setTimeout(function(){ trySpeak(attemptsLeft-1); }, 300); return; }
-    var MALE_NAMES = ['Google UK English Male','Microsoft David','Microsoft Mark','David','Daniel','Alex','Fred','Ralph','Thomas','Google US English'];
-    var preferred =
-      MALE_NAMES.map(function(n){ return voices.find(function(v){ return v.name===n; }); }).find(Boolean) ||
+    var PREFERRED = ['Google UK English Male','Microsoft David','Microsoft Mark','David','Daniel','Alex','Fred','Ralph','Thomas','Google US English'];
+    return PREFERRED.map(function(n){ return voices.find(function(v){ return v.name===n; }); }).find(Boolean) ||
       voices.find(function(v){ return v.lang==='en-US' && /male|david|mark|james|guy|man/i.test(v.name); }) ||
-      voices.find(function(v){ return v.lang.startsWith('en') && /male|david|mark|james|guy|man/i.test(v.name); }) ||
       voices.find(function(v){ return v.lang==='en-US' && v.name.includes('Google'); }) ||
-      voices.find(function(v){ return v.lang==='en-US' && !v.localService; }) ||
-      voices.find(function(v){ return v.lang.startsWith('en') && !v.localService; }) ||
+      voices.find(function(v){ return v.lang==='en-US'; }) ||
       voices.find(function(v){ return v.lang.startsWith('en'); }) ||
-      (voices.length > 0 ? voices[0] : null);
+      (window.speechSynthesis.getVoices()[0] || null);
+  }
 
+  function attemptSpeak(retriesLeft){
+    var voices = window.speechSynthesis.getVoices();
+    if(!voices.length && retriesLeft > 0){
+      setTimeout(function(){ attemptSpeak(retriesLeft - 1); }, 400);
+      return;
+    }
     var u = new SpeechSynthesisUtterance(announcement);
-    u.rate = 1.05; u.pitch = 0.75; u.volume = 1; u.lang = 'en-US';
-    if(preferred) u.voice = preferred;
+    u.lang = 'en-US'; u.rate = 1.05; u.pitch = 0.75; u.volume = 1;
+    var voice = getVoice();
+    if(voice) u.voice = voice;
 
     var done = false;
-    function finish(){ if(done) return; done = true; if(onDone) onDone(); }
+    var keepAlive;
+    function finish(){ if(done) return; done = true; clearInterval(keepAlive); if(onDone) onDone(); }
+
     u.onend = finish;
-    u.onerror = function(e){ if(e.error !== 'canceled') finish(); };
-    var started = false;
-    u.onstart = function(){ started = true; };
-    setTimeout(function(){ if(!started){ window.speechSynthesis.cancel(); finish(); } }, 2500);
-    setTimeout(finish, 15000);
-    window.speechSynthesis.speak(u);
-    var resumeInterval = setInterval(function(){
-      if(done){ clearInterval(resumeInterval); return; }
+    u.onerror = function(e){
+      if(e.error === 'canceled') return;
+      if(retriesLeft > 0){
+        setTimeout(function(){ window.speechSynthesis.cancel(); setTimeout(function(){ attemptSpeak(retriesLeft-1); }, 300); }, 200);
+      } else { finish(); }
+    };
+
+    var startTimer = setTimeout(function(){
+      if(done) return;
+      if(retriesLeft > 0){ window.speechSynthesis.cancel(); setTimeout(function(){ attemptSpeak(retriesLeft-1); }, 300); }
+      else { finish(); }
+    }, 3000);
+    u.onstart = function(){ clearTimeout(startTimer); };
+
+    setTimeout(finish, 20000);
+
+    // Chrome keep-alive: ping every 1s to prevent mid-sentence pause
+    keepAlive = setInterval(function(){
+      if(done){ clearInterval(keepAlive); return; }
       if(window.speechSynthesis.paused) window.speechSynthesis.resume();
-    }, 2000);
+    }, 1000);
+
+    window.speechSynthesis.speak(u);
   }
-  setTimeout(function(){ trySpeak(5); }, 250);
+
+  setTimeout(function(){ attemptSpeak(6); }, 150);
 }
-
-// Chrome TTS heartbeat
-setInterval(function(){
-  if(!audioUnlocked) return;
-  if(window.speechSynthesis && window.speechSynthesis.paused && !window.speechSynthesis.speaking){
-    window.speechSynthesis.resume();
-  }
-}, 5000);
-
-// ── Init ──
-buildCounters();
-renderAll();
-if(window.speechSynthesis){
-  window.speechSynthesis.getVoices();
-  window.speechSynthesis.onvoiceschanged = function(){ window.speechSynthesis.getVoices(); };
-}
-
-</script>
-</body>
-</html>
