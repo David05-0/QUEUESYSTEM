@@ -834,10 +834,10 @@ function rebuildCompiledRecords(){
     const saved           = arrays[3];
     compiledRecords = [...own, ...liveTransferred, ...saved].sort((a,b) => (a.ts||0) - (b.ts||0));
 
-    // De-duplicate by ts+fullName+savedDate (include savedDate so same person on different days isn't dropped)
+    // De-duplicate by Firebase key ts+fullName
     const seen = new Set();
     compiledRecords = compiledRecords.filter(r => {
-      const key = (r.ts||'') + '|' + (r.fullName||'') + '|' + (r.savedDate||'');
+      const key = (r.ts||'') + '|' + (r.fullName||'');
       if(seen.has(key)) return false;
       seen.add(key); return true;
     });
@@ -1155,7 +1155,7 @@ function switchCiTab(tab){
   } else if(tab === 'compiled'){
     if(compTab) compTab.style.display = '';
     if(btnComp){ btnComp.style.borderBottomColor='#3ddc84'; btnComp.style.color='#3ddc84'; btnComp.style.background='rgba(61,220,132,0.10)'; }
-    // Use rebuildCompiledRecords which correctly merges: own records + live transferLog (today) + allRecords (past days saved)
+    // Single source of truth: rebuildCompiledRecords handles own + transferred + allRecords
     const compList = document.getElementById('compiledList');
     if(compList) compList.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:9px;letter-spacing:0.1em">Loading…</div>';
     rebuildCompiledRecords().then(function(){ _renderCompiledListNow(); });
@@ -1190,6 +1190,7 @@ function bindTransferLogListener(){
     _trLogListener = () => handlers.forEach(({ ref, handler }) => ref.off('value', handler));
     rebuildCompiledRecords();
     rebuildDesk2TransferredRecords();
+    deduplicateAllRecords();
   } else {
     // Counters 3-5: listen to their own transferLog (sent history)
     const logRef = db.ref('transferLog/counter_' + activeCounter);
@@ -2576,7 +2577,9 @@ function confirmSaveForDay(){
     // Step 1: Write all records to permanent allRecords FIRST
     var allRecordWrites = snap.records.map(function(r){
       var record = Object.assign({}, r, { savedDate: dateKey, savedAt: snap.savedAt, _source: 'saved' });
-      var key = 'rec_' + (r.ts || Date.now()) + '_' + Math.random().toString(36).slice(2,6);
+      // Deterministic key: same record always maps to same Firebase key — prevents duplicates on re-save
+      var nameSlug = (r.fullName||'unknown').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,12);
+      var key = 'rec_' + (r.ts || 0) + '_' + nameSlug;
       return db.ref('allRecords/' + key).set(record);
     });
     // Step 2: Archive daily snapshot simultaneously
@@ -2622,6 +2625,30 @@ function confirmSaveForDay(){
     });
   });
 }
+// ── Clean duplicate allRecords from Firebase (runs once when Counter 2 opens) ──
+function deduplicateAllRecords(){
+  db.ref('allRecords').once('value', function(snap){
+    var data = snap.val();
+    if(!data) return;
+    var seen = {};
+    var toDelete = [];
+    Object.keys(data).forEach(function(key){
+      var r = data[key];
+      var dedupKey = (r.ts||0) + '|' + (r.fullName||'');
+      if(seen[dedupKey]){
+        toDelete.push(key); // duplicate — remove it
+      } else {
+        seen[dedupKey] = key;
+      }
+    });
+    if(toDelete.length){
+      console.log('[Dedup] Removing', toDelete.length, 'duplicate(s) from allRecords');
+      Promise.all(toDelete.map(function(k){ return db.ref('allRecords/'+k).remove(); }))
+        .then(function(){ console.log('[Dedup] Done'); });
+    }
+  });
+}
+
 window.openSaveForDayModal=openSaveForDayModal;
 window.closeSaveForDayModal=closeSaveForDayModal;
 window.confirmSaveForDay=confirmSaveForDay;
