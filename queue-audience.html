@@ -235,8 +235,7 @@ function startDisplay(){
   }
 }
 
-// ── Auto-start on page load ──
-window.addEventListener('DOMContentLoaded', function(){ buildCounters(); startDisplay(); });
+// ── Auto-start (inline script runs after DOM — call directly) ──
 window.addEventListener('click', function(){ if(!audioUnlocked) startDisplay(); }, {once:true});
 
 // ── Build counter panels ──
@@ -633,3 +632,10 @@ function doSpeak(ticket, onDone){
 
   setTimeout(function(){ attemptSpeak(6); }, 150);
 }
+
+// ── Init ──
+buildCounters();
+startDisplay();
+</script>
+</body>
+</html>
