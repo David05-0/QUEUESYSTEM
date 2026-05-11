@@ -216,7 +216,6 @@ updateClock();
 function startDisplay(){
   if(audioUnlocked) return;
   audioUnlocked = true;
-  document.getElementById('startOverlay').classList.add('hidden');
   try {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     var buf = audioCtx.createBuffer(1,1,22050);
@@ -237,7 +236,7 @@ function startDisplay(){
 }
 
 // ── Auto-start on page load ──
-window.addEventListener('DOMContentLoaded', function(){ startDisplay(); });
+window.addEventListener('DOMContentLoaded', function(){ buildCounters(); startDisplay(); });
 window.addEventListener('click', function(){ if(!audioUnlocked) startDisplay(); }, {once:true});
 
 // ── Build counter panels ──
