@@ -228,8 +228,7 @@ setInterval(updateClock, 1000);
 updateClock();
 
 // ── Audio unlock ──
-function startDisplay(e){
-  if(e){ e.preventDefault(); e.stopPropagation(); }
+function startDisplay(){
   if(audioUnlocked) return;
   audioUnlocked = true;
   document.getElementById('startOverlay').classList.add('hidden');
@@ -252,16 +251,22 @@ function startDisplay(e){
   }
 }
 
-// ── Attach start overlay events (single unified handler to avoid double-fire on touch) ──
+// ── Attach start overlay events ──
 (function(){
   var overlay = document.getElementById('startOverlay');
   var btn = document.getElementById('startBtn');
-  function handleStart(e){ startDisplay(e); }
-  // Use touchend on touch devices (prevents 300ms click delay), click as fallback
-  overlay.addEventListener('touchend', handleStart, {passive:false});
+  var fired = false;
+  function handleStart(e){
+    e.stopPropagation();
+    if(fired) return;
+    fired = true;
+    startDisplay();
+    setTimeout(function(){ fired = false; }, 800);
+  }
+  overlay.addEventListener('touchend', handleStart, {passive:true});
   overlay.addEventListener('click', handleStart, false);
-  btn.addEventListener('touchend', function(e){ e.stopPropagation(); startDisplay(e); }, {passive:false});
-  btn.addEventListener('click', function(e){ e.stopPropagation(); startDisplay(e); }, false);
+  btn.addEventListener('touchend', function(e){ e.stopPropagation(); handleStart(e); }, {passive:true});
+  btn.addEventListener('click', function(e){ e.stopPropagation(); handleStart(e); }, false);
 })();
 
 // ── Build counter panels ──
