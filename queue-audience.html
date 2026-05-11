@@ -184,19 +184,41 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
 
+// ── Button listener — attached FIRST before anything else can crash ──
+(function(){
+  var btn = document.getElementById('startBtn');
+  if(!btn) return;
+  btn.addEventListener('touchend', function(e){
+    e.preventDefault();
+    e.stopPropagation();
+    startDisplay();
+  }, { passive: false });
+  btn.addEventListener('click', function(e){
+    e.stopPropagation();
+    startDisplay();
+  });
+})();
+
 // ── Firebase init ──
-var firebaseConfig = {
-  apiKey: "AIzaSyD1jlmo6pdJhqwjbRDMby9cTBHzazRejcE",
-  authDomain: "queuesystem-fe374.firebaseapp.com",
-  databaseURL: "https://queuesystem-fe374-default-rtdb.firebaseio.com",
-  projectId: "queuesystem-fe374",
-  storageBucket: "queuesystem-fe374.firebasestorage.app",
-  messagingSenderId: "314957208142",
-  appId: "1:314957208142:web:51f960c760f8682e77811f"
-};
-firebase.initializeApp(firebaseConfig);
-var db = firebase.database();
-var stateRef = db.ref('queueState');
+var db, stateRef;
+try {
+  var firebaseConfig = {
+    apiKey: "AIzaSyD1jlmo6pdJhqwjbRDMby9cTBHzazRejcE",
+    authDomain: "queuesystem-fe374.firebaseapp.com",
+    databaseURL: "https://queuesystem-fe374-default-rtdb.firebaseio.com",
+    projectId: "queuesystem-fe374",
+    storageBucket: "queuesystem-fe374.firebasestorage.app",
+    messagingSenderId: "314957208142",
+    appId: "1:314957208142:web:51f960c760f8682e77811f"
+  };
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.database();
+  stateRef = db.ref('queueState');
+} catch(e){
+  console.error('Firebase failed to initialize:', e);
+  var fbEl = document.getElementById('fbLiveIndicator');
+  if(fbEl) fbEl.style.opacity = '0.2';
+}
 
 // ── Constants ──
 var COUNTER_NAMES = ['DMW Desk 2','DMW Desk 3','DMW Desk 4','DMW Desk 5'];
@@ -250,17 +272,7 @@ function startDisplay(){
     setTimeout(function(){ window.speechSynthesis.getVoices(); }, 1500);
   }
 }
-// ── Attach start button listeners (single source of truth) ──
-var btn = document.getElementById('startBtn');
-btn.addEventListener('touchend', function(e){
-  e.preventDefault();
-  e.stopPropagation();
-  startDisplay();
-}, { passive: false });
-btn.addEventListener('click', function(e){
-  e.stopPropagation();
-  startDisplay();
-});
+
 
 // ── Build counter panels ──
 function buildCounters(){
@@ -395,7 +407,7 @@ function renderAll(){ renderCounters(); renderStats(); }
 buildCounters();
 
 // ── Firebase real-time listener ──
-stateRef.on('value', function(snap){
+if(stateRef) stateRef.on('value', function(snap){
   document.getElementById('fbLiveIndicator').style.opacity = '1';
   var data = snap.val() || {};
   var newReset = data.resetFlag || null;
