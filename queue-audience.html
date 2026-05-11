@@ -125,10 +125,10 @@
 <div class="bg-grid"></div>
 <div class="bg-vignette"></div>
 
-<div id="startOverlay" onclick="startDisplay()">
+<div id="startOverlay">
   <div class="start-title">QUEUE<span>SYS</span></div>
   <div class="start-sub">Audience Display · Voice Announcements</div>
-  <button class="start-btn" id="startBtn" onclick="startDisplay()">▶ TAP TO START</button>
+  <button class="start-btn" id="startBtn">▶ TAP TO START</button>
   <div class="start-note">Tap once to enable voice announcements.<br>This screen will announce numbers automatically.</div>
 </div>
 
@@ -184,41 +184,19 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
 
-// ── Button listener — attached FIRST before anything else can crash ──
-(function(){
-  var btn = document.getElementById('startBtn');
-  if(!btn) return;
-  btn.addEventListener('touchend', function(e){
-    e.preventDefault();
-    e.stopPropagation();
-    startDisplay();
-  }, { passive: false });
-  btn.addEventListener('click', function(e){
-    e.stopPropagation();
-    startDisplay();
-  });
-})();
-
 // ── Firebase init ──
-var db, stateRef;
-try {
-  var firebaseConfig = {
-    apiKey: "AIzaSyD1jlmo6pdJhqwjbRDMby9cTBHzazRejcE",
-    authDomain: "queuesystem-fe374.firebaseapp.com",
-    databaseURL: "https://queuesystem-fe374-default-rtdb.firebaseio.com",
-    projectId: "queuesystem-fe374",
-    storageBucket: "queuesystem-fe374.firebasestorage.app",
-    messagingSenderId: "314957208142",
-    appId: "1:314957208142:web:51f960c760f8682e77811f"
-  };
-  firebase.initializeApp(firebaseConfig);
-  db = firebase.database();
-  stateRef = db.ref('queueState');
-} catch(e){
-  console.error('Firebase failed to initialize:', e);
-  var fbEl = document.getElementById('fbLiveIndicator');
-  if(fbEl) fbEl.style.opacity = '0.2';
-}
+var firebaseConfig = {
+  apiKey: "AIzaSyD1jlmo6pdJhqwjbRDMby9cTBHzazRejcE",
+  authDomain: "queuesystem-fe374.firebaseapp.com",
+  databaseURL: "https://queuesystem-fe374-default-rtdb.firebaseio.com",
+  projectId: "queuesystem-fe374",
+  storageBucket: "queuesystem-fe374.firebasestorage.app",
+  messagingSenderId: "314957208142",
+  appId: "1:314957208142:web:51f960c760f8682e77811f"
+};
+firebase.initializeApp(firebaseConfig);
+var db = firebase.database();
+var stateRef = db.ref('queueState');
 
 // ── Constants ──
 var COUNTER_NAMES = ['DMW Desk 2','DMW Desk 3','DMW Desk 4','DMW Desk 5'];
@@ -250,8 +228,9 @@ setInterval(updateClock, 1000);
 updateClock();
 
 // ── Audio unlock ──
-function startDisplay(){
-  if(audioUnlocked) return; // prevent double-call
+function startDisplay(e){
+  if(e){ e.preventDefault(); e.stopPropagation(); }
+  if(audioUnlocked) return;
   audioUnlocked = true;
   document.getElementById('startOverlay').classList.add('hidden');
   try {
@@ -259,7 +238,7 @@ function startDisplay(){
     var buf = audioCtx.createBuffer(1,1,22050);
     var src = audioCtx.createBufferSource();
     src.buffer = buf; src.connect(audioCtx.destination); src.start(0);
-  } catch(e){ console.warn('AudioContext:', e); }
+  } catch(e2){ console.warn('AudioContext:', e2); }
   if(window.speechSynthesis){
     window.speechSynthesis.cancel();
     // Pre-load voices by speaking a silent utterance
@@ -273,6 +252,17 @@ function startDisplay(){
   }
 }
 
+// ── Attach start overlay events (single unified handler to avoid double-fire on touch) ──
+(function(){
+  var overlay = document.getElementById('startOverlay');
+  var btn = document.getElementById('startBtn');
+  function handleStart(e){ startDisplay(e); }
+  // Use touchend on touch devices (prevents 300ms click delay), click as fallback
+  overlay.addEventListener('touchend', handleStart, {passive:false});
+  overlay.addEventListener('click', handleStart, false);
+  btn.addEventListener('touchend', function(e){ e.stopPropagation(); startDisplay(e); }, {passive:false});
+  btn.addEventListener('click', function(e){ e.stopPropagation(); startDisplay(e); }, false);
+})();
 
 // ── Build counter panels ──
 function buildCounters(){
@@ -403,11 +393,8 @@ function renderStats(){
 
 function renderAll(){ renderCounters(); renderStats(); }
 
-// ── Build counter panels on startup ──
-buildCounters();
-
 // ── Firebase real-time listener ──
-if(stateRef) stateRef.on('value', function(snap){
+stateRef.on('value', function(snap){
   document.getElementById('fbLiveIndicator').style.opacity = '1';
   var data = snap.val() || {};
   var newReset = data.resetFlag || null;
