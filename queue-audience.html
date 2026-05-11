@@ -125,10 +125,10 @@
 <div class="bg-grid"></div>
 <div class="bg-vignette"></div>
 
-<div id="startOverlay" onclick="startDisplay()" ontouchend="startDisplay()">
+<div id="startOverlay">
   <div class="start-title">QUEUE<span>SYS</span></div>
   <div class="start-sub">Audience Display · Voice Announcements</div>
-  <button class="start-btn" id="startBtn" onclick="startDisplay()" ontouchend="startDisplay()">▶ TAP TO START</button>
+  <button class="start-btn" id="startBtn">▶ TAP TO START</button>
   <div class="start-note">Tap once to enable voice announcements.<br>This screen will announce numbers automatically.</div>
 </div>
 
@@ -250,7 +250,21 @@ function startDisplay(){
     setTimeout(function(){ window.speechSynthesis.getVoices(); }, 1500);
   }
 }
-// startDisplay() is called directly via onclick/ontouchend on the overlay and button HTML
+// ── Attach start button listeners (single source of truth) ──
+document.addEventListener('DOMContentLoaded', function(){
+  var btn = document.getElementById('startBtn');
+  // touchend: call startDisplay and preventDefault to block the follow-up synthetic click
+  btn.addEventListener('touchend', function(e){
+    e.preventDefault();
+    e.stopPropagation();
+    startDisplay();
+  }, { passive: false });
+  // click: covers desktop mouse clicks (touchend+preventDefault suppresses duplicate on mobile)
+  btn.addEventListener('click', function(e){
+    e.stopPropagation();
+    startDisplay();
+  });
+});
 
 // ── Build counter panels ──
 function buildCounters(){
