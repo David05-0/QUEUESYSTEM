@@ -251,19 +251,15 @@ function startDisplay(){
   }
 }
 // ── Attach start button listeners (single source of truth) ──
-document.addEventListener('DOMContentLoaded', function(){
-  var btn = document.getElementById('startBtn');
-  // touchend: call startDisplay and preventDefault to block the follow-up synthetic click
-  btn.addEventListener('touchend', function(e){
-    e.preventDefault();
-    e.stopPropagation();
-    startDisplay();
-  }, { passive: false });
-  // click: covers desktop mouse clicks (touchend+preventDefault suppresses duplicate on mobile)
-  btn.addEventListener('click', function(e){
-    e.stopPropagation();
-    startDisplay();
-  });
+var btn = document.getElementById('startBtn');
+btn.addEventListener('touchend', function(e){
+  e.preventDefault();
+  e.stopPropagation();
+  startDisplay();
+}, { passive: false });
+btn.addEventListener('click', function(e){
+  e.stopPropagation();
+  startDisplay();
 });
 
 // ── Build counter panels ──
