@@ -125,10 +125,10 @@
 <div class="bg-grid"></div>
 <div class="bg-vignette"></div>
 
-<div id="startOverlay">
+<div id="startOverlay" onclick="startDisplay()" ontouchend="startDisplay()">
   <div class="start-title">QUEUE<span>SYS</span></div>
   <div class="start-sub">Audience Display · Voice Announcements</div>
-  <button class="start-btn" id="startBtn">▶ TAP TO START</button>
+  <button class="start-btn" id="startBtn" onclick="startDisplay()" ontouchend="startDisplay()">▶ TAP TO START</button>
   <div class="start-note">Tap once to enable voice announcements.<br>This screen will announce numbers automatically.</div>
 </div>
 
@@ -229,6 +229,7 @@ updateClock();
 
 // ── Audio unlock ──
 function startDisplay(){
+  if(audioUnlocked) return; // prevent double-call
   audioUnlocked = true;
   document.getElementById('startOverlay').classList.add('hidden');
   try {
@@ -249,28 +250,7 @@ function startDisplay(){
     setTimeout(function(){ window.speechSynthesis.getVoices(); }, 1500);
   }
 }
-// Attach listeners inside DOMContentLoaded to guarantee DOM is ready
-function attachStartListeners(){
-  var btn = document.getElementById('startBtn');
-  var overlay = document.getElementById('startOverlay');
-  if(!btn || !overlay){ setTimeout(attachStartListeners, 50); return; }
-
-  function onStart(e){
-    e.preventDefault();
-    e.stopPropagation();
-    startDisplay();
-  }
-  // Make entire overlay tappable — not just the button
-  overlay.addEventListener('click', onStart);
-  overlay.addEventListener('touchend', onStart);
-  btn.addEventListener('click', onStart);
-  btn.addEventListener('touchend', onStart);
-}
-if(document.readyState === 'loading'){
-  document.addEventListener('DOMContentLoaded', attachStartListeners);
-} else {
-  attachStartListeners();
-}
+// startDisplay() is called directly via onclick/ontouchend on the overlay and button HTML
 
 // ── Build counter panels ──
 function buildCounters(){
