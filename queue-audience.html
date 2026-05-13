@@ -508,10 +508,13 @@ function runAnnouncement(ticket){
   if(flashTimer){ clearTimeout(flashTimer); flashTimer = null; }
   document.getElementById('callFlash').classList.add('show');
   flashTimer = setTimeout(function(){
-    document.getElementById('callFlash').classList.remove('show');
+    // Safety net: only fires if doSpeak never completed
     flashTimer = null;
+    document.getElementById('callFlash').classList.remove('show');
+    isAnnouncing = false; lockedCounter = null;
+    window.speechSynthesis && window.speechSynthesis.cancel();
     setTimeout(processAnnounceQueue, announceQueue.length > 0 ? COOLDOWN_MS : 0);
-  }, 12000);
+  }, 15000);
 
   var numEl = document.getElementById('cpnum-' + ticket.counter);
   if(numEl){ numEl.classList.remove('pop'); void numEl.offsetWidth; numEl.classList.add('pop'); setTimeout(function(){ numEl.classList.remove('pop'); }, 700); }
@@ -522,10 +525,8 @@ function runAnnouncement(ticket){
   setTimeout(function(){
     doSpeak(ticket, function(){
       if(flashTimer){ clearTimeout(flashTimer); flashTimer = null; }
-      setTimeout(function(){
-        document.getElementById('callFlash').classList.remove('show');
-        setTimeout(processAnnounceQueue, announceQueue.length > 0 ? COOLDOWN_MS : 0);
-      }, 400);
+      document.getElementById('callFlash').classList.remove('show');
+      setTimeout(processAnnounceQueue, announceQueue.length > 0 ? COOLDOWN_MS : 0);
     });
   }, 350);
 }
@@ -606,7 +607,11 @@ function doSpeak(ticket, onDone){
 
     u.onend = finish;
     u.onerror = function(e){
-      if(e.error === 'canceled') return;
+      if(e.error === 'canceled'){
+        // canceled means we intentionally stopped — treat as done
+        finish();
+        return;
+      }
       if(retriesLeft > 0){
         setTimeout(function(){ window.speechSynthesis.cancel(); setTimeout(function(){ attemptSpeak(retriesLeft-1); }, 300); }, 200);
       } else { finish(); }
@@ -618,8 +623,6 @@ function doSpeak(ticket, onDone){
       else { finish(); }
     }, 3000);
     u.onstart = function(){ clearTimeout(startTimer); };
-
-    setTimeout(finish, 20000);
 
     // Chrome keep-alive: ping every 1s to prevent mid-sentence pause
     keepAlive = setInterval(function(){
