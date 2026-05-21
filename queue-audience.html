@@ -453,6 +453,7 @@ function nowTime(){
 // ── Announcement queue ──
 function triggerCallFlash(ticket){
   if(isAnnouncing && lockedCounter !== ticket.counter){
+    // Different counter is announcing — queue this one
     if(!announceQueue.find(function(q){ return q.counter===ticket.counter && q.id===ticket.id; })){
       announceQueue.push(Object.assign({}, ticket, {calledAt: ticket.calledAt||Date.now()}));
       announceQueue.sort(function(a,b){ return a.calledAt-b.calledAt; });
@@ -460,15 +461,18 @@ function triggerCallFlash(ticket){
     return;
   }
   if(isAnnouncing && lockedCounter === ticket.counter){
-    window.speechSynthesis && window.speechSynthesis.cancel();
-    isAnnouncing = false; lockedCounter = null;
+    // Same counter re-called — cancel current and replace
     if(flashTimer){ clearTimeout(flashTimer); flashTimer = null; }
+    window.speechSynthesis && window.speechSynthesis.cancel();
     document.getElementById('callFlash').classList.remove('show');
+    // isAnnouncing stays true — we're about to start a new one immediately
   }
   announceQueue = announceQueue.filter(function(q){ return q.counter !== ticket.counter; });
-  announceQueue.push(Object.assign({}, ticket, {calledAt: ticket.calledAt||Date.now()}));
-  announceQueue.sort(function(a,b){ return a.calledAt-b.calledAt; });
-  if(!isAnnouncing) processAnnounceQueue();
+  announceQueue.unshift(Object.assign({}, ticket, {calledAt: ticket.calledAt||Date.now()}));
+  if(!isAnnouncing){
+    isAnnouncing = true;
+  }
+  processAnnounceQueue();
 }
 
 function processAnnounceQueue(){
@@ -505,15 +509,26 @@ function runAnnouncement(ticket){
   else { fullnameEl.style.display = 'none'; }
   document.getElementById('cfPriority').style.display = ticket.priority === 'priority' ? 'inline-flex' : 'none';
 
+  // Cancel any previous safety-net timer
   if(flashTimer){ clearTimeout(flashTimer); flashTimer = null; }
   document.getElementById('callFlash').classList.add('show');
-  flashTimer = setTimeout(function(){
-    // Safety net: only fires if doSpeak never completed
-    flashTimer = null;
-    document.getElementById('callFlash').classList.remove('show');
+
+  // Each announcement gets its own "done" flag so stale closures can't fire twice
+  var announceDone = false;
+  function onAnnounceDone(){
+    if(announceDone) return;
+    announceDone = true;
+    if(flashTimer){ clearTimeout(flashTimer); flashTimer = null; }
     isAnnouncing = false; lockedCounter = null;
-    window.speechSynthesis && window.speechSynthesis.cancel();
+    document.getElementById('callFlash').classList.remove('show');
     setTimeout(processAnnounceQueue, announceQueue.length > 0 ? COOLDOWN_MS : 0);
+  }
+
+  // Safety-net: if speech never finishes, force-advance after 15s
+  flashTimer = setTimeout(function(){
+    flashTimer = null;
+    window.speechSynthesis && window.speechSynthesis.cancel();
+    onAnnounceDone();
   }, 15000);
 
   var numEl = document.getElementById('cpnum-' + ticket.counter);
@@ -523,11 +538,7 @@ function runAnnouncement(ticket){
 
   playChime();
   setTimeout(function(){
-    doSpeak(ticket, function(){
-      if(flashTimer){ clearTimeout(flashTimer); flashTimer = null; }
-      document.getElementById('callFlash').classList.remove('show');
-      setTimeout(processAnnounceQueue, announceQueue.length > 0 ? COOLDOWN_MS : 0);
-    });
+    doSpeak(ticket, onAnnounceDone);
   }, 350);
 }
 
