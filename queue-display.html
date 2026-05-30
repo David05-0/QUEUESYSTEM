@@ -774,7 +774,6 @@ let cbmRecords      = [];   // own records for current counter
 let compiledRecords = [];   // Desk 2 only: own + all transferred combined
 let cbmRef          = null;
 let _desk2TransferListeners = []; // Firebase listeners for Desk 2 incoming transfers
-let _archivedDateKey = null; // set after Save for Day — excludes today's archived records from compiled view
 
 function initCbmListener(){
   // Detach old listeners
@@ -808,12 +807,15 @@ function initCbmListener(){
   if(btn) btn.style.display = activeCounter === 1 ? 'none' : '';
 }
 
-// ── Desk 2: merge own + transferred (live) + allRecords (permanent saved) ──
+// ── Desk 2: merge own (live) + transferred (live) only ──
+// allRecords is a permanent historical archive and is NOT mixed into the daily compiled view.
+// The All Records tab shows only today's live data (own + transferred).
+// After Save for Day, both nodes are cleared so this list returns to zero.
 function rebuildCompiledRecords(){
   if(activeCounter !== 1) return Promise.resolve();
   const own = cbmRecords.map(r => Object.assign({}, r, { _source: 'own' }));
 
-  // Fetch live transfer logs
+  // Fetch live transfer logs only — no allRecords
   const transferPromises = [2, 3, 4].map(cIdx =>
     db.ref('transferLog/counter_' + cIdx).once('value').then(snap => {
       const data = snap.val();
@@ -821,24 +823,11 @@ function rebuildCompiledRecords(){
     })
   );
 
-  // Fetch permanently saved allRecords — force server read to bypass cache
-  const allRecordsPromise = new Promise(function(resolve) {
-    db.ref('allRecords').once('value', function(snap) {
-      const data = snap.val();
-      resolve(data ? Object.values(data).map(r => Object.assign({}, r, { _source: r._source || 'saved' })) : []);
-    }, function(){ resolve([]); });
-  });
+  return Promise.all(transferPromises).then(arrays => {
+    const liveTransferred = [].concat(...arrays);
+    compiledRecords = [...own, ...liveTransferred].sort((a,b) => (a.ts||0) - (b.ts||0));
 
-  return Promise.all([...transferPromises, allRecordsPromise]).then(arrays => {
-    const liveTransferred = [].concat(...arrays.slice(0,3));
-    // Exclude allRecords that belong to the just-archived date — they are already saved
-    // and should not re-appear in the live compiled view after Save for Day
-    const saved = _archivedDateKey
-      ? arrays[3].filter(r => r.savedDate !== _archivedDateKey)
-      : arrays[3];
-    compiledRecords = [...own, ...liveTransferred, ...saved].sort((a,b) => (a.ts||0) - (b.ts||0));
-
-    // De-duplicate by Firebase key ts+fullName
+    // De-duplicate by ts+fullName
     const seen = new Set();
     compiledRecords = compiledRecords.filter(r => {
       const key = (r.ts||'') + '|' + (r.fullName||'');
@@ -852,7 +841,7 @@ function rebuildCompiledRecords(){
     const compBadge = document.getElementById('tabCompiledCount');
     if(compBadge) compBadge.textContent = compiledRecords.length;
 
-    // Always render if All Records tab is open
+    // Re-render if All Records tab is currently open
     const compTab = document.getElementById('ciTabCompiled');
     if(compTab && compTab.style.display !== 'none') _renderCompiledListNow();
   });
@@ -1832,7 +1821,6 @@ function refreshLoginCounts(){
 
 function login(id){
   activeCounter=id; myHistory=[]; myServed=0; activeTicketId=null; myServedLog=[]; myUnservedLog=[];
-  _archivedDateKey = null; // reset archive filter on every fresh login
   sessionStorage.setItem('ssCounter', id);
   sessionStorage.removeItem('ssTicketId');
   const view=document.getElementById('counterView');
@@ -2611,9 +2599,6 @@ function confirmSaveForDay(){
       transferredRecords = [];
       compiledRecords = [];
 
-      // Step 6: Mark this dateKey as archived so rebuildCompiledRecords will
-      // filter out today's allRecords (they are saved, not live any more)
-      _archivedDateKey = dateKey;
 
       // Step 7: Immediately render empty lists so the UI clears right away
       renderCbmList();
