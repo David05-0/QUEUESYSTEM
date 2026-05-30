@@ -791,17 +791,16 @@ function initCbmListener(){
     if(activeCounter === 1) rebuildCompiledRecords();
   });
 
-  // ── Desk 2 only: also listen to transferLog from counters 3-5 + allRecords ──
+  // ── Desk 2 only: listen to transferLog from counters 3-5 ──
+  // allRecords is a permanent archive — no live listener needed.
+  // It is fetched on-demand when opening the All Records tab.
+  // A live listener would re-populate the compiled list after Save for Day.
   if(activeCounter === 1){
     [2, 3, 4].forEach(cIdx => {
       const ref = db.ref('transferLog/counter_' + cIdx);
       ref.on('value', () => rebuildCompiledRecords());
       _desk2TransferListeners.push(() => ref.off('value'));
     });
-    // Live listener on allRecords — so saved records appear immediately in All Records tab
-    const allRef = db.ref('allRecords');
-    allRef.on('value', () => rebuildCompiledRecords());
-    _desk2TransferListeners.push(() => allRef.off('value'));
   }
 
   // Show/hide transfer button: only visible for counters 3-5
