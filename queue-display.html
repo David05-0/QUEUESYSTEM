@@ -774,6 +774,7 @@ let cbmRecords      = [];   // own records for current counter
 let compiledRecords = [];   // Desk 2 only: own + all transferred combined
 let cbmRef          = null;
 let _desk2TransferListeners = []; // Firebase listeners for Desk 2 incoming transfers
+let _archivedDateKey = null; // set after Save for Day — excludes today's archived records from compiled view
 
 function initCbmListener(){
   // Detach old listeners
@@ -831,7 +832,11 @@ function rebuildCompiledRecords(){
 
   return Promise.all([...transferPromises, allRecordsPromise]).then(arrays => {
     const liveTransferred = [].concat(...arrays.slice(0,3));
-    const saved           = arrays[3];
+    // Exclude allRecords that belong to the just-archived date — they are already saved
+    // and should not re-appear in the live compiled view after Save for Day
+    const saved = _archivedDateKey
+      ? arrays[3].filter(r => r.savedDate !== _archivedDateKey)
+      : arrays[3];
     compiledRecords = [...own, ...liveTransferred, ...saved].sort((a,b) => (a.ts||0) - (b.ts||0));
 
     // De-duplicate by Firebase key ts+fullName
@@ -1828,6 +1833,7 @@ function refreshLoginCounts(){
 
 function login(id){
   activeCounter=id; myHistory=[]; myServed=0; activeTicketId=null; myServedLog=[]; myUnservedLog=[];
+  _archivedDateKey = null; // reset archive filter on every fresh login
   sessionStorage.setItem('ssCounter', id);
   sessionStorage.removeItem('ssTicketId');
   const view=document.getElementById('counterView');
@@ -2601,19 +2607,40 @@ function confirmSaveForDay(){
       }));
     })
     .then(function(){
-      // Step 5: Reset local state
-      cbmRecords=[]; transferredRecords=[];
+      // Step 5: Reset ALL local state — records are archived, counter starts fresh
+      cbmRecords = [];
+      transferredRecords = [];
+      compiledRecords = [];
 
-      // Step 6: Rebuild from allRecords only (live nodes are now empty)
-      return rebuildCompiledRecords();
-    })
-    .then(function(){
+      // Step 6: Mark this dateKey as archived so rebuildCompiledRecords will
+      // filter out today's allRecords (they are saved, not live any more)
+      _archivedDateKey = dateKey;
+
+      // Step 7: Immediately render empty lists so the UI clears right away
       renderCbmList();
-      // Step 7: Re-attach listeners for new records coming in
+      var compList = document.getElementById('compiledList');
+      var compEmpty = document.getElementById('compiledEmpty');
+      if(compList) compList.innerHTML = '';
+      if(compEmpty) compEmpty.style.display = '';
+      var trList = document.getElementById('trList');
+      var trEmpty = document.getElementById('trEmpty');
+      if(trList) trList.innerHTML = '';
+      if(trEmpty) trEmpty.style.display = '';
+      // Reset tab badges
+      var myBadge = document.getElementById('tabMyCount');
+      if(myBadge) myBadge.textContent = '0';
+      var trBadge = document.getElementById('tabTrCount');
+      if(trBadge) trBadge.textContent = '0';
+      var compBadge = document.getElementById('tabCompiledCount');
+      if(compBadge) compBadge.textContent = '0';
+
+      // Step 8: Re-attach listeners for new records coming in after the archive
       initCbmListener();
+
+      // Step 9: Close modal and notify
       closeSaveForDayModal();
       var total = snap.totalRecords;
-      showToast('Saved '+total+' record'+(total!==1?'s':'')+' for '+dateKey+' — visible in All Records');
+      showToast('\uD83D\uDCBE Archived '+total+' record'+(total!==1?'s':'')+' for '+dateKey+' — Counter 2 is ready for a new day');
       btn.disabled=false; btn.textContent='CONFIRM & SAVE';
     })
     .catch(function(err){
