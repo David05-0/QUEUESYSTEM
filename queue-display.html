@@ -2870,27 +2870,36 @@ function flattenFirebaseNode(node){
 }
 
 function analyzeImport(data, fileName){
-  // Support both a full Firebase export (root has many nodes) and a partial export
-  // Accepted structures:
-  //   { counterBmRecords: { counter_1: {...}, counter_2: {...} }, transferLog: {...}, allRecords: {...}, bmRecords: {...} }
-  //   or the root IS one of those nodes directly
-  var counterBmRecords = data.counterBmRecords || null;
-  var transferLog      = data.transferLog      || null;
-  var allRecords       = data.allRecords       || null;
-  var bmRecords        = data.bmRecords        || null;
+  // Firebase sometimes wraps the whole export under the database name as a root key,
+  // e.g. { "queuesystem-fe374-default-rtdb": { allRecords: {...}, ... } }
+  // Detect that and unwrap it automatically.
+  var KNOWN_NODES = ['counterBmRecords','transferLog','allRecords','bmRecords','queueState','eodSaves','cbmDailyArchive'];
+  var root = data;
+  var rootKeys = Object.keys(data || {});
+  if(rootKeys.length === 1 && !KNOWN_NODES.includes(rootKeys[0])){
+    // Likely a database-name wrapper — unwrap one level
+    root = data[rootKeys[0]];
+  }
+
+  var counterBmRecords = root.counterBmRecords || null;
+  var transferLog      = root.transferLog      || null;
+  var allRecords       = root.allRecords       || null;
+  var bmRecords        = root.bmRecords        || null;
 
   // Count records in each section
   var ownRecs = 0;
   if(counterBmRecords){
     Object.keys(counterBmRecords).forEach(function(k){
-      ownRecs += Object.keys(counterBmRecords[k] || {}).length;
+      var sub = counterBmRecords[k];
+      if(sub && typeof sub === 'object') ownRecs += Object.keys(sub).length;
     });
   }
 
   var trRecs = 0;
   if(transferLog){
     Object.keys(transferLog).forEach(function(k){
-      trRecs += Object.keys(transferLog[k] || {}).length;
+      var sub = transferLog[k];
+      if(sub && typeof sub === 'object') trRecs += Object.keys(sub).length;
     });
   }
 
@@ -2899,7 +2908,10 @@ function analyzeImport(data, fileName){
 
   var total = ownRecs + trRecs + allRecs + bmRecs;
   if(total === 0){
-    showToast('⚠ No recognizable records found in this file');
+    // Show what top-level keys were actually found to help diagnose
+    var foundKeys = Object.keys(root || {}).join(', ') || '(none)';
+    showToast('⚠ No records found. Top-level keys: ' + foundKeys);
+    console.warn('[Import] Top-level keys found:', Object.keys(root || {}));
     return;
   }
 
