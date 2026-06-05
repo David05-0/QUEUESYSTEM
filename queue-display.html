@@ -530,7 +530,7 @@
         <button onclick="printCbmRecords()" title="Print records" style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(240,192,64,0.1);border:1px solid rgba(240,192,64,0.35);color:var(--accent);border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.background='rgba(240,192,64,0.2)'" onmouseout="this.style.background='rgba(240,192,64,0.1)'">🖨 Print</button>
         <button onclick="restoreLocalBackup()" title="Restore from local backup" style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(36,113,163,0.12);border:1px solid rgba(36,113,163,0.4);color:var(--c2);border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.background='rgba(36,113,163,0.22)'" onmouseout="this.style.background='rgba(36,113,163,0.12)'">↺ Restore</button>
         <button id="btnSaveForDay" onclick="openSaveForDayModal()" title="Save all records for the day to archive" style="display:none;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(125,60,152,0.12);border:1px solid rgba(125,60,152,0.45);color:var(--c4);border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.background='rgba(125,60,152,0.25)'" onmouseout="this.style.background='rgba(125,60,152,0.12)'">&#x1F4BE; Save for Day</button>
-        <button onclick="clearAllCbmRecords()" title="Clear all records"
+        <button id="btnImportJson" onclick="openImportJsonModal()" title="Import Firebase JSON export" style="display:none;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(230,126,34,0.1);border:1px solid rgba(230,126,34,0.4);color:var(--c1);border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.background='rgba(230,126,34,0.2)'" onmouseout="this.style.background='rgba(230,126,34,0.1)'">📥 Import JSON</button>
         <button onclick="clearAllCbmRecords()" title="Clear all records" style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(255,95,95,0.08);border:1px solid rgba(255,95,95,0.35);color:var(--red);border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.background='rgba(255,95,95,0.18)'" onmouseout="this.style.background='rgba(255,95,95,0.08)'">🗑 Clear All</button>
         <button onclick="closeClientInfo()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:3px;padding:4px 10px;cursor:pointer;font-size:12px">✕</button>
       </div>
@@ -953,6 +953,7 @@ function openClientInfo(){
   const lbl = document.getElementById('ciCounterLabel');
   if(lbl && activeCounter) lbl.textContent = '— ' + COUNTER_NAMES[activeCounter-1];
   var sfdBtn=document.getElementById('btnSaveForDay');if(sfdBtn) sfdBtn.style.display=(activeCounter===1)?'':'none';
+  var importBtn=document.getElementById('btnImportJson');if(importBtn) importBtn.style.display=(activeCounter===1)?'':'none';
   switchCiTab('my');
   bindTransferLogListener();
   restoreDraft();
@@ -2729,6 +2730,261 @@ window.confirmSaveForDay=confirmSaveForDay;
     </div>
   </div>
 </div>
+
+
+<!-- ── Import JSON Modal (Desk 2 only) ── -->
+<div id="importJsonBackdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:9999;align-items:center;justify-content:center;backdrop-filter:blur(4px)">
+  <div style="background:#111118;border:1.5px solid rgba(230,126,34,0.55);border-radius:6px;width:min(540px,95vw);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.9);display:flex;flex-direction:column">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid rgba(230,126,34,0.25);background:rgba(230,126,34,0.08)">
+      <div style="display:flex;align-items:center;gap:9px">
+        <span style="font-size:18px">📥</span>
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:0.1em;color:var(--c1)">IMPORT FIREBASE JSON</div>
+          <div style="font-size:7.5px;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);margin-top:1px">DMW DESK 2 — RESTORE FROM EXPORTED DATA</div>
+        </div>
+      </div>
+      <button onclick="closeImportJsonModal()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:3px;padding:4px 10px;cursor:pointer;font-size:14px">✕</button>
+    </div>
+
+    <!-- Instructions -->
+    <div style="padding:14px 18px;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.02)">
+      <div style="font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">HOW TO EXPORT FROM FIREBASE</div>
+      <ol style="font-size:9px;color:rgba(238,238,246,0.65);line-height:1.9;padding-left:16px;margin:0">
+        <li>Go to <span style="color:var(--c1);font-family:'DM Mono',monospace">console.firebase.google.com</span></li>
+        <li>Open your project → Realtime Database</li>
+        <li>Click the <strong style="color:var(--text)">⋮ menu</strong> (top-right of the data panel) → <strong style="color:var(--text)">Export JSON</strong></li>
+        <li>Save the file, then drag it here or click to upload</li>
+      </ol>
+      <div style="margin-top:10px;font-size:8px;color:rgba(238,238,246,0.4);line-height:1.6">
+        Accepted nodes: <span style="color:var(--c1);font-family:'DM Mono',monospace">counterBmRecords</span>, <span style="color:var(--c1);font-family:'DM Mono',monospace">transferLog</span>, <span style="color:var(--c1);font-family:'DM Mono',monospace">allRecords</span>, <span style="color:var(--c1);font-family:'DM Mono',monospace">bmRecords</span>.<br>
+        Records already in Firebase will <strong style="color:var(--text)">not be overwritten</strong> — only missing ones are added.
+      </div>
+    </div>
+
+    <!-- Drop zone -->
+    <div style="padding:18px">
+      <div id="importDropZone" style="border:2px dashed rgba(230,126,34,0.4);border-radius:5px;padding:32px 20px;text-align:center;cursor:pointer;transition:all 0.2s;background:rgba(230,126,34,0.04)"
+        onclick="document.getElementById('importFileInput').click()"
+        ondragover="event.preventDefault();this.style.borderColor='var(--c1)';this.style.background='rgba(230,126,34,0.1)'"
+        ondragleave="this.style.borderColor='rgba(230,126,34,0.4)';this.style.background='rgba(230,126,34,0.04)'"
+        ondrop="event.preventDefault();this.style.borderColor='rgba(230,126,34,0.4)';this.style.background='rgba(230,126,34,0.04)';handleImportFileDrop(event.dataTransfer.files[0])">
+        <div style="font-size:28px;margin-bottom:8px">📂</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:0.1em;color:var(--c1)">DROP JSON FILE HERE</div>
+        <div style="font-size:9px;color:var(--muted);margin-top:4px;letter-spacing:0.08em">or click to browse</div>
+        <input type="file" id="importFileInput" accept=".json,application/json" style="display:none" onchange="handleImportFileSelect(this)">
+      </div>
+
+      <!-- Preview area -->
+      <div id="importPreview" style="display:none;margin-top:14px">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px">
+          <div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:4px;padding:10px;text-align:center">
+            <div id="impCountOwn" style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--teal)">0</div>
+            <div style="font-size:7px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-top:2px">Counter Rec.</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:4px;padding:10px;text-align:center">
+            <div id="impCountTransfer" style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--c2)">0</div>
+            <div style="font-size:7px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-top:2px">Transfer Log</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:4px;padding:10px;text-align:center">
+            <div id="impCountAll" style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--green)">0</div>
+            <div style="font-size:7px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-top:2px">All Records</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:4px;padding:10px;text-align:center">
+            <div id="impCountBm" style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--c1)">0</div>
+            <div style="font-size:7px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-top:2px">BM Records</div>
+          </div>
+        </div>
+        <div id="impFileName" style="font-size:8px;color:var(--muted);text-align:center;margin-bottom:12px;font-family:'DM Mono',monospace"></div>
+        <div style="display:flex;gap:8px">
+          <button onclick="resetImport()" style="flex:1;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;padding:10px;border-radius:3px;cursor:pointer;background:transparent;color:var(--muted);border:1.5px solid var(--border)">✕ Clear</button>
+          <button id="btnConfirmImport" onclick="confirmImport()" style="flex:2;font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:0.1em;padding:11px;border-radius:3px;cursor:pointer;background:rgba(230,126,34,0.85);color:#fff;border:none">📥 IMPORT TO FIREBASE</button>
+        </div>
+        <div id="impWarning" style="display:none;margin-top:8px;font-size:8px;color:var(--amber);background:rgba(154,111,0,0.1);border:1px solid rgba(154,111,0,0.3);border-radius:3px;padding:8px 10px;line-height:1.6"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+//  IMPORT JSON — Desk 2 only
+// ══════════════════════════════════════════════════════════
+var _importParsed = null; // holds the parsed JSON data ready to import
+
+function openImportJsonModal(){
+  resetImport();
+  document.getElementById('importJsonBackdrop').style.display = 'flex';
+}
+function closeImportJsonModal(){
+  document.getElementById('importJsonBackdrop').style.display = 'none';
+  resetImport();
+}
+function resetImport(){
+  _importParsed = null;
+  document.getElementById('importPreview').style.display = 'none';
+  document.getElementById('importDropZone').style.display = '';
+  document.getElementById('impWarning').style.display = 'none';
+  var fi = document.getElementById('importFileInput');
+  if(fi) fi.value = '';
+}
+
+window.openImportJsonModal  = openImportJsonModal;
+window.closeImportJsonModal = closeImportJsonModal;
+window.resetImport          = resetImport;
+
+function handleImportFileSelect(input){
+  if(!input.files || !input.files[0]) return;
+  readImportFile(input.files[0]);
+}
+window.handleImportFileSelect = handleImportFileSelect;
+
+function handleImportFileDrop(file){
+  if(!file) return;
+  readImportFile(file);
+}
+window.handleImportFileDrop = handleImportFileDrop;
+
+function readImportFile(file){
+  if(!file.name.endsWith('.json') && file.type !== 'application/json'){
+    showToast('⚠ Please select a .json file');
+    return;
+  }
+  var reader = new FileReader();
+  reader.onload = function(e){
+    try {
+      var parsed = JSON.parse(e.target.result);
+      analyzeImport(parsed, file.name);
+    } catch(err) {
+      showToast('⚠ Invalid JSON — could not parse file');
+      console.error('JSON parse error:', err);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function flattenFirebaseNode(node){
+  // Firebase exports objects keyed by push-id; return flat array of values
+  if(!node || typeof node !== 'object') return [];
+  return Object.values(node).filter(function(v){ return v && typeof v === 'object'; });
+}
+
+function analyzeImport(data, fileName){
+  // Support both a full Firebase export (root has many nodes) and a partial export
+  // Accepted structures:
+  //   { counterBmRecords: { counter_1: {...}, counter_2: {...} }, transferLog: {...}, allRecords: {...}, bmRecords: {...} }
+  //   or the root IS one of those nodes directly
+  var counterBmRecords = data.counterBmRecords || null;
+  var transferLog      = data.transferLog      || null;
+  var allRecords       = data.allRecords       || null;
+  var bmRecords        = data.bmRecords        || null;
+
+  // Count records in each section
+  var ownRecs = 0;
+  if(counterBmRecords){
+    Object.keys(counterBmRecords).forEach(function(k){
+      ownRecs += Object.keys(counterBmRecords[k] || {}).length;
+    });
+  }
+
+  var trRecs = 0;
+  if(transferLog){
+    Object.keys(transferLog).forEach(function(k){
+      trRecs += Object.keys(transferLog[k] || {}).length;
+    });
+  }
+
+  var allRecs = allRecords ? Object.keys(allRecords).length : 0;
+  var bmRecs  = bmRecords  ? Object.keys(bmRecords).length  : 0;
+
+  var total = ownRecs + trRecs + allRecs + bmRecs;
+  if(total === 0){
+    showToast('⚠ No recognizable records found in this file');
+    return;
+  }
+
+  _importParsed = { counterBmRecords, transferLog, allRecords, bmRecords, fileName };
+
+  document.getElementById('impCountOwn').textContent      = ownRecs;
+  document.getElementById('impCountTransfer').textContent = trRecs;
+  document.getElementById('impCountAll').textContent      = allRecs;
+  document.getElementById('impCountBm').textContent       = bmRecs;
+  document.getElementById('impFileName').textContent      = '📄 ' + fileName + ' — ' + total + ' total record(s)';
+  document.getElementById('importPreview').style.display  = '';
+  document.getElementById('importDropZone').style.display = 'none';
+
+  // Warn if no allRecords — means transferred records may not be permanent
+  if(allRecs === 0 && (ownRecs > 0 || trRecs > 0)){
+    var warn = document.getElementById('impWarning');
+    warn.style.display = '';
+    warn.textContent = '⚠ This export has no allRecords node. Importing counterBmRecords and transferLog only — consider doing a full export for a complete restore.';
+  }
+}
+
+function confirmImport(){
+  if(!_importParsed){ showToast('⚠ No file loaded'); return; }
+  var btn = document.getElementById('btnConfirmImport');
+  btn.disabled = true;
+  btn.textContent = 'IMPORTING...';
+
+  var writes = [];
+  var skipped = 0;
+  var total = 0;
+
+  // Helper: write a node to Firebase using update() so existing records are NOT overwritten
+  function mergeNode(fbPath, nodeData){
+    if(!nodeData || typeof nodeData !== 'object') return;
+    Object.keys(nodeData).forEach(function(key){
+      var val = nodeData[key];
+      if(val && typeof val === 'object'){
+        // Check if this is a leaf record (has typical BM fields) or a sub-node
+        if(val.fullName || val.firstName || val.lastName || val.ts || val.records){
+          // It's a record — use set with a transaction-like approach:
+          // We use update on the parent so only MISSING keys are written
+          total++;
+          writes.push(
+            db.ref(fbPath + '/' + key).once('value').then(function(snap){
+              if(snap.exists()){
+                skipped++;
+                return Promise.resolve(); // already exists — skip
+              }
+              return db.ref(fbPath + '/' + key).set(val);
+            })
+          );
+        } else {
+          // It's a sub-node (e.g. counter_1, counter_2) — recurse
+          mergeNode(fbPath + '/' + key, val);
+        }
+      }
+    });
+  }
+
+  if(_importParsed.counterBmRecords) mergeNode('counterBmRecords', _importParsed.counterBmRecords);
+  if(_importParsed.transferLog)      mergeNode('transferLog',      _importParsed.transferLog);
+  if(_importParsed.allRecords)       mergeNode('allRecords',       _importParsed.allRecords);
+  if(_importParsed.bmRecords)        mergeNode('bmRecords',        _importParsed.bmRecords);
+
+  if(!writes.length){
+    showToast('⚠ Nothing to import from this file');
+    btn.disabled = false; btn.textContent = '📥 IMPORT TO FIREBASE';
+    return;
+  }
+
+  Promise.all(writes)
+    .then(function(){
+      var imported = total - skipped;
+      showToast('✓ Imported ' + imported + ' record(s) — ' + skipped + ' already existed (skipped)');
+      closeImportJsonModal();
+      btn.disabled = false; btn.textContent = '📥 IMPORT TO FIREBASE';
+    })
+    .catch(function(err){
+      console.error('Import error:', err);
+      showToast('⚠ Import failed — ' + (err.message || 'check connection'));
+      btn.disabled = false; btn.textContent = '📥 IMPORT TO FIREBASE';
+    });
+}
+window.confirmImport = confirmImport;
+</script>
 
 </body>
 </html>
