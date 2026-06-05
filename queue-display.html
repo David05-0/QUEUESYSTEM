@@ -815,7 +815,7 @@ function rebuildCompiledRecords(){
   if(activeCounter !== 1) return Promise.resolve();
   const own = cbmRecords.map(r => Object.assign({}, r, { _source: 'own' }));
 
-  // Fetch live transfer logs only — no allRecords
+  // Fetch live transfer logs from all other counters
   const transferPromises = [2, 3, 4].map(cIdx =>
     db.ref('transferLog/counter_' + cIdx).once('value').then(snap => {
       const data = snap.val();
@@ -823,17 +823,29 @@ function rebuildCompiledRecords(){
     })
   );
 
-  return Promise.all(transferPromises).then(arrays => {
-    const liveTransferred = [].concat(...arrays);
-    compiledRecords = [...own, ...liveTransferred].sort((a,b) => (a.ts||0) - (b.ts||0));
+  // Also fetch allRecords — includes imported records and anything saved for the day
+  const allRecordsPromise = db.ref('allRecords').once('value').then(snap => {
+    const data = snap.val();
+    return data ? Object.values(data).map(r => Object.assign({}, r, { _source: r._source || 'saved' })) : [];
+  });
 
-    // De-duplicate by ts+fullName
+  return Promise.all([...transferPromises, allRecordsPromise]).then(arrays => {
+    const liveTransferred = [].concat(...arrays.slice(0, 3));
+    const allRecordsData  = arrays[3];
+
+    // Merge: own + transferred + allRecords, deduplicate by ts|fullName
+    // Priority: own > transferred > allRecords (so live data wins over archived)
     const seen = new Set();
-    compiledRecords = compiledRecords.filter(r => {
+    const merged = [];
+
+    [...own, ...liveTransferred, ...allRecordsData].forEach(r => {
       const key = (r.ts||'') + '|' + (r.fullName||'');
-      if(seen.has(key)) return false;
-      seen.add(key); return true;
+      if(seen.has(key)) return;
+      seen.add(key);
+      merged.push(r);
     });
+
+    compiledRecords = merged.sort((a,b) => (a.ts||0) - (b.ts||0));
     compiledRecords.forEach((r,i) => r.id = i + 1);
 
     const badge = document.getElementById('tabTrCount');
@@ -858,8 +870,8 @@ function _renderCompiledListNow(){
   }
   if(empty) empty.style.display = 'none';
   list.innerHTML = compiledRecords.map((r,i) => {
-    const srcColor = r._source === 'transferred' ? 'rgba(36,113,163,0.8)' : r._source === 'saved' ? 'rgba(240,192,64,0.9)' : 'rgba(61,220,132,0.8)';
-    const srcLabel = r._source === 'transferred' ? '\u2197 ' + (r.transferredFrom||'Other').replace('DMW ','') : r._source === 'saved' ? '\uD83D\uDCBE ' + (r.savedDate||'Saved') : '\u2713 Own';
+    const srcColor = r._source === 'transferred' ? 'rgba(36,113,163,0.8)' : r._source === 'saved' ? 'rgba(240,192,64,0.9)' : r._source === 'imported' ? 'rgba(230,126,34,0.9)' : 'rgba(61,220,132,0.8)';
+    const srcLabel = r._source === 'transferred' ? '\u2197 ' + (r.transferredFrom||'Other').replace('DMW ','') : r._source === 'saved' ? '\uD83D\uDCBE ' + (r.savedDate||'Saved') : r._source === 'imported' ? '\u2B07 Imported' : '\u2713 Own';
     return `<div style="display:grid;grid-template-columns:22px 1fr 44px 32px 60px 60px 50px 22px;gap:2px;padding:7px 12px;border-top:1px solid var(--border);align-items:center;font-size:9px;background:${r._source==='transferred'?'rgba(36,113,163,0.04)':''}">
       <span style="font-family:Bebas Neue,sans-serif;font-size:13px;color:var(--muted)">${r.id}</span>
       <div style="overflow:hidden">
@@ -2971,10 +2983,34 @@ function confirmImport(){
     });
   }
 
-  if(_importParsed.counterBmRecords) mergeNode('counterBmRecords', _importParsed.counterBmRecords);
-  if(_importParsed.transferLog)      mergeNode('transferLog',      _importParsed.transferLog);
-  if(_importParsed.allRecords)       mergeNode('allRecords',       _importParsed.allRecords);
-  if(_importParsed.bmRecords)        mergeNode('bmRecords',        _importParsed.bmRecords);
+  // For counterBmRecords and transferLog: also mirror each record into allRecords
+  // so they show up in the All Records tab immediately after import
+  function mirrorToAllRecords(nodeData){
+    if(!nodeData || typeof nodeData !== 'object') return;
+    Object.keys(nodeData).forEach(function(key){
+      var val = nodeData[key];
+      if(val && typeof val === 'object'){
+        if(val.fullName || val.firstName || val.lastName || val.ts){
+          var nameSlug = ((val.fullName||val.firstName||'unknown')).toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,12);
+          var allKey = 'rec_' + (val.ts||Date.now()) + '_' + nameSlug;
+          var record = Object.assign({}, val, { _source: 'imported', importedAt: Date.now() });
+          writes.push(
+            db.ref('allRecords/' + allKey).once('value').then(function(snap){
+              if(snap.exists()) return Promise.resolve();
+              return db.ref('allRecords/' + allKey).set(record);
+            })
+          );
+        } else {
+          mirrorToAllRecords(val); // recurse into sub-nodes like counter_1
+        }
+      }
+    });
+  }
+
+  if(_importParsed.counterBmRecords){ mergeNode('counterBmRecords', _importParsed.counterBmRecords); mirrorToAllRecords(_importParsed.counterBmRecords); }
+  if(_importParsed.transferLog)     { mergeNode('transferLog',      _importParsed.transferLog);      mirrorToAllRecords(_importParsed.transferLog); }
+  if(_importParsed.allRecords)        mergeNode('allRecords',       _importParsed.allRecords);
+  if(_importParsed.bmRecords)         mergeNode('bmRecords',        _importParsed.bmRecords);
 
   if(!writes.length){
     showToast('⚠ Nothing to import from this file');
@@ -2987,6 +3023,11 @@ function confirmImport(){
       var imported = total - skipped;
       showToast('✓ Imported ' + imported + ' record(s) — ' + skipped + ' already existed (skipped)');
       closeImportJsonModal();
+      // Refresh the All Records tab so imported data is visible immediately
+      rebuildCompiledRecords().then(function(){
+        var compTab = document.getElementById('ciTabCompiled');
+        if(compTab && compTab.style.display !== 'none') _renderCompiledListNow();
+      });
       btn.disabled = false; btn.textContent = '📥 IMPORT TO FIREBASE';
     })
     .catch(function(err){
