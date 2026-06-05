@@ -918,7 +918,13 @@ function addCbmEntry(){
   };
 
   const ref = db.ref('counterBmRecords/counter_' + activeCounter + '/bm_' + ts);
-  ref.set(entry)
+  // Also write to allRecords immediately — deterministic key means re-saves are safe (idempotent).
+  // Records are permanently safe from the moment they're created, regardless of Save for Day.
+  const nameSlug = (entry.fullName||'unknown').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,12);
+  const allRecordsRef = db.ref('allRecords/rec_' + ts + '_' + nameSlug);
+  const entryForArchive = Object.assign({}, entry, { _source: 'own', savedAt: ts });
+
+  Promise.all([ref.set(entry), allRecordsRef.set(entryForArchive)])
     .then(() => {
       saveCbmLocalBackup();
       clearDraft();
@@ -971,20 +977,30 @@ function transferAllToCounter2(){
   const now    = Date.now();
   const snapshot = cbmRecords.slice();
 
-  // Step 1: write ONLY to transferLog (NOT to counterBmRecords/counter_1)
-  const logWrites = snapshot.map(r => {
-    const logKey   = 'tr_' + r.ts;
-    const logEntry = Object.assign({}, r, {
-      transferredFrom: COUNTER_NAMES[activeCounter-1],
-      transferredTo:   COUNTER_NAMES[0],
-      transferredAt:   now
-    });
-    return logRef.child(logKey).set(logEntry);
+  // Build entries with transfer metadata
+  const enrichedEntries = snapshot.map(r => Object.assign({}, r, {
+    transferredFrom: COUNTER_NAMES[activeCounter-1],
+    transferredTo:   COUNTER_NAMES[0],
+    transferredAt:   now,
+    _source:         'transferred'
+  }));
+
+  // Step 1a: Write to transferLog (so Desk 2 sees them in the Transferred tab live)
+  const logWrites = enrichedEntries.map(entry => {
+    return logRef.child('tr_' + entry.ts).set(entry);
   });
 
-  Promise.all(logWrites)
+  // Step 1b: Also write to allRecords immediately — records are safe the moment
+  //          transfer is confirmed, regardless of whether Desk 2 ever saves for the day
+  const allRecordWrites = enrichedEntries.map(entry => {
+    const nameSlug = (entry.fullName||'unknown').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,12);
+    const key = 'rec_' + (entry.ts||0) + '_' + nameSlug;
+    return db.ref('allRecords/' + key).set(entry);
+  });
+
+  Promise.all(logWrites.concat(allRecordWrites))
     .then(() => {
-      // Step 2: delete originals from source counter
+      // Step 2: delete originals from source counter only after both writes succeed
       return srcRef.remove();
     })
     .then(() => {
