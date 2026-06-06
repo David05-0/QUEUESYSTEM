@@ -531,6 +531,7 @@
         <button onclick="restoreLocalBackup()" title="Restore from local backup" style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(36,113,163,0.12);border:1px solid rgba(36,113,163,0.4);color:var(--c2);border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.background='rgba(36,113,163,0.22)'" onmouseout="this.style.background='rgba(36,113,163,0.12)'">↺ Restore</button>
         <button id="btnSaveForDay" onclick="openSaveForDayModal()" title="Save all records for the day to archive" style="display:none;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(125,60,152,0.12);border:1px solid rgba(125,60,152,0.45);color:var(--c4);border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.background='rgba(125,60,152,0.25)'" onmouseout="this.style.background='rgba(125,60,152,0.12)'">&#x1F4BE; Save for Day</button>
         <button id="btnImportJson" onclick="openImportJsonModal()" title="Import Firebase JSON export" style="display:none;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(230,126,34,0.1);border:1px solid rgba(230,126,34,0.4);color:var(--c1);border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.background='rgba(230,126,34,0.2)'" onmouseout="this.style.background='rgba(230,126,34,0.1)'">📥 Import JSON</button>
+        <button id="btnDebugRecords" onclick="debugAllRecords()" title="Debug: inspect allRecords in Firebase" style="display:none;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(120,80,200,0.1);border:1px solid rgba(120,80,200,0.4);color:#a78bfa;border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s">🔍 Debug</button>
         <button onclick="clearAllCbmRecords()" title="Clear all records" style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(255,95,95,0.08);border:1px solid rgba(255,95,95,0.35);color:var(--red);border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.background='rgba(255,95,95,0.18)'" onmouseout="this.style.background='rgba(255,95,95,0.08)'">🗑 Clear All</button>
         <button onclick="closeClientInfo()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:3px;padding:4px 10px;cursor:pointer;font-size:12px">✕</button>
       </div>
@@ -869,6 +870,61 @@ function _currentMonthKey(){
   return new Date().toISOString().slice(0,7); // 'YYYY-MM'
 }
 
+function debugAllRecords(){
+  showToast('Reading allRecords from Firebase...');
+  db.ref('allRecords').once('value').then(function(snap){
+    var data = snap.val();
+    if(!data){
+      alert('allRecords node is EMPTY or does not exist in Firebase.');
+      return;
+    }
+    var records = Object.values(data);
+    var total = records.length;
+
+    // Sample first 5 records — show their raw fields
+    var sample = records.slice(0, 5).map(function(r, i){
+      return [
+        '--- Record ' + (i+1) + ' ---',
+        'fullName:    ' + (r.fullName || '(none)'),
+        'ts:          ' + (r.ts || '(none)') + (r.ts ? ' → ' + new Date(r.ts).toISOString().slice(0,10) : ''),
+        'savedDate:   ' + (r.savedDate || '(none)'),
+        'savedAt:     ' + (r.savedAt || '(none)') + (r.savedAt ? ' → ' + new Date(r.savedAt).toISOString().slice(0,10) : ''),
+        'importedAt:  ' + (r.importedAt || '(none)'),
+        'transferredAt:' + (r.transferredAt || '(none)'),
+        'date:        ' + (r.date || '(none)'),
+        '_source:     ' + (r._source || '(none)'),
+        '_getMonthKey:' + _getMonthKey(r),
+      ].join('\n');
+    }).join('\n\n');
+
+    // Count by month bucket
+    var byMonth = {};
+    records.forEach(function(r){
+      var mk = _getMonthKey(r) || '(no month key)';
+      byMonth[mk] = (byMonth[mk] || 0) + 1;
+    });
+    var monthSummary = Object.keys(byMonth).sort().map(function(m){
+      return m + ': ' + byMonth[m] + ' record(s)';
+    }).join('\n');
+
+    var msg = 'allRecords in Firebase: ' + total + ' total\n\n'
+      + 'BY MONTH BUCKET:\n' + monthSummary
+      + '\n\n_allRecordsByMonth (cached):\n'
+      + (Object.keys(_allRecordsByMonth).length
+          ? Object.keys(_allRecordsByMonth).sort().map(function(m){ return m + ': ' + _allRecordsByMonth[m].length; }).join('\n')
+          : '(empty — rebuildCompiledRecords not yet called)')
+      + '\n\nFIRST 5 RECORDS SAMPLE:\n' + sample;
+
+    console.log('[DEBUG allRecords]', data);
+    console.log('[DEBUG byMonth]', byMonth);
+    console.log('[DEBUG _allRecordsByMonth]', _allRecordsByMonth);
+    alert(msg);
+  }).catch(function(err){
+    alert('Firebase read error: ' + err.message);
+  });
+}
+window.debugAllRecords = debugAllRecords;
+
 function rebuildCompiledRecords(){
   if(activeCounter !== 1) return Promise.resolve();
 
@@ -1171,6 +1227,7 @@ function openClientInfo(){
   if(lbl && activeCounter) lbl.textContent = '— ' + COUNTER_NAMES[activeCounter-1];
   var sfdBtn=document.getElementById('btnSaveForDay');if(sfdBtn) sfdBtn.style.display=(activeCounter===1)?'':'none';
   var importBtn=document.getElementById('btnImportJson');if(importBtn) importBtn.style.display=(activeCounter===1)?'':'none';
+  var debugBtn=document.getElementById('btnDebugRecords');if(debugBtn) debugBtn.style.display=(activeCounter===1)?'':'none';
   switchCiTab('my');
   bindTransferLogListener();
   restoreDraft();
