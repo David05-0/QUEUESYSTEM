@@ -834,16 +834,34 @@ var _allRecordsByMonth = {};   // { 'YYYY-MM': [records...], ... }
 var _allRecordsLoaded  = false;
 
 function _getMonthKey(r){
-  // For the past-month bucket, ONLY use savedDate (explicitly set by Save for Day or Import).
-  // Records that were mirrored to allRecords live (addCbmEntry, transfer) have no savedDate
-  // and must NOT appear in past months — they are visible only in Current (live) view.
-  if(r.savedDate)  return r.savedDate.slice(0,7);  // set by confirmSaveForDay
-  if(r.importedAt) return new Date(r.importedAt).toISOString().slice(0,7); // set by import
-  // Records with _source:'saved' but no savedDate — use savedAt timestamp
-  if(r._source === 'saved' && r.savedAt && typeof r.savedAt === 'number'){
+  // Priority 1: explicit savedDate stamp (set by confirmSaveForDay or Import) — most reliable
+  if(r.savedDate) return r.savedDate.slice(0,7);
+
+  // Priority 2: savedAt timestamp (set by confirmSaveForDay)
+  if(r.savedAt && typeof r.savedAt === 'number'){
     return new Date(r.savedAt).toISOString().slice(0,7);
   }
-  // Everything else (live mirrors) — no month bucket; they belong to current live view only
+
+  // Priority 3: importedAt timestamp (set by Import)
+  if(r.importedAt && typeof r.importedAt === 'number'){
+    return new Date(r.importedAt).toISOString().slice(0,7);
+  }
+
+  // Priority 4: transferredAt (set when another desk transferred to Desk 2)
+  if(r.transferredAt && typeof r.transferredAt === 'number'){
+    return new Date(r.transferredAt).toISOString().slice(0,7);
+  }
+
+  // Priority 5: date field ('YYYY-MM-DD') filled in by staff
+  if(r.date && typeof r.date === 'string' && r.date.length >= 7){
+    return r.date.slice(0,7);
+  }
+
+  // Priority 6: ts (creation timestamp) — catches all older records that have no other date
+  if(r.ts && typeof r.ts === 'number'){
+    return new Date(r.ts).toISOString().slice(0,7);
+  }
+
   return null;
 }
 
@@ -876,20 +894,29 @@ function rebuildCompiledRecords(){
     const liveTransferred = [].concat(...arrays.slice(0, 3));
     const allRecordsData  = arrays[3];
 
-    // Bucket ALL allRecords by month — no bleed into current live view.
-    // A record belongs to its savedDate month (set by Save for Day),
-    // falling back to the date field, then ts timestamp.
+    // Bucket allRecords by month.
+    // Records from the CURRENT month that are also still live (in own/transferLog)
+    // are shown in Current only — deduplicated out of the month bucket to avoid doubles.
+    const curMonth = _currentMonthKey();
+    const liveKeys = new Set();
+    [...own, ...liveTransferred].forEach(r => {
+      liveKeys.add((r.ts||'') + '|' + (r.fullName||''));
+    });
+
     _allRecordsByMonth = {};
     allRecordsData.forEach(r => {
       const mk = _getMonthKey(r);
       if(!mk) return;
+      // If this record is also live (still in counterBmRecords/transferLog),
+      // skip it from the archive bucket — it belongs to Current view
+      const rKey = (r.ts||'') + '|' + (r.fullName||'');
+      if(liveKeys.has(rKey)) return;
       if(!_allRecordsByMonth[mk]) _allRecordsByMonth[mk] = [];
       _allRecordsByMonth[mk].push(r);
     });
     _allRecordsLoaded = true;
 
-    // "Current" compiled = ONLY live own + live transferred.
-    // Nothing from allRecords bleeds in — those are past months.
+    // "Current" compiled = ONLY live own + live transferred (not from allRecords).
     const seen = new Set();
     const merged = [];
     [...own, ...liveTransferred].forEach(r => {
