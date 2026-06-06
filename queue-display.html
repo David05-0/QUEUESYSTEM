@@ -1003,23 +1003,20 @@ function _buildMonthFilterBtns(){
   if(!wrap) return;
   wrap.innerHTML = '';
 
-  const curMonth  = _currentMonthKey();
-  const pastMonths = Object.keys(_allRecordsByMonth)
-    .filter(m => m !== curMonth)
-    .sort().reverse(); // newest first
-
-  // "Current Month" button
+  // "Current" = unsaved live records only (own + transferLog, not yet committed)
   const curBtn = document.createElement('button');
   var liveCount = compiledRecords.length;
-  curBtn.textContent = '📋 Current (' + liveCount + ')';
+  curBtn.textContent = '📋 Unsaved (' + liveCount + ')';
   curBtn.dataset.month = 'current';
   curBtn.onclick = function(){ _compiledMonthFilter = 'current'; applyCompiledFilters(); };
   _styleMonthBtn(curBtn, _compiledMonthFilter === 'current');
   wrap.appendChild(curBtn);
 
-  // Past month buttons
-  pastMonths.forEach(m => {
-    const d = new Date(m + '-01');
+  // ALL months in allRecords get a button — including current month (e.g. June 2026)
+  // because Save for Day may have already been run today, archiving those records
+  const allMonths = Object.keys(_allRecordsByMonth).sort().reverse(); // newest first
+  allMonths.forEach(m => {
+    const d = new Date(m + '-02'); // use day 2 to avoid timezone rollback to prior month
     const label = d.toLocaleDateString('en-PH', { month: 'short', year: 'numeric' });
     const count = (_allRecordsByMonth[m]||[]).length;
     const btn = document.createElement('button');
