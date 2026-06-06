@@ -662,12 +662,27 @@
       <div id="trEmpty" style="display:none;padding:28px;text-align:center;color:var(--muted);font-size:10px;letter-spacing:0.1em">No transferred records yet</div>
     </div>
     <!-- Desk 2 Compiled tab -->
-    <div id="ciTabCompiled" style="display:none;overflow-y:auto;max-height:260px">
-      <div style="display:grid;grid-template-columns:22px 1fr 44px 32px 60px 60px 50px 22px;gap:2px;padding:6px 12px;background:rgba(61,220,132,0.08);color:rgba(238,238,246,0.4);font-size:6px;letter-spacing:0.12em;text-transform:uppercase;position:sticky;top:0">
+    <div id="ciTabCompiled" style="display:none;flex-direction:column">
+      <!-- Month filter bar -->
+      <div id="compiledFilterBar" style="display:flex;gap:6px;padding:8px 12px;border-bottom:1px solid var(--border);flex-wrap:wrap;align-items:center;background:rgba(0,0,0,0.15);position:sticky;top:0;z-index:2">
+        <span style="font-size:7px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);flex-shrink:0">Month:</span>
+        <div id="compiledMonthBtns" style="display:flex;gap:4px;flex-wrap:wrap;flex:1"></div>
+        <select id="compiledSourceFilter" onchange="applyCompiledFilters()" style="font-family:'DM Mono',monospace;font-size:7px;padding:3px 6px;border:1px solid var(--border);background:#111118;color:var(--muted);border-radius:3px;outline:none;cursor:pointer;color-scheme:dark">
+          <option value="all">All Sources</option>
+          <option value="own">✓ Own</option>
+          <option value="transferred">↗ Transferred</option>
+          <option value="saved">💾 Saved</option>
+          <option value="imported">⬇ Imported</option>
+        </select>
+      </div>
+      <!-- Summary strip -->
+      <div id="compiledSummaryStrip" style="display:flex;gap:10px;padding:5px 12px;border-bottom:1px solid var(--border);background:rgba(61,220,132,0.04);font-size:7.5px;color:var(--muted);flex-wrap:wrap"></div>
+      <!-- Column header -->
+      <div style="display:grid;grid-template-columns:22px 1fr 44px 32px 60px 60px 50px 22px;gap:2px;padding:6px 12px;background:rgba(61,220,132,0.08);color:rgba(238,238,246,0.4);font-size:6px;letter-spacing:0.12em;text-transform:uppercase">
         <span>#</span><span>Name</span><span>Sex</span><span>Age</span><span>Destination</span><span>Position</span><span>Source</span><span></span>
       </div>
-      <div id="compiledList" style="display:flex;flex-direction:column"></div>
-      <div id="compiledEmpty" style="display:none;padding:28px;text-align:center;color:var(--muted);font-size:10px;letter-spacing:0.1em">No compiled records yet</div>
+      <div id="compiledList" style="display:flex;flex-direction:column;overflow-y:auto;max-height:320px"></div>
+      <div id="compiledEmpty" style="display:none;padding:28px;text-align:center;color:var(--muted);font-size:10px;letter-spacing:0.1em">No records for this filter</div>
     </div>
   </div>
 </div>
@@ -811,11 +826,37 @@ function initCbmListener(){
 // allRecords is a permanent historical archive and is NOT mixed into the daily compiled view.
 // The All Records tab shows only today's live data (own + transferred).
 // After Save for Day, both nodes are cleared so this list returns to zero.
+// Active month filter — 'current' means today's live data, 'YYYY-MM' means a past month
+var _compiledMonthFilter  = 'current';
+var _compiledSourceFilter = 'all';
+// Cache: allRecords from Firebase (past saved data), keyed by month 'YYYY-MM'
+var _allRecordsByMonth = {};   // { 'YYYY-MM': [records...], ... }
+var _allRecordsLoaded  = false;
+
+function _getMonthKey(r){
+  // For the past-month bucket, ONLY use savedDate (explicitly set by Save for Day or Import).
+  // Records that were mirrored to allRecords live (addCbmEntry, transfer) have no savedDate
+  // and must NOT appear in past months — they are visible only in Current (live) view.
+  if(r.savedDate)  return r.savedDate.slice(0,7);  // set by confirmSaveForDay
+  if(r.importedAt) return new Date(r.importedAt).toISOString().slice(0,7); // set by import
+  // Records with _source:'saved' but no savedDate — use savedAt timestamp
+  if(r._source === 'saved' && r.savedAt && typeof r.savedAt === 'number'){
+    return new Date(r.savedAt).toISOString().slice(0,7);
+  }
+  // Everything else (live mirrors) — no month bucket; they belong to current live view only
+  return null;
+}
+
+function _currentMonthKey(){
+  return new Date().toISOString().slice(0,7); // 'YYYY-MM'
+}
+
 function rebuildCompiledRecords(){
   if(activeCounter !== 1) return Promise.resolve();
-  const own = cbmRecords.map(r => Object.assign({}, r, { _source: 'own' }));
 
-  // Fetch live transfer logs from all other counters
+  // ── LIVE (current working set): own counter records + active transfer logs ──
+  // These are records staff entered today that have NOT yet been saved for the day.
+  const own = cbmRecords.map(r => Object.assign({}, r, { _source: 'own' }));
   const transferPromises = [2, 3, 4].map(cIdx =>
     db.ref('transferLog/counter_' + cIdx).once('value').then(snap => {
       const data = snap.val();
@@ -823,7 +864,9 @@ function rebuildCompiledRecords(){
     })
   );
 
-  // Also fetch allRecords — includes imported records and anything saved for the day
+  // ── ARCHIVE (past months): allRecords in Firebase ──
+  // These are records that were committed via Save for Day (tagged with savedDate).
+  // They are bucketed by month and shown in past-month filters only.
   const allRecordsPromise = db.ref('allRecords').once('value').then(snap => {
     const data = snap.val();
     return data ? Object.values(data).map(r => Object.assign({}, r, { _source: r._source || 'saved' })) : [];
@@ -833,18 +876,28 @@ function rebuildCompiledRecords(){
     const liveTransferred = [].concat(...arrays.slice(0, 3));
     const allRecordsData  = arrays[3];
 
-    // Merge: own + transferred + allRecords, deduplicate by ts|fullName
-    // Priority: own > transferred > allRecords (so live data wins over archived)
+    // Bucket ALL allRecords by month — no bleed into current live view.
+    // A record belongs to its savedDate month (set by Save for Day),
+    // falling back to the date field, then ts timestamp.
+    _allRecordsByMonth = {};
+    allRecordsData.forEach(r => {
+      const mk = _getMonthKey(r);
+      if(!mk) return;
+      if(!_allRecordsByMonth[mk]) _allRecordsByMonth[mk] = [];
+      _allRecordsByMonth[mk].push(r);
+    });
+    _allRecordsLoaded = true;
+
+    // "Current" compiled = ONLY live own + live transferred.
+    // Nothing from allRecords bleeds in — those are past months.
     const seen = new Set();
     const merged = [];
-
-    [...own, ...liveTransferred, ...allRecordsData].forEach(r => {
+    [...own, ...liveTransferred].forEach(r => {
       const key = (r.ts||'') + '|' + (r.fullName||'');
       if(seen.has(key)) return;
       seen.add(key);
       merged.push(r);
     });
-
     compiledRecords = merged.sort((a,b) => (a.ts||0) - (b.ts||0));
     compiledRecords.forEach((r,i) => r.id = i + 1);
 
@@ -853,10 +906,135 @@ function rebuildCompiledRecords(){
     const compBadge = document.getElementById('tabCompiledCount');
     if(compBadge) compBadge.textContent = compiledRecords.length;
 
-    // Re-render if All Records tab is currently open
+    // Build month filter buttons (Current + one per past month in allRecords)
+    _buildMonthFilterBtns();
+
+    // Re-render if All Records tab is open
     const compTab = document.getElementById('ciTabCompiled');
-    if(compTab && compTab.style.display !== 'none') _renderCompiledListNow();
+    if(compTab && compTab.style.display !== 'none') applyCompiledFilters();
   });
+}
+
+function _buildMonthFilterBtns(){
+  const wrap = document.getElementById('compiledMonthBtns');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+
+  const curMonth  = _currentMonthKey();
+  const pastMonths = Object.keys(_allRecordsByMonth)
+    .filter(m => m !== curMonth)
+    .sort().reverse(); // newest first
+
+  // "Current Month" button
+  const curBtn = document.createElement('button');
+  var liveCount = compiledRecords.length;
+  curBtn.textContent = '📋 Current (' + liveCount + ')';
+  curBtn.dataset.month = 'current';
+  curBtn.onclick = function(){ _compiledMonthFilter = 'current'; applyCompiledFilters(); };
+  _styleMonthBtn(curBtn, _compiledMonthFilter === 'current');
+  wrap.appendChild(curBtn);
+
+  // Past month buttons
+  pastMonths.forEach(m => {
+    const d = new Date(m + '-01');
+    const label = d.toLocaleDateString('en-PH', { month: 'short', year: 'numeric' });
+    const count = (_allRecordsByMonth[m]||[]).length;
+    const btn = document.createElement('button');
+    btn.textContent = label + ' (' + count + ')';
+    btn.dataset.month = m;
+    btn.onclick = function(){ _compiledMonthFilter = m; applyCompiledFilters(); };
+    _styleMonthBtn(btn, _compiledMonthFilter === m);
+    wrap.appendChild(btn);
+  });
+}
+
+function _styleMonthBtn(btn, active){
+  btn.style.cssText = [
+    'font-family:DM Mono,monospace',
+    'font-size:7.5px',
+    'letter-spacing:0.1em',
+    'text-transform:uppercase',
+    'padding:3px 9px',
+    'border-radius:20px',
+    'cursor:pointer',
+    'border:1px solid',
+    'transition:all 0.13s',
+    'white-space:nowrap',
+    active
+      ? 'background:rgba(61,220,132,0.18);border-color:rgba(61,220,132,0.5);color:#3ddc84'
+      : 'background:transparent;border-color:var(--border);color:var(--muted)'
+  ].join(';');
+}
+
+function applyCompiledFilters(){
+  // Sync source filter value
+  const srcSel = document.getElementById('compiledSourceFilter');
+  if(srcSel) _compiledSourceFilter = srcSel.value;
+
+  // Rebuild month button styles
+  document.querySelectorAll('#compiledMonthBtns button').forEach(btn => {
+    _styleMonthBtn(btn, btn.dataset.month === _compiledMonthFilter);
+  });
+
+  // Pick the right record pool
+  let pool;
+  if(_compiledMonthFilter === 'current'){
+    pool = compiledRecords.slice(); // live merged set
+  } else {
+    pool = (_allRecordsByMonth[_compiledMonthFilter] || []).slice();
+    pool.sort((a,b) => (a.ts||0) - (b.ts||0));
+    pool.forEach((r,i) => r.id = i + 1);
+  }
+
+  // Apply source filter
+  if(_compiledSourceFilter !== 'all'){
+    pool = pool.filter(r => (r._source||'own') === _compiledSourceFilter);
+  }
+
+  // Summary strip
+  const strip = document.getElementById('compiledSummaryStrip');
+  if(strip){
+    const total = pool.length;
+    const own   = pool.filter(r => r._source === 'own' || !r._source).length;
+    const tr    = pool.filter(r => r._source === 'transferred').length;
+    const sv    = pool.filter(r => r._source === 'saved').length;
+    const im    = pool.filter(r => r._source === 'imported').length;
+    strip.innerHTML =
+      '<span style="color:#3ddc84">Total: <strong>' + total + '</strong></span>' +
+      (own  ? ' &nbsp;·&nbsp; <span>✓ Own: <strong>' + own  + '</strong></span>' : '') +
+      (tr   ? ' &nbsp;·&nbsp; <span style="color:var(--c2)">↗ Transferred: <strong>' + tr + '</strong></span>' : '') +
+      (sv   ? ' &nbsp;·&nbsp; <span style="color:var(--accent)">💾 Saved: <strong>' + sv + '</strong></span>' : '') +
+      (im   ? ' &nbsp;·&nbsp; <span style="color:var(--c1)">⬇ Imported: <strong>' + im + '</strong></span>' : '');
+  }
+
+  _renderFilteredCompiledList(pool);
+}
+window.applyCompiledFilters = applyCompiledFilters;
+
+function _renderFilteredCompiledList(pool){
+  const list  = document.getElementById('compiledList');
+  const empty = document.getElementById('compiledEmpty');
+  if(!list) return;
+  if(!pool.length){
+    list.innerHTML = '';
+    if(empty) empty.style.display = '';
+    return;
+  }
+  if(empty) empty.style.display = 'none';
+  list.innerHTML = pool.map((r,i) => {
+    const srcColor = r._source === 'transferred' ? 'rgba(36,113,163,0.8)' : r._source === 'saved' ? 'rgba(240,192,64,0.9)' : r._source === 'imported' ? 'rgba(230,126,34,0.9)' : 'rgba(61,220,132,0.8)';
+    const srcLabel = r._source === 'transferred' ? '\u2197 ' + (r.transferredFrom||'Other').replace('DMW ','') : r._source === 'saved' ? '\uD83D\uDCBE ' + (r.savedDate||'Saved') : r._source === 'imported' ? '\u2B07 Imported' : '\u2713 Own';
+    return '<div style="display:grid;grid-template-columns:22px 1fr 44px 32px 60px 60px 50px 22px;gap:2px;padding:7px 12px;border-top:1px solid var(--border);align-items:center;font-size:9px;background:' + (r._source==='transferred'?'rgba(36,113,163,0.04)':'') + '">' +
+      '<span style="font-family:Bebas Neue,sans-serif;font-size:13px;color:var(--muted)">' + r.id + '</span>' +
+      '<div style="overflow:hidden"><div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + (r.fullName||'') + '">' + (r.fullName||'') + '</div></div>' +
+      '<span style="color:var(--muted);font-size:8px">' + (r.gender||'—') + '</span>' +
+      '<span style="color:var(--muted);font-size:8px">' + (r.age||'—') + '</span>' +
+      '<span style="color:var(--muted);font-size:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (r.country||'—') + '</span>' +
+      '<span style="color:var(--muted);font-size:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (r.position||'—') + '</span>' +
+      '<span style="color:' + srcColor + ';font-size:7px;font-weight:600">' + srcLabel + '</span>' +
+      '<span></span>' +
+      '</div>';
+  }).join('');
 }
 
 function _renderCompiledListNow(){
@@ -2623,13 +2801,13 @@ function confirmSaveForDay(){
       }));
     })
     .then(function(){
-      // Step 5: Reset ALL local state — records are archived, counter starts fresh
+      // Step 5: Reset live local state — records are now in allRecords (past month bucket)
       cbmRecords = [];
       transferredRecords = [];
       compiledRecords = [];
+      _allRecordsLoaded = false; // force full reload on next rebuildCompiledRecords
 
-
-      // Step 7: Immediately render empty lists so the UI clears right away
+      // Step 6: Clear UI lists immediately
       renderCbmList();
       var compList = document.getElementById('compiledList');
       var compEmpty = document.getElementById('compiledEmpty');
@@ -2647,8 +2825,16 @@ function confirmSaveForDay(){
       var compBadge = document.getElementById('tabCompiledCount');
       if(compBadge) compBadge.textContent = '0';
 
-      // Step 8: Re-attach listeners for new records coming in after the archive
+      // Step 7: Re-attach listeners for new records after archive
       initCbmListener();
+
+      // Step 8: Rebuild compiled records so the just-saved month appears
+      // in the month filter bar immediately (no page reload required)
+      rebuildCompiledRecords().then(function(){
+        // Switch to the newly saved month so staff can verify records
+        _compiledMonthFilter = dateKey.slice(0,7);
+        applyCompiledFilters();
+      });
 
       // Step 9: Close modal and notify
       closeSaveForDayModal();
@@ -2985,6 +3171,9 @@ function confirmImport(){
 
   // For counterBmRecords and transferLog: also mirror each record into allRecords
   // so they show up in the All Records tab immediately after import
+  var _importNow = Date.now();
+  var _importDateKey = new Date(_importNow).toISOString().slice(0,10); // 'YYYY-MM-DD'
+
   function mirrorToAllRecords(nodeData){
     if(!nodeData || typeof nodeData !== 'object') return;
     Object.keys(nodeData).forEach(function(key){
@@ -2992,8 +3181,15 @@ function confirmImport(){
       if(val && typeof val === 'object'){
         if(val.fullName || val.firstName || val.lastName || val.ts){
           var nameSlug = ((val.fullName||val.firstName||'unknown')).toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,12);
-          var allKey = 'rec_' + (val.ts||Date.now()) + '_' + nameSlug;
-          var record = Object.assign({}, val, { _source: 'imported', importedAt: Date.now() });
+          var allKey = 'rec_' + (val.ts||_importNow) + '_' + nameSlug;
+          // Stamp savedDate so _getMonthKey places this in the correct past-month bucket.
+          // Use the record's own date if it has one, otherwise today.
+          var recDateKey = val.savedDate || (val.ts ? new Date(val.ts).toISOString().slice(0,10) : _importDateKey);
+          var record = Object.assign({}, val, {
+            _source:    'imported',
+            importedAt: _importNow,
+            savedDate:  recDateKey   // ← makes it visible in past-month filters
+          });
           writes.push(
             db.ref('allRecords/' + allKey).once('value').then(function(snap){
               if(snap.exists()) return Promise.resolve();
@@ -3023,10 +3219,13 @@ function confirmImport(){
       var imported = total - skipped;
       showToast('✓ Imported ' + imported + ' record(s) — ' + skipped + ' already existed (skipped)');
       closeImportJsonModal();
-      // Refresh the All Records tab so imported data is visible immediately
+      // Refresh the All Records tab and switch to the imported month so records are visible
       rebuildCompiledRecords().then(function(){
-        var compTab = document.getElementById('ciTabCompiled');
-        if(compTab && compTab.style.display !== 'none') _renderCompiledListNow();
+        _compiledMonthFilter = _importDateKey.slice(0,7); // jump to imported month
+        applyCompiledFilters();
+        // Open compiled tab if not already open
+        var compBtn = document.getElementById('tabCompiled');
+        if(compBtn && compBtn.style.display !== 'none') switchCiTab('compiled');
       });
       btn.disabled = false; btn.textContent = '📥 IMPORT TO FIREBASE';
     })
