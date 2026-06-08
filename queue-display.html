@@ -1790,8 +1790,15 @@ function _doExportRecords(recordsToExport, monthLabel){
 }
 
 function printCbmRecords(){
-  const recordsToExport = (activeCounter === 1 && compiledRecords.length) ? compiledRecords : cbmRecords;
-  if(!recordsToExport.length){ showToast('⚠ No records to print'); return; }
+  if(activeCounter === 1){
+    openPrintMonthModal();
+    return;
+  }
+  _doPrintRecords(cbmRecords, null);
+}
+
+function _doPrintRecords(recordsToExport, monthLabel){
+  if(!recordsToExport || !recordsToExport.length){ showToast('⚠ No records to print'); return; }
   const counterName = activeCounter ? COUNTER_NAMES[activeCounter-1] : 'Counter';
   const date = new Date().toLocaleDateString('en-PH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   const rows = recordsToExport.map((r,i)=>{
@@ -1850,7 +1857,7 @@ function printCbmRecords(){
   <div class="hdr">
     <div>
       <div class="hdr-title">📋 OFW Client Info Records</div>
-      <div class="hdr-sub">${counterName}</div>
+      <div class="hdr-sub">${counterName}${monthLabel ? ' — ' + monthLabel : ''}</div>
     </div>
     <div class="hdr-meta">
       <div>${date}</div>
@@ -3453,6 +3460,119 @@ function _downloadMonthRecords(monthKey, monthLabel){
   }, 80);
 }
 window._downloadMonthRecords = _downloadMonthRecords;
+</script>
+
+<!-- ── Print by Month Modal (Desk 2 only) ── -->
+<div id="printMonthBackdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:9999;align-items:center;justify-content:center;backdrop-filter:blur(4px)">
+  <div style="background:#111118;border:1.5px solid rgba(36,113,163,0.45);border-radius:6px;width:min(480px,95vw);max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.9);display:flex;flex-direction:column">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid rgba(36,113,163,0.2);background:rgba(36,113,163,0.07)">
+      <div style="display:flex;align-items:center;gap:9px">
+        <span style="font-size:18px">🖨️</span>
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:0.1em;color:#5dade2">PRINT RECORDS</div>
+          <div style="font-size:7.5px;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);margin-top:1px">SELECT A MONTH TO PRINT</div>
+        </div>
+      </div>
+      <button onclick="closePrintMonthModal()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:3px;padding:4px 10px;cursor:pointer;font-size:14px">✕</button>
+    </div>
+
+    <!-- Month list -->
+    <div style="padding:16px 18px;flex:1">
+      <div id="pmMonthList" style="display:flex;flex-direction:column;gap:8px"></div>
+      <div id="pmMonthEmpty" style="display:none;text-align:center;padding:28px;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted)">
+        No saved months found.<br>Run Save for Day first to archive records.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+//  PRINT BY MONTH — Desk 2 only
+// ══════════════════════════════════════════════════════════
+
+function openPrintMonthModal(){
+  var backdrop = document.getElementById('printMonthBackdrop');
+  var list     = document.getElementById('pmMonthList');
+  var empty    = document.getElementById('pmMonthEmpty');
+  if(!backdrop || !list) return;
+
+  list.innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:9px;letter-spacing:0.1em">Loading…</div>';
+  empty.style.display = 'none';
+  backdrop.style.display = 'flex';
+
+  rebuildCompiledRecords().then(function(){
+    list.innerHTML = '';
+    var months = Object.keys(_allRecordsByMonth).sort().reverse();
+    var items = [];
+
+    if(compiledRecords.length){
+      items.push({ key: 'current', label: 'Current — Unsaved', count: compiledRecords.length, isLive: true });
+    }
+    months.forEach(function(m){
+      var recs = _allRecordsByMonth[m] || [];
+      if(!recs.length) return;
+      var d = new Date(m + '-02');
+      var label = d.toLocaleDateString('en-PH', { month: 'long', year: 'numeric' });
+      items.push({ key: m, label: label, count: recs.length, isLive: false });
+    });
+
+    if(!items.length){
+      list.innerHTML = '';
+      empty.style.display = '';
+      return;
+    }
+
+    items.forEach(function(item){
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1px solid var(--border);border-radius:4px;cursor:pointer;transition:all 0.15s;background:rgba(255,255,255,0.02)';
+      row.onmouseover = function(){ this.style.background='rgba(36,113,163,0.08)'; this.style.borderColor='rgba(36,113,163,0.4)'; };
+      row.onmouseout  = function(){ this.style.background='rgba(255,255,255,0.02)'; this.style.borderColor='var(--border)'; };
+
+      var left = document.createElement('div');
+      left.innerHTML = '<div style="font-family:Bebas Neue,sans-serif;font-size:17px;letter-spacing:0.08em;color:' + (item.isLive ? 'var(--teal)' : '#5dade2') + '">'
+        + (item.isLive ? '📋 ' : '📅 ') + item.label + '</div>'
+        + '<div style="font-size:8px;color:var(--muted);margin-top:2px;letter-spacing:0.1em">'
+        + item.count + ' record' + (item.count !== 1 ? 's' : '')
+        + (item.isLive ? ' — not yet saved for day' : ' — archived')
+        + '</div>';
+
+      var pBtn = document.createElement('button');
+      pBtn.innerHTML = '🖨 Print';
+      pBtn.style.cssText = 'font-family:DM Mono,monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(36,113,163,0.1);border:1px solid rgba(36,113,163,0.4);color:#5dade2;border-radius:3px;padding:7px 13px;cursor:pointer;white-space:nowrap';
+      pBtn.onclick = function(e){
+        e.stopPropagation();
+        _printMonthRecords(item.key, item.label);
+      };
+
+      row.appendChild(left);
+      row.appendChild(pBtn);
+      row.onclick = function(){ _printMonthRecords(item.key, item.label); };
+      list.appendChild(row);
+    });
+  });
+}
+window.openPrintMonthModal = openPrintMonthModal;
+
+function closePrintMonthModal(){
+  var b = document.getElementById('printMonthBackdrop');
+  if(b) b.style.display = 'none';
+}
+window.closePrintMonthModal = closePrintMonthModal;
+
+function _printMonthRecords(monthKey, monthLabel){
+  var records = monthKey === 'current'
+    ? compiledRecords.slice()
+    : (_allRecordsByMonth[monthKey] || []).slice();
+
+  if(!records.length){ showToast('⚠ No records found for ' + monthLabel); return; }
+  closePrintMonthModal();
+  setTimeout(function(){ _doPrintRecords(records, monthLabel); }, 80);
+}
+window._printMonthRecords = _printMonthRecords;
 </script>
 </body>
 </html>
