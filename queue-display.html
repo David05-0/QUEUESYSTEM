@@ -1636,18 +1636,19 @@ function renderCbmList(){
 function exportCbmCsv(){
   if(typeof XLSX === 'undefined'){ showToast('⚠ Excel library not loaded yet — try again'); return; }
   if(activeCounter === 1){
-    showToast('⏳ Preparing all records for export…');
-    rebuildCompiledRecords().then(function(){ _doExportRecords(compiledRecords); });
+    // Desk 2: open the month picker so they choose which month to download
+    openDownloadMonthModal();
     return;
   }
   _doExportRecords(cbmRecords);
 }
 
-function _doExportRecords(recordsToExport){
+function _doExportRecords(recordsToExport, monthLabel){
   if(!recordsToExport.length){ showToast('⚠ No records to export'); return; }
   if(typeof XLSX === 'undefined'){ showToast('⚠ Excel library not loaded yet — try again'); return; }
 
   const counterName = activeCounter ? COUNTER_NAMES[activeCounter-1] : 'Counter';
+  const _exportMonthLabel = monthLabel || null;
 
   // ── Column layout (21 total) ──
   // A-G  = OFW Info (7)   H-I = Address (2)   J = Region (1)
@@ -1782,9 +1783,10 @@ function _doExportRecords(recordsToExport){
   XLSX.utils.book_append_sheet(wb, ws, 'Client Info');
 
   const date = new Date().toLocaleDateString('en-PH',{year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\//g,'-');
-  const fname = 'ClientInfo_' + counterName.replace(/\s+/g,'_') + '_' + date + '.xlsx';
+  const monthPart = _exportMonthLabel ? '_' + _exportMonthLabel.replace(/[^a-zA-Z0-9]/g,'_').replace(/_+/g,'_') : '';
+  const fname = 'ClientInfo_' + counterName.replace(/\s+/g,'_') + monthPart + '_' + date + '.xlsx';
   XLSX.writeFile(wb, fname, { cellStyles: true, bookSST: false });
-  showToast('✓ Excel file downloaded');
+  showToast('\u2713 Downloaded ' + recordsToExport.length + ' record(s)' + (_exportMonthLabel ? ' for ' + _exportMonthLabel : ''));
 }
 
 function printCbmRecords(){
@@ -3319,5 +3321,138 @@ function confirmImport(){
 window.confirmImport = confirmImport;
 </script>
 
+
+<!-- ── Download by Month Modal (Desk 2 only) ── -->
+<div id="downloadMonthBackdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:9999;align-items:center;justify-content:center;backdrop-filter:blur(4px)">
+  <div style="background:#111118;border:1.5px solid rgba(61,220,132,0.45);border-radius:6px;width:min(480px,95vw);max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.9);display:flex;flex-direction:column">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid rgba(61,220,132,0.2);background:rgba(61,220,132,0.07)">
+      <div style="display:flex;align-items:center;gap:9px">
+        <span style="font-size:18px">📥</span>
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:0.1em;color:#3ddc84">DOWNLOAD RECORDS</div>
+          <div style="font-size:7.5px;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);margin-top:1px">SELECT A MONTH TO EXPORT AS EXCEL</div>
+        </div>
+      </div>
+      <button onclick="closeDownloadMonthModal()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:3px;padding:4px 10px;cursor:pointer;font-size:14px">✕</button>
+    </div>
+
+    <!-- Month list -->
+    <div style="padding:16px 18px;flex:1">
+      <div id="dlMonthList" style="display:flex;flex-direction:column;gap:8px">
+        <!-- populated by openDownloadMonthModal() -->
+      </div>
+      <div id="dlMonthEmpty" style="display:none;text-align:center;padding:28px;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted)">
+        No saved months found.<br>Run Save for Day first to archive records.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+//  DOWNLOAD BY MONTH — Desk 2 only
+// ══════════════════════════════════════════════════════════
+
+function openDownloadMonthModal(){
+  // Ensure allRecords are loaded before opening
+  var backdrop = document.getElementById('downloadMonthBackdrop');
+  var list     = document.getElementById('dlMonthList');
+  var empty    = document.getElementById('dlMonthEmpty');
+  if(!backdrop || !list) return;
+
+  list.innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:9px;letter-spacing:0.1em">Loading…</div>';
+  empty.style.display = 'none';
+  backdrop.style.display = 'flex';
+
+  // Rebuild to make sure _allRecordsByMonth is fresh
+  rebuildCompiledRecords().then(function(){
+    list.innerHTML = '';
+    var months = Object.keys(_allRecordsByMonth).sort().reverse(); // newest first
+
+    // Also offer "Current (unsaved)" if there are live records
+    var allMonthItems = [];
+
+    if(compiledRecords.length){
+      allMonthItems.push({ key: 'current', label: 'Current — Unsaved', count: compiledRecords.length, isLive: true });
+    }
+    months.forEach(function(m){
+      var recs = _allRecordsByMonth[m] || [];
+      if(!recs.length) return;
+      var d = new Date(m + '-02');
+      var label = d.toLocaleDateString('en-PH', { month: 'long', year: 'numeric' });
+      allMonthItems.push({ key: m, label: label, count: recs.length, isLive: false });
+    });
+
+    if(!allMonthItems.length){
+      list.innerHTML = '';
+      empty.style.display = '';
+      return;
+    }
+
+    allMonthItems.forEach(function(item){
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1px solid var(--border);border-radius:4px;cursor:pointer;transition:all 0.15s;background:rgba(255,255,255,0.02)';
+      row.onmouseover = function(){ this.style.background = 'rgba(61,220,132,0.07)'; this.style.borderColor = 'rgba(61,220,132,0.4)'; };
+      row.onmouseout  = function(){ this.style.background = 'rgba(255,255,255,0.02)'; this.style.borderColor = 'var(--border)'; };
+
+      var left = document.createElement('div');
+      left.innerHTML = '<div style="font-family:Bebas Neue,sans-serif;font-size:17px;letter-spacing:0.08em;color:' + (item.isLive ? 'var(--teal)' : '#3ddc84') + '">'
+        + (item.isLive ? '📋 ' : '📅 ') + item.label + '</div>'
+        + '<div style="font-size:8px;color:var(--muted);margin-top:2px;letter-spacing:0.1em">'
+        + item.count + ' record' + (item.count !== 1 ? 's' : '')
+        + (item.isLive ? ' — not yet saved for day' : ' — archived')
+        + '</div>';
+
+      var dlBtn = document.createElement('button');
+      dlBtn.innerHTML = '⬇ Excel';
+      dlBtn.style.cssText = 'font-family:DM Mono,monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(61,220,132,0.1);border:1px solid rgba(61,220,132,0.4);color:#3ddc84;border-radius:3px;padding:7px 13px;cursor:pointer;white-space:nowrap';
+      dlBtn.onclick = function(e){
+        e.stopPropagation();
+        _downloadMonthRecords(item.key, item.label);
+      };
+
+      row.appendChild(left);
+      row.appendChild(dlBtn);
+      row.onclick = function(){ _downloadMonthRecords(item.key, item.label); };
+      list.appendChild(row);
+    });
+  });
+}
+window.openDownloadMonthModal = openDownloadMonthModal;
+
+function closeDownloadMonthModal(){
+  var backdrop = document.getElementById('downloadMonthBackdrop');
+  if(backdrop) backdrop.style.display = 'none';
+}
+window.closeDownloadMonthModal = closeDownloadMonthModal;
+
+function _downloadMonthRecords(monthKey, monthLabel){
+  if(typeof XLSX === 'undefined'){ showToast('⚠ Excel library not loaded'); return; }
+
+  var records;
+  if(monthKey === 'current'){
+    records = compiledRecords.slice();
+  } else {
+    records = (_allRecordsByMonth[monthKey] || []).slice();
+  }
+
+  if(!records.length){
+    showToast('⚠ No records found for ' + monthLabel);
+    return;
+  }
+
+  showToast('⏳ Preparing ' + records.length + ' record(s) for ' + monthLabel + '…');
+  closeDownloadMonthModal();
+
+  // Small delay so toast shows before heavy XLSX work
+  setTimeout(function(){
+    _doExportRecords(records, monthLabel);
+  }, 80);
+}
+window._downloadMonthRecords = _downloadMonthRecords;
+</script>
 </body>
 </html>
