@@ -347,6 +347,32 @@
   .bm-clear-btn:hover{border-color:var(--accent);color:var(--accent)}
 
   /* Toast */
+
+  /* ── NO SHOW PANEL ── */
+  .noshow-panel{background:var(--paper);border:1px solid var(--rule);border-left:3px solid var(--amber);border-radius:2px;box-shadow:0 2px 8px var(--shadow);overflow:hidden}
+  .noshow-head{background:var(--ink);color:var(--bg);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  .noshow-head-left{display:flex;flex-direction:column;gap:2px}
+  .noshow-head-title{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:0.1em;color:#f0c040}
+  .noshow-head-sub{font-size:8px;color:rgba(244,241,234,0.45);letter-spacing:0.12em;text-transform:uppercase}
+  .noshow-count-badge{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:0.04em;color:#f0c040;line-height:1}
+  .noshow-body{max-height:320px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--rule) transparent}
+  .noshow-empty{padding:24px 16px;text-align:center;font-size:11px;color:var(--muted);letter-spacing:0.1em}
+  .noshow-row{display:grid;grid-template-columns:40px 1fr 80px 90px 60px;align-items:center;gap:8px;padding:9px 16px;border-bottom:1px solid var(--rule);font-size:9px;transition:background 0.13s}
+  .noshow-row:hover{background:rgba(154,111,0,0.04)}
+  .noshow-row-head{display:grid;grid-template-columns:40px 1fr 80px 90px 60px;gap:8px;padding:6px 16px 5px;border-bottom:2px solid var(--ink);font-size:7px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);background:rgba(154,111,0,0.04)}
+  .ns-num{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:0.04em;color:var(--amber);line-height:1}
+  .ns-body{overflow:hidden}
+  .ns-svc{font-size:8.5px;letter-spacing:0.06em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ns-cust{font-size:8px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ns-counter{font-size:8px;color:var(--muted);letter-spacing:0.06em}
+  .ns-time{font-size:8px;color:var(--muted);letter-spacing:0.04em;white-space:nowrap}
+  .ns-restore-btn{font-family:'DM Mono',monospace;font-size:7px;letter-spacing:0.1em;text-transform:uppercase;padding:3px 7px;border-radius:2px;cursor:pointer;border:1px solid rgba(30,132,73,0.3);color:var(--green);background:transparent;transition:all 0.13s;white-space:nowrap}
+  .ns-restore-btn:hover{background:rgba(30,132,73,0.1);border-color:var(--green)}
+  .noshow-footer{display:flex;gap:7px;padding:10px 14px;border-top:1px solid var(--rule);background:rgba(154,111,0,0.03)}
+  .noshow-export-btn{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;padding:6px 12px;border:1px solid rgba(154,111,0,0.35);color:var(--amber);background:transparent;border-radius:2px;cursor:pointer;transition:all 0.13s}
+  .noshow-export-btn:hover{background:rgba(154,111,0,0.1);border-color:var(--amber)}
+  .noshow-clear-btn{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;padding:6px 12px;border:1px solid rgba(176,58,46,0.3);color:var(--accent);background:transparent;border-radius:2px;cursor:pointer;transition:all 0.13s}
+  .noshow-clear-btn:hover{background:rgba(176,58,46,0.1);border-color:var(--accent)}
   .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(18px);background:var(--ink);color:var(--bg);padding:11px 26px;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.12em;opacity:0;transition:all 0.3s;pointer-events:none;z-index:999;white-space:nowrap}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
@@ -469,6 +495,10 @@
           <div class="stat-val" id="stServed" style="color:var(--green)">0</div>
           <div class="stat-lbl">Served</div>
         </div>
+        <div class="stat-card" style="border-left:3px solid rgba(154,111,0,0.4)">
+          <div class="stat-val" id="stNoShow" style="color:var(--amber)">0</div>
+          <div class="stat-lbl">No Show</div>
+        </div>
       </div>
 
       <!-- Service Tally -->
@@ -519,6 +549,24 @@
         </div>
         <div class="pool-body" id="poolBody">
           <div class="pool-empty" id="poolEmpty">No tickets issued yet</div>
+        </div>
+      </div>
+
+      <!-- No Show Panel -->
+      <div class="noshow-panel" id="noShowPanel">
+        <div class="noshow-head">
+          <div class="noshow-head-left">
+            <div class="noshow-head-title">&#x1F6AB; No Show Log</div>
+            <div class="noshow-head-sub">Tickets marked No Show this session</div>
+          </div>
+          <span class="noshow-count-badge" id="noShowCountBadge">0</span>
+        </div>
+        <div class="noshow-body" id="noShowBody">
+          <div class="noshow-empty" id="noShowEmpty">No no-show tickets yet</div>
+        </div>
+        <div class="noshow-footer">
+          <button class="noshow-export-btn" onclick="exportNoShowCsv()">&#x2B07; Export CSV</button>
+          <button class="noshow-clear-btn" onclick="adminClearNoShows()">&#x2715; Clear All</button>
         </div>
       </div>
 
@@ -879,6 +927,7 @@ function renderAll(){
   renderTally();
   renderPool();
   renderCounterGrid();
+  renderNoShowPanel();
 }
 
 function renderStats(){
@@ -887,7 +936,8 @@ function renderStats(){
   document.getElementById('stTotal').textContent      = log.length;
   document.getElementById('stUnassigned').textContent = unassigned;
   document.getElementById('stInQueue').textContent    = inQueue;
-  document.getElementById('stServed').textContent     = log.filter(t=>t.served).length;
+  document.getElementById('stServed').textContent     = log.filter(t=>t.served&&!t.noShow).length;
+  document.getElementById('stNoShow').textContent     = log.filter(t=>t.noShow).length;
 }
 
 function onPoolSearch(val){
@@ -1900,6 +1950,94 @@ function clearBmDraft(){
   bmIdbSet('bmDraft', null).catch(()=>{});
   try { localStorage.removeItem('bmDraft'); } catch(e){}
 }
+
+
+// ── No Show Panel ──
+function renderNoShowPanel(){
+  const body   = document.getElementById('noShowBody');
+  const empty  = document.getElementById('noShowEmpty');
+  const badge  = document.getElementById('noShowCountBadge');
+  if(!body) return;
+  const noShows = log.filter(t=>t.noShow).reverse();
+  badge.textContent = noShows.length;
+  body.querySelectorAll('.noshow-row, .noshow-row-head').forEach(e=>e.remove());
+  if(!noShows.length){
+    empty.style.display='block';
+    return;
+  }
+  empty.style.display='none';
+  // Header row
+  const hdr = document.createElement('div');
+  hdr.className = 'noshow-row-head';
+  hdr.innerHTML = '<span>#</span><span>Client / Service</span><span>Counter</span><span>Time</span><span>Action</span>';
+  body.insertBefore(hdr, empty);
+  noShows.forEach(t=>{
+    const row = document.createElement('div');
+    row.className = 'noshow-row';
+    const counterName = t.counter>0 ? 'DMW Desk '+(t.counter+1) : 'Unassigned';
+    const endFmt = t.endTime ? new Date(t.endTime).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) : (t.time||'—');
+    row.innerHTML = \`
+      <div class="ns-num">\${String(t.id).padStart(3,'0')}</div>
+      <div class="ns-body">
+        <div class="ns-svc">\${t.service||''}</div>
+        \${t.customer?\`<div class="ns-cust">\${t.customer}</div>\`:''}
+      </div>
+      <div class="ns-counter">\${counterName}</div>
+      <div class="ns-time">\${endFmt}</div>
+      <div><button class="ns-restore-btn" onclick="adminRestoreNoShow(\${t.id})">&#x21A9; Restore</button></div>\`;
+    body.insertBefore(row, empty);
+  });
+}
+window.renderNoShowPanel = renderNoShowPanel;
+
+// Restore a no-show ticket back into the unassigned pool
+function adminRestoreNoShow(ticketId){
+  const t = log.find(x=>x.id===ticketId);
+  if(!t || !t.noShow) return;
+  if(!confirm(\`Restore #\${String(ticketId).padStart(3,'0')} back to the unassigned pool?\`)) return;
+  t.served  = false;
+  t.noShow  = false;
+  t.endTime = null;
+  t.counter = 0;
+  t.compliance  = false;
+  t.paymentHold = false;
+  saveState();
+  showToast(\`#\${String(ticketId).padStart(3,'0')} ↩ restored to pool\`);
+}
+window.adminRestoreNoShow = adminRestoreNoShow;
+
+// Export no-show list to CSV
+function exportNoShowCsv(){
+  const noShows = log.filter(t=>t.noShow);
+  if(!noShows.length){ showToast('No no-show records to export'); return; }
+  function esc(v){ return '"'+String(v==null?'':v).replace(/"/g,'""')+'"'; }
+  const CRLF = '\r\n';
+  const headers = ['#','Customer','Service','Counter','Time','Date'].map(esc).join(',');
+  const rows = noShows.map(t=>{
+    const counterName = t.counter>0?'DMW Desk '+(t.counter+1):'Unassigned';
+    const endFmt = t.endTime?new Date(t.endTime).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit',second:'2-digit'}):(t.time||'');
+    return [t.id, t.customer||'', t.service||'', counterName, endFmt, t.date||''].map(esc).join(',');
+  });
+  const csv = '\ufeff'+[headers,...rows].join(CRLF);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
+  const d = new Date();
+  a.download = 'NoShow_'+d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  showToast('CSV exported');
+}
+window.exportNoShowCsv = exportNoShowCsv;
+
+// Clear all no-show flags (restore all to pool)
+function adminClearNoShows(){
+  const ns = log.filter(t=>t.noShow);
+  if(!ns.length){ showToast('No no-show records to clear'); return; }
+  if(!confirm(\`Clear all \${ns.length} no-show record(s)? They will be permanently removed from the log.\`)) return;
+  log = log.filter(t=>!t.noShow);
+  saveState();
+  showToast(\`\${ns.length} no-show record(s) cleared\`);
+}
+window.adminClearNoShows = adminClearNoShows;
 
 // ── Restore from IndexedDB backup (localStorage fallback) ──
 async function restoreBmFromDevice(){
