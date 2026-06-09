@@ -2480,8 +2480,6 @@ function showToast(msg){
   setTimeout(()=>el.classList.remove('show'),2000);
 }
 
-buildLogin();
-
 // ── Month filter helpers ──
 var _compiledMonthFilter  = 'current';
 var _compiledSourceFilter = 'all';
@@ -2876,6 +2874,9 @@ function deduplicateAllRecords(){
 window.openSaveForDayModal=openSaveForDayModal;
 window.closeSaveForDayModal=closeSaveForDayModal;
 window.confirmSaveForDay=confirmSaveForDay;
+
+// ── Start: called after all functions are defined ──
+buildLogin();
 
 </script>
 
