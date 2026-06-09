@@ -305,6 +305,9 @@
   #counterView.c3 .pool-item:hover .pi-hint{color:var(--c3)}
   #counterView.c4 .pool-item:hover .pi-hint{color:var(--c4)}
   .pool-empty{font-size:10px;color:var(--muted);letter-spacing:0.1em;text-align:center;padding:28px 12px}
+  /* Pool No Show button */
+  .pi-noshow-btn{font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:0.1em;border-radius:3px;padding:4px 8px;cursor:pointer;transition:all 0.15s;background:rgba(226,126,0,0.08);color:var(--amber);border:1px solid rgba(226,126,0,0.32);flex-shrink:0;white-space:nowrap}
+  .pi-noshow-btn:hover{background:rgba(226,126,0,0.22);border-color:var(--amber);box-shadow:0 2px 10px rgba(226,126,0,0.18)}
 
   /* Pool filter tabs */
 
@@ -2128,6 +2131,38 @@ function markNoShow(){
 }
 window.markNoShow=markNoShow;
 
+// ── Mark a pool ticket as No Show directly (without claiming it first) ──
+function markNoShowFromPool(ticketId){
+  const t=sharedLog.find(x=>x.id===ticketId);
+  if(!t) return;
+  if(t.served){ showToast('Already removed'); return; }
+  if(!confirm(`Mark #${String(t.id).padStart(3,'0')} as No Show and remove from queue?`)) return;
+  t.served    = true;
+  t.noShow    = true;
+  t.endTime   = Date.now();
+  t.compliance  = false;
+  t.paymentHold = false;
+  if(window._lastCall && window._lastCall.ticketId===t.id){
+    window._lastCall=null;
+  }
+  myUnservedLog.unshift({
+    id:       t.id,
+    service:  t.service||'',
+    customer: t.customer||null,
+    time:     nowTime(),
+    issuedAt: t.issuedAt || t.startTime || null,
+    calledAt: t.calledAt || null,
+    endTime:  t.endTime,
+    noShow:   true
+  });
+  myHistory.unshift(t.id);
+  if(myHistory.length>6) myHistory.pop();
+  showToast(`#${String(t.id).padStart(3,'0')} — No Show · Removed from queue`);
+  saveShared();
+  renderView();
+}
+window.markNoShowFromPool=markNoShowFromPool;
+
 // ── Transfer Modal ──
 const COUNTER_LABELS_D = {1:'DMW Desk 2',2:'DMW Desk 3',3:'DMW Desk 4',4:'DMW Desk 5'};
 const COUNTER_COLORS_D = {1:'var(--c1)',2:'var(--c2)',3:'var(--c3)',4:'var(--c4)'};
@@ -2480,7 +2515,13 @@ function buildPoolItem(t){
       ${t.priority==='priority'?'<span class="pi-badge pi-badge-prio">⚡</span>':''}
       <span class="pi-hint">Tap to claim</span>
     </div>
-    <div class="claim-flash">✓ Added</div>`;
+    <button class="pi-noshow-btn" title="Mark as No Show \u2014 remove from queue">\uD83D\uDEAB No Show</button>
+    <div class="claim-flash">\u2713 Added</div>`;
+  // Attach No Show button click \u2014 stop propagation so it doesn\u2019t trigger claim
+  item.querySelector('.pi-noshow-btn').addEventListener('click', function(e){
+    e.stopPropagation();
+    markNoShowFromPool(t.id);
+  });
   return item;
 }
 
