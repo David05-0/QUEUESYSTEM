@@ -676,7 +676,6 @@
     </div>
     <!-- Desk 2 Compiled tab -->
     <div id="ciTabCompiled" style="display:none;flex-direction:column;max-height:320px">
-      <!-- Month filter bar -->
       <div style="padding:7px 12px 6px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.18);flex-shrink:0">
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:5px">
           <span style="font-size:7px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);flex-shrink:0">Month:</span>
@@ -694,7 +693,6 @@
           <div id="compiledSummaryStrip" style="font-size:7.5px;color:var(--muted);flex:1;text-align:right"></div>
         </div>
       </div>
-      <!-- Column headers -->
       <div style="display:grid;grid-template-columns:22px 1fr 44px 32px 60px 60px 50px 22px;gap:2px;padding:6px 12px;background:rgba(61,220,132,0.08);color:rgba(238,238,246,0.4);font-size:6px;letter-spacing:0.12em;text-transform:uppercase;flex-shrink:0">
         <span>#</span><span>Name</span><span>Sex</span><span>Age</span><span>Destination</span><span>Position</span><span>Source</span><span></span>
       </div>
@@ -2093,6 +2091,43 @@ function markNoShow(){
 }
 window.markNoShow=markNoShow;
 
+// ── Mark any queued ticket as No Show by ID (without calling first) ──
+function markNoShowById(ticketId){
+  const t = sharedLog.find(x=>x.id===ticketId);
+  if(!t) return;
+  if(!confirm(`Mark #${String(t.id).padStart(3,'0')} as No Show?`)) return;
+  // If this is the currently active ticket, clear it
+  if(activeTicketId === ticketId){
+    activeTicketId = null;
+    sessionStorage.removeItem('ssTicketId');
+    stopElapsedTimer();
+    clearDisplay();
+    if(window._lastCall && window._lastCall.ticketId===ticketId) window._lastCall=null;
+  }
+  t.served      = true;
+  t.noShow      = true;
+  t.endTime     = Date.now();
+  t.compliance  = false;
+  t.paymentHold = false;
+  t.counter     = activeCounter;
+  myUnservedLog.unshift({
+    id:       t.id,
+    service:  t.service||'',
+    customer: t.customer||null,
+    time:     nowTime(),
+    issuedAt: t.issuedAt || t.startTime || null,
+    calledAt: t.calledAt || null,
+    endTime:  t.endTime,
+    noShow:   true
+  });
+  myHistory.unshift(t.id);
+  if(myHistory.length>6) myHistory.pop();
+  showToast(`#${String(t.id).padStart(3,'0')} — No Show · Removed from queue`);
+  saveShared();
+  renderView();
+}
+window.markNoShowById = markNoShowById;
+
 // ── Transfer Modal ──
 const COUNTER_LABELS_D = {1:'DMW Desk 2',2:'DMW Desk 3',3:'DMW Desk 4',4:'DMW Desk 5'};
 const COUNTER_COLORS_D = {1:'var(--c1)',2:'var(--c2)',3:'var(--c3)',4:'var(--c4)'};
@@ -2341,7 +2376,10 @@ function renderView(){
           ${t.customer?`<div class="cv-q-cust">${t.customer}</div>`:''}
           ${qTimeHtml}
         </div>
-        <div class="cv-q-badges">${badges.join('')}</div>`;
+        <div class="cv-q-badges">
+          ${badges.join('')}
+          <button onclick="event.stopPropagation();markNoShowById(${t.id})" title="Mark No Show" style="font-size:9px;padding:2px 5px;background:rgba(226,126,0,0.1);border:1px solid rgba(226,126,0,0.35);color:var(--amber);border-radius:3px;cursor:pointer;margin-top:2px;letter-spacing:0.05em">🚫</button>
+        </div>`;
       listEl.appendChild(item);
     });
   }
@@ -2434,7 +2472,7 @@ function renderView(){
     if(!noShowList.length){
       noShowEl.innerHTML='<span style="font-size:9px;color:var(--muted)">None yet</span>';
     } else {
-      const fmtTs = ts => {
+      const fmtTs2 = ts => {
         if(!ts) return '--';
         const d=new Date(ts);
         return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0');
@@ -2450,7 +2488,7 @@ function renderView(){
             <div class="unserved-reason" style="color:var(--amber);border-color:rgba(226,126,0,0.35);background:rgba(226,126,0,0.08)">🚫 No Show</div>
           </div>
           <div class="served-dur">
-            <span class="dur-part"><span class="dur-label">▶ Called</span><span class="dur-val">${fmtTs(s.calledAt)}</span></span>
+            <span class="dur-part"><span class="dur-label">▶ Called</span><span class="dur-val">${fmtTs2(s.calledAt)}</span></span>
             <span class="dur-part"><span class="dur-label">At</span><span class="dur-val">${s.time}</span></span>
           </div>
         </div>`).join('');
