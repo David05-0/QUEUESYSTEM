@@ -667,11 +667,30 @@
       <div id="trEmpty" style="display:none;padding:28px;text-align:center;color:var(--muted);font-size:10px;letter-spacing:0.1em">No transferred records yet</div>
     </div>
     <!-- Desk 2 Compiled tab -->
-    <div id="ciTabCompiled" style="display:none;overflow-y:auto;max-height:260px">
-      <div style="display:grid;grid-template-columns:22px 1fr 44px 32px 60px 60px 50px 22px;gap:2px;padding:6px 12px;background:rgba(61,220,132,0.08);color:rgba(238,238,246,0.4);font-size:6px;letter-spacing:0.12em;text-transform:uppercase;position:sticky;top:0">
+    <div id="ciTabCompiled" style="display:none;flex-direction:column;max-height:320px">
+      <!-- Month filter bar -->
+      <div style="padding:7px 12px 6px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.18);flex-shrink:0">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:5px">
+          <span style="font-size:7px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);flex-shrink:0">Month:</span>
+          <div id="compiledMonthBtns" style="display:flex;gap:5px;flex-wrap:wrap;align-items:center"></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:7px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);flex-shrink:0">Source:</span>
+          <select id="compiledSourceFilter" onchange="applyCompiledFilters()" style="font-family:'DM Mono',monospace;font-size:7.5px;padding:2px 6px;border:1px solid var(--border);background:#111118;color:var(--muted);border-radius:3px;outline:none;color-scheme:dark">
+            <option value="all">All</option>
+            <option value="own">✓ Own</option>
+            <option value="transferred">↗ Transferred</option>
+            <option value="saved">💾 Saved</option>
+            <option value="imported">⬇ Imported</option>
+          </select>
+          <div id="compiledSummaryStrip" style="font-size:7.5px;color:var(--muted);flex:1;text-align:right"></div>
+        </div>
+      </div>
+      <!-- Column headers -->
+      <div style="display:grid;grid-template-columns:22px 1fr 44px 32px 60px 60px 50px 22px;gap:2px;padding:6px 12px;background:rgba(61,220,132,0.08);color:rgba(238,238,246,0.4);font-size:6px;letter-spacing:0.12em;text-transform:uppercase;flex-shrink:0">
         <span>#</span><span>Name</span><span>Sex</span><span>Age</span><span>Destination</span><span>Position</span><span>Source</span><span></span>
       </div>
-      <div id="compiledList" style="display:flex;flex-direction:column"></div>
+      <div id="compiledList" style="display:flex;flex-direction:column;overflow-y:auto;flex:1"></div>
       <div id="compiledEmpty" style="display:none;padding:28px;text-align:center;color:var(--muted);font-size:10px;letter-spacing:0.1em">No compiled records yet</div>
     </div>
   </div>
