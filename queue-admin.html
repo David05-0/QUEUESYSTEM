@@ -1984,25 +1984,22 @@ function renderNoShowPanel(){
     return;
   }
   empty.style.display='none';
-  // Header row
   const hdr = document.createElement('div');
   hdr.className = 'noshow-row-head';
   hdr.innerHTML = '<span>#</span><span>Client / Service</span><span>Counter</span><span>Time</span><span>Action</span>';
   body.insertBefore(hdr, empty);
-  noShows.forEach(t=>{
+  noShows.forEach(function(t){
     const row = document.createElement('div');
     row.className = 'noshow-row';
     const counterName = t.counter>0 ? 'DMW Desk '+(t.counter+1) : 'Unassigned';
-    const endFmt = t.endTime ? new Date(t.endTime).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) : (t.time||'—');
-    row.innerHTML = \`
-      <div class="ns-num">\${String(t.id).padStart(3,'0')}</div>
-      <div class="ns-body">
-        <div class="ns-svc">\${t.service||''}</div>
-        \${t.customer?\`<div class="ns-cust">\${t.customer}</div>\`:''}
-      </div>
-      <div class="ns-counter">\${counterName}</div>
-      <div class="ns-time">\${endFmt}</div>
-      <div><button class="ns-restore-btn" onclick="adminRestoreNoShow(\${t.id})">&#x21A9; Restore</button></div>\`;
+    const endFmt = t.endTime ? new Date(t.endTime).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) : (t.time||'--');
+    const custHtml = t.customer ? '<div class="ns-cust">'+t.customer+'</div>' : '';
+    row.innerHTML =
+      '<div class="ns-num">'+String(t.id).padStart(3,'0')+'</div>'+
+      '<div class="ns-body"><div class="ns-svc">'+(t.service||'')+'</div>'+custHtml+'</div>'+
+      '<div class="ns-counter">'+counterName+'</div>'+
+      '<div class="ns-time">'+endFmt+'</div>'+
+      '<div><button class="ns-restore-btn" onclick="adminRestoreNoShow('+t.id+')">&#x21A9; Restore</button></div>';
     body.insertBefore(row, empty);
   });
 }
@@ -2010,9 +2007,9 @@ window.renderNoShowPanel = renderNoShowPanel;
 
 // Restore a no-show ticket back into the unassigned pool
 function adminRestoreNoShow(ticketId){
-  const t = log.find(x=>x.id===ticketId);
+  const t = log.find(function(x){ return x.id===ticketId; });
   if(!t || !t.noShow) return;
-  if(!confirm(\`Restore #\${String(ticketId).padStart(3,'0')} back to the unassigned pool?\`)) return;
+  if(!confirm('Restore #'+String(ticketId).padStart(3,'0')+' back to the unassigned pool?')) return;
   t.served  = false;
   t.noShow  = false;
   t.endTime = null;
@@ -2020,23 +2017,23 @@ function adminRestoreNoShow(ticketId){
   t.compliance  = false;
   t.paymentHold = false;
   saveState();
-  showToast(\`#\${String(ticketId).padStart(3,'0')} ↩ restored to pool\`);
+  showToast('#'+String(ticketId).padStart(3,'0')+' restored to pool');
 }
 window.adminRestoreNoShow = adminRestoreNoShow;
 
 // Export no-show list to CSV
 function exportNoShowCsv(){
-  const noShows = log.filter(t=>t.noShow);
+  const noShows = log.filter(function(t){ return t.noShow; });
   if(!noShows.length){ showToast('No no-show records to export'); return; }
   function esc(v){ return '"'+String(v==null?'':v).replace(/"/g,'""')+'"'; }
   const CRLF = '\r\n';
   const headers = ['#','Customer','Service','Counter','Time','Date'].map(esc).join(',');
-  const rows = noShows.map(t=>{
-    const counterName = t.counter>0?'DMW Desk '+(t.counter+1):'Unassigned';
-    const endFmt = t.endTime?new Date(t.endTime).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit',second:'2-digit'}):(t.time||'');
+  const rows = noShows.map(function(t){
+    const counterName = t.counter>0 ? 'DMW Desk '+(t.counter+1) : 'Unassigned';
+    const endFmt = t.endTime ? new Date(t.endTime).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) : (t.time||'');
     return [t.id, t.customer||'', t.service||'', counterName, endFmt, t.date||''].map(esc).join(',');
   });
-  const csv = '\ufeff'+[headers,...rows].join(CRLF);
+  const csv = '\ufeff'+[headers].concat(rows).join(CRLF);
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
   const d = new Date();
@@ -2046,14 +2043,14 @@ function exportNoShowCsv(){
 }
 window.exportNoShowCsv = exportNoShowCsv;
 
-// Clear all no-show flags (restore all to pool)
+// Clear all no-show entries from the log
 function adminClearNoShows(){
-  const ns = log.filter(t=>t.noShow);
+  const ns = log.filter(function(t){ return t.noShow; });
   if(!ns.length){ showToast('No no-show records to clear'); return; }
-  if(!confirm(\`Clear all \${ns.length} no-show record(s)? They will be permanently removed from the log.\`)) return;
-  log = log.filter(t=>!t.noShow);
+  if(!confirm('Clear all '+ns.length+' no-show record(s)? They will be permanently removed from the log.')) return;
+  log = log.filter(function(t){ return !t.noShow; });
   saveState();
-  showToast(\`\${ns.length} no-show record(s) cleared\`);
+  showToast(ns.length+' no-show record(s) cleared');
 }
 window.adminClearNoShows = adminClearNoShows;
 
