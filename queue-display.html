@@ -129,6 +129,8 @@
   /* ── NOT AVAILABLE button ── */
   .cv-notavail-btn{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.1em;border-radius:4px;padding:11px;cursor:pointer;transition:all 0.15s;background:rgba(255,95,95,0.07);color:var(--red);border:1px solid rgba(255,95,95,0.28);width:100%}
   .cv-notavail-btn:hover{background:rgba(255,95,95,0.18);border-color:var(--red);transform:translateY(-1px);box-shadow:0 4px 18px rgba(255,95,95,0.18)}
+  .cv-noshow-btn{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.1em;border-radius:4px;padding:11px;cursor:pointer;transition:all 0.15s;background:rgba(226,126,0,0.08);color:var(--amber);border:1px solid rgba(226,126,0,0.32);width:100%}
+  .cv-noshow-btn:hover{background:rgba(226,126,0,0.2);border-color:var(--amber);transform:translateY(-1px);box-shadow:0 4px 18px rgba(226,126,0,0.18)}
   /* ── UNSERVED button ── */
   .cv-unserved-btn{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.1em;border-radius:4px;padding:11px;cursor:pointer;transition:all 0.15s;background:rgba(125,60,152,0.08);color:var(--c4);border:1px solid rgba(125,60,152,0.3);width:100%}
   .cv-unserved-btn:hover{background:rgba(125,60,152,0.18);border-color:var(--c4);transform:translateY(-1px);box-shadow:0 4px 18px rgba(125,60,152,0.18)}
@@ -431,6 +433,7 @@
         </div>
         <button class="cv-unserved-btn" onclick="markUnserved()">✕ UNSERVED — CLIENT DID NOT CONTINUE</button>
         <button class="cv-notavail-btn" onclick="markNotAvailable()">⚠ NOT AVAILABLE — RETURN TO POOL</button>
+        <button class="cv-noshow-btn" onclick="markNoShow()">🚫 NO SHOW — REMOVE FROM QUEUE</button>
         <button class="cv-done-btn" onclick="markDone()">✓ DONE — MARK SERVED</button>
       </div>
     </div>
@@ -2386,6 +2389,44 @@ function markUnserved(){
 }
 window.markUnserved=markUnserved;
 
+// ── Mark active ticket as No Show — called but client never appeared; do not re-queue ──
+function markNoShow(){
+  if(activeTicketId===null) return;
+  const t=sharedLog.find(x=>x.id===activeTicketId);
+  if(!t) return;
+  // Mark as served so it leaves the queue, flagged distinctly as no-show
+  t.served    = true;
+  t.noShow    = true;   // client was called but never appeared — not re-queued
+  t.endTime   = Date.now();
+  t.compliance  = false;
+  t.paymentHold = false;
+  // Clear lastCall so display removes the announcement
+  if(window._lastCall && window._lastCall.ticketId===activeTicketId){
+    window._lastCall=null;
+  }
+  // Track in local unserved log (reuse same log, noShow flag distinguishes it)
+  myUnservedLog.unshift({
+    id:       t.id,
+    service:  t.service||'',
+    customer: t.customer||null,
+    time:     nowTime(),
+    issuedAt: t.issuedAt || t.startTime || null,
+    calledAt: t.calledAt || null,
+    endTime:  t.endTime,
+    noShow:   true
+  });
+  myHistory.unshift(t.id);
+  if(myHistory.length>6) myHistory.pop();
+  showToast(`#${String(t.id).padStart(3,'0')} — No Show · Removed from queue`);
+  activeTicketId=null;
+  sessionStorage.removeItem('ssTicketId');
+  stopElapsedTimer();
+  clearDisplay();
+  saveShared();
+  renderView();
+}
+window.markNoShow=markNoShow;
+
 // ── Transfer Modal ──
 const COUNTER_LABELS_D = {1:'DMW Desk 2',2:'DMW Desk 3',3:'DMW Desk 4',4:'DMW Desk 5'};
 const COUNTER_COLORS_D = {1:'var(--c1)',2:'var(--c2)',3:'var(--c3)',4:'var(--c4)'};
@@ -2707,7 +2748,7 @@ function renderView(){
             <div class="served-svc">${s.service}</div>
             ${s.customer?`<div class="served-cust" style="color:var(--c4);opacity:0.8">${s.customer}</div>`:''}
           </div>
-          <div class="unserved-reason">Unserved</div>
+          <div class="unserved-reason" style="${s.noShow?'color:var(--amber);border-color:rgba(226,126,0,0.35);background:rgba(226,126,0,0.08)':''}">${s.noShow?'🚫 No Show':'✕ Unserved'}</div>
         </div>
         <div class="served-dur">
           <span class="dur-part"><span class="dur-label">▶ Called</span><span class="dur-val">${fmtTs(s.calledAt)}</span></span>
