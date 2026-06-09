@@ -2409,7 +2409,12 @@ function renderView(){
           ${t.customer?`<div class="cv-q-cust">${t.customer}</div>`:''}
           ${qTimeHtml}
         </div>
-        <div class="cv-q-badges">${badges.join('')}</div>`;
+        <div class="cv-q-badges">${badges.join('')}</div>
+        ${!t._isActive?`<button class="pi-noshow-btn" style="font-size:9px;padding:3px 6px" title="No Show &#x2014; remove">&#x1F6AB; NS</button>`:''}`;
+      if(!t._isActive){
+        const nsBtn=item.querySelector('.pi-noshow-btn');
+        if(nsBtn) nsBtn.addEventListener('click',function(e){e.stopPropagation();markNoShowFromPool(t.id);});
+      }
       listEl.appendChild(item);
     });
   }
