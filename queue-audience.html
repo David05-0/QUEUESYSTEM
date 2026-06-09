@@ -110,12 +110,39 @@
   .cf-priority{display:inline-flex;align-items:center;gap:5px;font-size:clamp(12px,1.4vw,15px);letter-spacing:0.14em;text-transform:uppercase;color:var(--priority);border:1px solid rgba(231,76,60,0.4);background:rgba(231,76,60,0.08);padding:5px 14px;border-radius:3px;margin-top:6px;animation:cfFadeIn 0.5s ease 0.32s both}
   @keyframes cfZoomIn{from{transform:scale(0.5);opacity:0}to{transform:scale(1);opacity:1}}
   @keyframes cfFadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+  /* ── Sound unlock overlay ── */
+  #unlockOverlay{
+    position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:18px;
+    background:rgba(6,6,10,0.92);backdrop-filter:blur(6px);
+  }
+  #unlockOverlay.hidden{display:none}
+  .unlock-icon{font-size:64px;animation:unlockPulse 2s ease infinite}
+  @keyframes unlockPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.08);opacity:0.8}}
+  .unlock-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(32px,5vw,60px);letter-spacing:0.14em;color:var(--gold);text-align:center}
+  .unlock-sub{font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:var(--muted);text-align:center}
+  .unlock-btn{
+    font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:0.18em;text-transform:uppercase;
+    padding:14px 40px;border-radius:4px;border:2px solid var(--gold);
+    background:rgba(240,192,64,0.1);color:var(--gold);cursor:pointer;
+    transition:background 0.2s,transform 0.15s;
+  }
+  .unlock-btn:hover{background:rgba(240,192,64,0.22);transform:scale(1.03)}
 </style>
 </head>
 <body>
 <div class="bg-grid"></div>
 <div class="bg-vignette"></div>
 
+
+<!-- Sound unlock overlay -->
+<div id="unlockOverlay">
+  <div class="unlock-icon">🔊</div>
+  <div class="unlock-title">Queue Display</div>
+  <div class="unlock-sub">Tap to enable audio announcements</div>
+  <button class="unlock-btn" onclick="unlockAndStart()">Enable Sound &amp; Start</button>
+</div>
 
 <div class="call-flash" id="callFlash">
   <div class="cf-now-lbl">NOW SERVING</div>
@@ -213,30 +240,41 @@ setInterval(updateClock, 1000);
 updateClock();
 
 // ── Audio unlock ──
-function startDisplay(){
+function unlockAndStart(){
+  var overlay = document.getElementById('unlockOverlay');
+  if(overlay) overlay.classList.add('hidden');
   if(audioUnlocked) return;
   audioUnlocked = true;
   try {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // Resume context if suspended (required after user gesture in Chrome)
+    if(audioCtx.state === 'suspended') audioCtx.resume();
     var buf = audioCtx.createBuffer(1,1,22050);
     var src = audioCtx.createBufferSource();
     src.buffer = buf; src.connect(audioCtx.destination); src.start(0);
   } catch(e2){ console.warn('AudioContext:', e2); }
   if(window.speechSynthesis){
     window.speechSynthesis.cancel();
-    // Pre-load voices by speaking a silent utterance
+    // Warm-up utterance to unlock TTS in the browser
     var w = new SpeechSynthesisUtterance(' ');
-    w.volume = 0.01;
+    w.volume = 0.001; w.rate = 1;
     window.speechSynthesis.speak(w);
-    // Aggressively pre-cache voices list
+    // Pre-cache voices aggressively
     window.speechSynthesis.getVoices();
-    setTimeout(function(){ window.speechSynthesis.getVoices(); }, 500);
-    setTimeout(function(){ window.speechSynthesis.getVoices(); }, 1500);
+    setTimeout(function(){ window.speechSynthesis.getVoices(); }, 300);
+    setTimeout(function(){ window.speechSynthesis.getVoices(); }, 800);
+    setTimeout(function(){ window.speechSynthesis.getVoices(); }, 1800);
+    // Chrome bug: speechSynthesis can get stuck — periodic resume
+    setInterval(function(){
+      if(window.speechSynthesis.paused) window.speechSynthesis.resume();
+    }, 5000);
   }
 }
 
-// ── Auto-start (inline script runs after DOM — call directly) ──
-window.addEventListener('click', function(){ if(!audioUnlocked) startDisplay(); }, {once:true});
+function startDisplay(){ unlockAndStart(); }
+
+// Fallback: also unlock on any click anywhere (in case overlay is dismissed)
+window.addEventListener('click', function(){ if(!audioUnlocked) unlockAndStart(); }, {once:true});
 
 // ── Build counter panels ──
 function buildCounters(){
