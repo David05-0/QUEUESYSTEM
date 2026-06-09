@@ -776,14 +776,32 @@ let activeFilter  = 'all';
 // ── FB status ──
 function setFbStatus(s){
   const el=document.getElementById('fbStatus');
+  if(!el) return;
   el.className='fb-status '+s;
   el.innerHTML=`<span class="fb-dot"></span>${s==='connected'?'Live':s==='error'?'Offline':'Connecting…'}`;
 }
 
-// Use Firebase .info/connected to immediately reflect true connection state
+// Start in connecting state
+setFbStatus('connecting');
+
+// Timeout fallback — if no connection within 8s, show Offline
+let _fbConnectTimer = setTimeout(()=>setFbStatus('error'), 8000);
+
+// Use Firebase .info/connected for true real-time connection state
 db.ref('.info/connected').on('value', snap=>{
-  if(snap.val()===true) setFbStatus('connected');
-  else setFbStatus('error');
+  if(snap.val()===true){
+    clearTimeout(_fbConnectTimer);
+    setFbStatus('connected');
+  } else {
+    // false = known-disconnected (not just initialising)
+    setFbStatus('error');
+    // Retry check after 5s — Firebase auto-reconnects in background
+    _fbConnectTimer = setTimeout(()=>{
+      db.ref('.info/connected').once('value').then(s=>{
+        setFbStatus(s.val()===true?'connected':'error');
+      });
+    }, 5000);
+  }
 });
 
 // ── Clock ──
