@@ -129,11 +129,12 @@
   /* ── NOT AVAILABLE button ── */
   .cv-notavail-btn{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.1em;border-radius:4px;padding:11px;cursor:pointer;transition:all 0.15s;background:rgba(255,95,95,0.07);color:var(--red);border:1px solid rgba(255,95,95,0.28);width:100%}
   .cv-notavail-btn:hover{background:rgba(255,95,95,0.18);border-color:var(--red);transform:translateY(-1px);box-shadow:0 4px 18px rgba(255,95,95,0.18)}
-  .cv-noshow-btn{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.1em;border-radius:4px;padding:11px;cursor:pointer;transition:all 0.15s;background:rgba(226,126,0,0.08);color:var(--amber);border:1px solid rgba(226,126,0,0.32);width:100%}
-  .cv-noshow-btn:hover{background:rgba(226,126,0,0.2);border-color:var(--amber);transform:translateY(-1px);box-shadow:0 4px 18px rgba(226,126,0,0.18)}
   /* ── UNSERVED button ── */
   .cv-unserved-btn{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.1em;border-radius:4px;padding:11px;cursor:pointer;transition:all 0.15s;background:rgba(125,60,152,0.08);color:var(--c4);border:1px solid rgba(125,60,152,0.3);width:100%}
   .cv-unserved-btn:hover{background:rgba(125,60,152,0.18);border-color:var(--c4);transform:translateY(-1px);box-shadow:0 4px 18px rgba(125,60,152,0.18)}
+  /* ── NO SHOW button ── */
+  .cv-noshow-btn{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.1em;border-radius:4px;padding:11px;cursor:pointer;transition:all 0.15s;background:rgba(226,126,0,0.08);color:var(--amber);border:1px solid rgba(226,126,0,0.32);width:100%}
+  .cv-noshow-btn:hover{background:rgba(226,126,0,0.2);border-color:var(--amber);transform:translateY(-1px);box-shadow:0 4px 18px rgba(226,126,0,0.18)}
   /* ── TRANSFER button ── */
   .cv-transfer-btn{margin-top:10px;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:0.12em;border:none;border-radius:6px;padding:15px 40px;cursor:pointer;transition:all 0.15s;width:min(320px,100%);display:none;color:#fff}
   .cv-transfer-btn.visible{display:block}
@@ -533,8 +534,7 @@
         <button onclick="printCbmRecords()" title="Print records" style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(240,192,64,0.1);border:1px solid rgba(240,192,64,0.35);color:var(--accent);border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.background='rgba(240,192,64,0.2)'" onmouseout="this.style.background='rgba(240,192,64,0.1)'">🖨 Print</button>
         <button onclick="restoreLocalBackup()" title="Restore from local backup" style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(36,113,163,0.12);border:1px solid rgba(36,113,163,0.4);color:var(--c2);border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.background='rgba(36,113,163,0.22)'" onmouseout="this.style.background='rgba(36,113,163,0.12)'">↺ Restore</button>
         <button id="btnSaveForDay" onclick="openSaveForDayModal()" title="Save all records for the day to archive" style="display:none;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(125,60,152,0.12);border:1px solid rgba(125,60,152,0.45);color:var(--c4);border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.background='rgba(125,60,152,0.25)'" onmouseout="this.style.background='rgba(125,60,152,0.12)'">&#x1F4BE; Save for Day</button>
-        <button id="btnImportJson" onclick="openImportJsonModal()" title="Import Firebase JSON export" style="display:none;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(230,126,34,0.1);border:1px solid rgba(230,126,34,0.4);color:var(--c1);border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.background='rgba(230,126,34,0.2)'" onmouseout="this.style.background='rgba(230,126,34,0.1)'">📥 Import JSON</button>
-        <button id="btnDebugRecords" onclick="debugAllRecords()" title="Debug: inspect allRecords in Firebase" style="display:none;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(120,80,200,0.1);border:1px solid rgba(120,80,200,0.4);color:#a78bfa;border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s">🔍 Debug</button>
+        <button onclick="clearAllCbmRecords()" title="Clear all records"
         <button onclick="clearAllCbmRecords()" title="Clear all records" style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(255,95,95,0.08);border:1px solid rgba(255,95,95,0.35);color:var(--red);border-radius:3px;padding:5px 10px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.background='rgba(255,95,95,0.18)'" onmouseout="this.style.background='rgba(255,95,95,0.08)'">🗑 Clear All</button>
         <button onclick="closeClientInfo()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:3px;padding:4px 10px;cursor:pointer;font-size:12px">✕</button>
       </div>
@@ -666,27 +666,12 @@
       <div id="trEmpty" style="display:none;padding:28px;text-align:center;color:var(--muted);font-size:10px;letter-spacing:0.1em">No transferred records yet</div>
     </div>
     <!-- Desk 2 Compiled tab -->
-    <div id="ciTabCompiled" style="display:none;flex-direction:column">
-      <!-- Month filter bar -->
-      <div id="compiledFilterBar" style="display:flex;gap:6px;padding:8px 12px;border-bottom:1px solid var(--border);flex-wrap:wrap;align-items:center;background:rgba(0,0,0,0.15);position:sticky;top:0;z-index:2">
-        <span style="font-size:7px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);flex-shrink:0">Month:</span>
-        <div id="compiledMonthBtns" style="display:flex;gap:4px;flex-wrap:wrap;flex:1"></div>
-        <select id="compiledSourceFilter" onchange="applyCompiledFilters()" style="font-family:'DM Mono',monospace;font-size:7px;padding:3px 6px;border:1px solid var(--border);background:#111118;color:var(--muted);border-radius:3px;outline:none;cursor:pointer;color-scheme:dark">
-          <option value="all">All Sources</option>
-          <option value="own">✓ Own</option>
-          <option value="transferred">↗ Transferred</option>
-          <option value="saved">💾 Saved</option>
-          <option value="imported">⬇ Imported</option>
-        </select>
-      </div>
-      <!-- Summary strip -->
-      <div id="compiledSummaryStrip" style="display:flex;gap:10px;padding:5px 12px;border-bottom:1px solid var(--border);background:rgba(61,220,132,0.04);font-size:7.5px;color:var(--muted);flex-wrap:wrap"></div>
-      <!-- Column header -->
-      <div style="display:grid;grid-template-columns:22px 1fr 44px 32px 60px 60px 50px 22px;gap:2px;padding:6px 12px;background:rgba(61,220,132,0.08);color:rgba(238,238,246,0.4);font-size:6px;letter-spacing:0.12em;text-transform:uppercase">
+    <div id="ciTabCompiled" style="display:none;overflow-y:auto;max-height:260px">
+      <div style="display:grid;grid-template-columns:22px 1fr 44px 32px 60px 60px 50px 22px;gap:2px;padding:6px 12px;background:rgba(61,220,132,0.08);color:rgba(238,238,246,0.4);font-size:6px;letter-spacing:0.12em;text-transform:uppercase;position:sticky;top:0">
         <span>#</span><span>Name</span><span>Sex</span><span>Age</span><span>Destination</span><span>Position</span><span>Source</span><span></span>
       </div>
-      <div id="compiledList" style="display:flex;flex-direction:column;overflow-y:auto;max-height:320px"></div>
-      <div id="compiledEmpty" style="display:none;padding:28px;text-align:center;color:var(--muted);font-size:10px;letter-spacing:0.1em">No records for this filter</div>
+      <div id="compiledList" style="display:flex;flex-direction:column"></div>
+      <div id="compiledEmpty" style="display:none;padding:28px;text-align:center;color:var(--muted);font-size:10px;letter-spacing:0.1em">No compiled records yet</div>
     </div>
   </div>
 </div>
@@ -830,110 +815,11 @@ function initCbmListener(){
 // allRecords is a permanent historical archive and is NOT mixed into the daily compiled view.
 // The All Records tab shows only today's live data (own + transferred).
 // After Save for Day, both nodes are cleared so this list returns to zero.
-// Active month filter — 'current' means today's live data, 'YYYY-MM' means a past month
-var _compiledMonthFilter  = 'current';
-var _compiledSourceFilter = 'all';
-// Cache: allRecords from Firebase (past saved data), keyed by month 'YYYY-MM'
-var _allRecordsByMonth = {};   // { 'YYYY-MM': [records...], ... }
-var _allRecordsLoaded  = false;
-
-function _getMonthKey(r){
-  // Priority 1: explicit savedDate stamp (set by confirmSaveForDay or Import) — most reliable
-  if(r.savedDate) return r.savedDate.slice(0,7);
-
-  // Priority 2: savedAt timestamp (set by confirmSaveForDay)
-  if(r.savedAt && typeof r.savedAt === 'number'){
-    return new Date(r.savedAt).toISOString().slice(0,7);
-  }
-
-  // Priority 3: importedAt timestamp (set by Import)
-  if(r.importedAt && typeof r.importedAt === 'number'){
-    return new Date(r.importedAt).toISOString().slice(0,7);
-  }
-
-  // Priority 4: transferredAt (set when another desk transferred to Desk 2)
-  if(r.transferredAt && typeof r.transferredAt === 'number'){
-    return new Date(r.transferredAt).toISOString().slice(0,7);
-  }
-
-  // Priority 5: date field ('YYYY-MM-DD') filled in by staff
-  if(r.date && typeof r.date === 'string' && r.date.length >= 7){
-    return r.date.slice(0,7);
-  }
-
-  // Priority 6: ts (creation timestamp) — catches all older records that have no other date
-  if(r.ts && typeof r.ts === 'number'){
-    return new Date(r.ts).toISOString().slice(0,7);
-  }
-
-  return null;
-}
-
-function _currentMonthKey(){
-  return new Date().toISOString().slice(0,7); // 'YYYY-MM'
-}
-
-function debugAllRecords(){
-  showToast('Reading allRecords from Firebase...');
-  db.ref('allRecords').once('value').then(function(snap){
-    var data = snap.val();
-    if(!data){
-      alert('allRecords node is EMPTY or does not exist in Firebase.');
-      return;
-    }
-    var records = Object.values(data);
-    var total = records.length;
-
-    // Sample first 5 records — show their raw fields
-    var sample = records.slice(0, 5).map(function(r, i){
-      return [
-        '--- Record ' + (i+1) + ' ---',
-        'fullName:    ' + (r.fullName || '(none)'),
-        'ts:          ' + (r.ts || '(none)') + (r.ts ? ' → ' + new Date(r.ts).toISOString().slice(0,10) : ''),
-        'savedDate:   ' + (r.savedDate || '(none)'),
-        'savedAt:     ' + (r.savedAt || '(none)') + (r.savedAt ? ' → ' + new Date(r.savedAt).toISOString().slice(0,10) : ''),
-        'importedAt:  ' + (r.importedAt || '(none)'),
-        'transferredAt:' + (r.transferredAt || '(none)'),
-        'date:        ' + (r.date || '(none)'),
-        '_source:     ' + (r._source || '(none)'),
-        '_getMonthKey:' + _getMonthKey(r),
-      ].join('\n');
-    }).join('\n\n');
-
-    // Count by month bucket
-    var byMonth = {};
-    records.forEach(function(r){
-      var mk = _getMonthKey(r) || '(no month key)';
-      byMonth[mk] = (byMonth[mk] || 0) + 1;
-    });
-    var monthSummary = Object.keys(byMonth).sort().map(function(m){
-      return m + ': ' + byMonth[m] + ' record(s)';
-    }).join('\n');
-
-    var msg = 'allRecords in Firebase: ' + total + ' total\n\n'
-      + 'BY MONTH BUCKET:\n' + monthSummary
-      + '\n\n_allRecordsByMonth (cached):\n'
-      + (Object.keys(_allRecordsByMonth).length
-          ? Object.keys(_allRecordsByMonth).sort().map(function(m){ return m + ': ' + _allRecordsByMonth[m].length; }).join('\n')
-          : '(empty — rebuildCompiledRecords not yet called)')
-      + '\n\nFIRST 5 RECORDS SAMPLE:\n' + sample;
-
-    console.log('[DEBUG allRecords]', data);
-    console.log('[DEBUG byMonth]', byMonth);
-    console.log('[DEBUG _allRecordsByMonth]', _allRecordsByMonth);
-    alert(msg);
-  }).catch(function(err){
-    alert('Firebase read error: ' + err.message);
-  });
-}
-window.debugAllRecords = debugAllRecords;
-
 function rebuildCompiledRecords(){
   if(activeCounter !== 1) return Promise.resolve();
-
-  // ── LIVE (current working set): own counter records + active transfer logs ──
-  // These are records staff entered today that have NOT yet been saved for the day.
   const own = cbmRecords.map(r => Object.assign({}, r, { _source: 'own' }));
+
+  // Fetch live transfer logs only — no allRecords
   const transferPromises = [2, 3, 4].map(cIdx =>
     db.ref('transferLog/counter_' + cIdx).once('value').then(snap => {
       const data = snap.val();
@@ -941,50 +827,17 @@ function rebuildCompiledRecords(){
     })
   );
 
-  // ── ARCHIVE (past months): allRecords in Firebase ──
-  // These are records that were committed via Save for Day (tagged with savedDate).
-  // They are bucketed by month and shown in past-month filters only.
-  const allRecordsPromise = db.ref('allRecords').once('value').then(snap => {
-    const data = snap.val();
-    return data ? Object.values(data).map(r => Object.assign({}, r, { _source: r._source || 'saved' })) : [];
-  });
+  return Promise.all(transferPromises).then(arrays => {
+    const liveTransferred = [].concat(...arrays);
+    compiledRecords = [...own, ...liveTransferred].sort((a,b) => (a.ts||0) - (b.ts||0));
 
-  return Promise.all([...transferPromises, allRecordsPromise]).then(arrays => {
-    const liveTransferred = [].concat(...arrays.slice(0, 3));
-    const allRecordsData  = arrays[3];
-
-    // Bucket allRecords by month.
-    // Records from the CURRENT month that are also still live (in own/transferLog)
-    // are shown in Current only — deduplicated out of the month bucket to avoid doubles.
-    const curMonth = _currentMonthKey();
-    const liveKeys = new Set();
-    [...own, ...liveTransferred].forEach(r => {
-      liveKeys.add((r.ts||'') + '|' + (r.fullName||''));
-    });
-
-    _allRecordsByMonth = {};
-    allRecordsData.forEach(r => {
-      const mk = _getMonthKey(r);
-      if(!mk) return;
-      // If this record is also live (still in counterBmRecords/transferLog),
-      // skip it from the archive bucket — it belongs to Current view
-      const rKey = (r.ts||'') + '|' + (r.fullName||'');
-      if(liveKeys.has(rKey)) return;
-      if(!_allRecordsByMonth[mk]) _allRecordsByMonth[mk] = [];
-      _allRecordsByMonth[mk].push(r);
-    });
-    _allRecordsLoaded = true;
-
-    // "Current" compiled = ONLY live own + live transferred (not from allRecords).
+    // De-duplicate by ts+fullName
     const seen = new Set();
-    const merged = [];
-    [...own, ...liveTransferred].forEach(r => {
+    compiledRecords = compiledRecords.filter(r => {
       const key = (r.ts||'') + '|' + (r.fullName||'');
-      if(seen.has(key)) return;
-      seen.add(key);
-      merged.push(r);
+      if(seen.has(key)) return false;
+      seen.add(key); return true;
     });
-    compiledRecords = merged.sort((a,b) => (a.ts||0) - (b.ts||0));
     compiledRecords.forEach((r,i) => r.id = i + 1);
 
     const badge = document.getElementById('tabTrCount');
@@ -992,132 +845,10 @@ function rebuildCompiledRecords(){
     const compBadge = document.getElementById('tabCompiledCount');
     if(compBadge) compBadge.textContent = compiledRecords.length;
 
-    // Build month filter buttons (Current + one per past month in allRecords)
-    _buildMonthFilterBtns();
-
-    // Re-render if All Records tab is open
+    // Re-render if All Records tab is currently open
     const compTab = document.getElementById('ciTabCompiled');
-    if(compTab && compTab.style.display !== 'none') applyCompiledFilters();
+    if(compTab && compTab.style.display !== 'none') _renderCompiledListNow();
   });
-}
-
-function _buildMonthFilterBtns(){
-  const wrap = document.getElementById('compiledMonthBtns');
-  if(!wrap) return;
-  wrap.innerHTML = '';
-
-  // "Current" = unsaved live records only (own + transferLog, not yet committed)
-  const curBtn = document.createElement('button');
-  var liveCount = compiledRecords.length;
-  curBtn.textContent = '📋 Unsaved (' + liveCount + ')';
-  curBtn.dataset.month = 'current';
-  curBtn.onclick = function(){ _compiledMonthFilter = 'current'; applyCompiledFilters(); };
-  _styleMonthBtn(curBtn, _compiledMonthFilter === 'current');
-  wrap.appendChild(curBtn);
-
-  // ALL months in allRecords get a button — including current month (e.g. June 2026)
-  // because Save for Day may have already been run today, archiving those records
-  const allMonths = Object.keys(_allRecordsByMonth).sort().reverse(); // newest first
-  allMonths.forEach(m => {
-    const d = new Date(m + '-02'); // use day 2 to avoid timezone rollback to prior month
-    const label = d.toLocaleDateString('en-PH', { month: 'short', year: 'numeric' });
-    const count = (_allRecordsByMonth[m]||[]).length;
-    const btn = document.createElement('button');
-    btn.textContent = label + ' (' + count + ')';
-    btn.dataset.month = m;
-    btn.onclick = function(){ _compiledMonthFilter = m; applyCompiledFilters(); };
-    _styleMonthBtn(btn, _compiledMonthFilter === m);
-    wrap.appendChild(btn);
-  });
-}
-
-function _styleMonthBtn(btn, active){
-  btn.style.cssText = [
-    'font-family:DM Mono,monospace',
-    'font-size:7.5px',
-    'letter-spacing:0.1em',
-    'text-transform:uppercase',
-    'padding:3px 9px',
-    'border-radius:20px',
-    'cursor:pointer',
-    'border:1px solid',
-    'transition:all 0.13s',
-    'white-space:nowrap',
-    active
-      ? 'background:rgba(61,220,132,0.18);border-color:rgba(61,220,132,0.5);color:#3ddc84'
-      : 'background:transparent;border-color:var(--border);color:var(--muted)'
-  ].join(';');
-}
-
-function applyCompiledFilters(){
-  // Sync source filter value
-  const srcSel = document.getElementById('compiledSourceFilter');
-  if(srcSel) _compiledSourceFilter = srcSel.value;
-
-  // Rebuild month button styles
-  document.querySelectorAll('#compiledMonthBtns button').forEach(btn => {
-    _styleMonthBtn(btn, btn.dataset.month === _compiledMonthFilter);
-  });
-
-  // Pick the right record pool
-  let pool;
-  if(_compiledMonthFilter === 'current'){
-    pool = compiledRecords.slice(); // live merged set
-  } else {
-    pool = (_allRecordsByMonth[_compiledMonthFilter] || []).slice();
-    pool.sort((a,b) => (a.ts||0) - (b.ts||0));
-    pool.forEach((r,i) => r.id = i + 1);
-  }
-
-  // Apply source filter
-  if(_compiledSourceFilter !== 'all'){
-    pool = pool.filter(r => (r._source||'own') === _compiledSourceFilter);
-  }
-
-  // Summary strip
-  const strip = document.getElementById('compiledSummaryStrip');
-  if(strip){
-    const total = pool.length;
-    const own   = pool.filter(r => r._source === 'own' || !r._source).length;
-    const tr    = pool.filter(r => r._source === 'transferred').length;
-    const sv    = pool.filter(r => r._source === 'saved').length;
-    const im    = pool.filter(r => r._source === 'imported').length;
-    strip.innerHTML =
-      '<span style="color:#3ddc84">Total: <strong>' + total + '</strong></span>' +
-      (own  ? ' &nbsp;·&nbsp; <span>✓ Own: <strong>' + own  + '</strong></span>' : '') +
-      (tr   ? ' &nbsp;·&nbsp; <span style="color:var(--c2)">↗ Transferred: <strong>' + tr + '</strong></span>' : '') +
-      (sv   ? ' &nbsp;·&nbsp; <span style="color:var(--accent)">💾 Saved: <strong>' + sv + '</strong></span>' : '') +
-      (im   ? ' &nbsp;·&nbsp; <span style="color:var(--c1)">⬇ Imported: <strong>' + im + '</strong></span>' : '');
-  }
-
-  _renderFilteredCompiledList(pool);
-}
-window.applyCompiledFilters = applyCompiledFilters;
-
-function _renderFilteredCompiledList(pool){
-  const list  = document.getElementById('compiledList');
-  const empty = document.getElementById('compiledEmpty');
-  if(!list) return;
-  if(!pool.length){
-    list.innerHTML = '';
-    if(empty) empty.style.display = '';
-    return;
-  }
-  if(empty) empty.style.display = 'none';
-  list.innerHTML = pool.map((r,i) => {
-    const srcColor = r._source === 'transferred' ? 'rgba(36,113,163,0.8)' : r._source === 'saved' ? 'rgba(240,192,64,0.9)' : r._source === 'imported' ? 'rgba(230,126,34,0.9)' : 'rgba(61,220,132,0.8)';
-    const srcLabel = r._source === 'transferred' ? '\u2197 ' + (r.transferredFrom||'Other').replace('DMW ','') : r._source === 'saved' ? '\uD83D\uDCBE ' + (r.savedDate||'Saved') : r._source === 'imported' ? '\u2B07 Imported' : '\u2713 Own';
-    return '<div style="display:grid;grid-template-columns:22px 1fr 44px 32px 60px 60px 50px 22px;gap:2px;padding:7px 12px;border-top:1px solid var(--border);align-items:center;font-size:9px;background:' + (r._source==='transferred'?'rgba(36,113,163,0.04)':'') + '">' +
-      '<span style="font-family:Bebas Neue,sans-serif;font-size:13px;color:var(--muted)">' + r.id + '</span>' +
-      '<div style="overflow:hidden"><div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + (r.fullName||'') + '">' + (r.fullName||'') + '</div></div>' +
-      '<span style="color:var(--muted);font-size:8px">' + (r.gender||'—') + '</span>' +
-      '<span style="color:var(--muted);font-size:8px">' + (r.age||'—') + '</span>' +
-      '<span style="color:var(--muted);font-size:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (r.country||'—') + '</span>' +
-      '<span style="color:var(--muted);font-size:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (r.position||'—') + '</span>' +
-      '<span style="color:' + srcColor + ';font-size:7px;font-weight:600">' + srcLabel + '</span>' +
-      '<span></span>' +
-      '</div>';
-  }).join('');
 }
 
 function _renderCompiledListNow(){
@@ -1131,8 +862,8 @@ function _renderCompiledListNow(){
   }
   if(empty) empty.style.display = 'none';
   list.innerHTML = compiledRecords.map((r,i) => {
-    const srcColor = r._source === 'transferred' ? 'rgba(36,113,163,0.8)' : r._source === 'saved' ? 'rgba(240,192,64,0.9)' : r._source === 'imported' ? 'rgba(230,126,34,0.9)' : 'rgba(61,220,132,0.8)';
-    const srcLabel = r._source === 'transferred' ? '\u2197 ' + (r.transferredFrom||'Other').replace('DMW ','') : r._source === 'saved' ? '\uD83D\uDCBE ' + (r.savedDate||'Saved') : r._source === 'imported' ? '\u2B07 Imported' : '\u2713 Own';
+    const srcColor = r._source === 'transferred' ? 'rgba(36,113,163,0.8)' : r._source === 'saved' ? 'rgba(240,192,64,0.9)' : 'rgba(61,220,132,0.8)';
+    const srcLabel = r._source === 'transferred' ? '\u2197 ' + (r.transferredFrom||'Other').replace('DMW ','') : r._source === 'saved' ? '\uD83D\uDCBE ' + (r.savedDate||'Saved') : '\u2713 Own';
     return `<div style="display:grid;grid-template-columns:22px 1fr 44px 32px 60px 60px 50px 22px;gap:2px;padding:7px 12px;border-top:1px solid var(--border);align-items:center;font-size:9px;background:${r._source==='transferred'?'rgba(36,113,163,0.04)':''}">
       <span style="font-family:Bebas Neue,sans-serif;font-size:13px;color:var(--muted)">${r.id}</span>
       <div style="overflow:hidden">
@@ -1191,13 +922,7 @@ function addCbmEntry(){
   };
 
   const ref = db.ref('counterBmRecords/counter_' + activeCounter + '/bm_' + ts);
-  // Also write to allRecords immediately — deterministic key means re-saves are safe (idempotent).
-  // Records are permanently safe from the moment they're created, regardless of Save for Day.
-  const nameSlug = (entry.fullName||'unknown').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,12);
-  const allRecordsRef = db.ref('allRecords/rec_' + ts + '_' + nameSlug);
-  const entryForArchive = Object.assign({}, entry, { _source: 'own', savedAt: ts });
-
-  Promise.all([ref.set(entry), allRecordsRef.set(entryForArchive)])
+  ref.set(entry)
     .then(() => {
       saveCbmLocalBackup();
       clearDraft();
@@ -1226,8 +951,6 @@ function openClientInfo(){
   const lbl = document.getElementById('ciCounterLabel');
   if(lbl && activeCounter) lbl.textContent = '— ' + COUNTER_NAMES[activeCounter-1];
   var sfdBtn=document.getElementById('btnSaveForDay');if(sfdBtn) sfdBtn.style.display=(activeCounter===1)?'':'none';
-  var importBtn=document.getElementById('btnImportJson');if(importBtn) importBtn.style.display=(activeCounter===1)?'':'none';
-  var debugBtn=document.getElementById('btnDebugRecords');if(debugBtn) debugBtn.style.display=(activeCounter===1)?'':'none';
   switchCiTab('my');
   bindTransferLogListener();
   restoreDraft();
@@ -1252,30 +975,20 @@ function transferAllToCounter2(){
   const now    = Date.now();
   const snapshot = cbmRecords.slice();
 
-  // Build entries with transfer metadata
-  const enrichedEntries = snapshot.map(r => Object.assign({}, r, {
-    transferredFrom: COUNTER_NAMES[activeCounter-1],
-    transferredTo:   COUNTER_NAMES[0],
-    transferredAt:   now,
-    _source:         'transferred'
-  }));
-
-  // Step 1a: Write to transferLog (so Desk 2 sees them in the Transferred tab live)
-  const logWrites = enrichedEntries.map(entry => {
-    return logRef.child('tr_' + entry.ts).set(entry);
+  // Step 1: write ONLY to transferLog (NOT to counterBmRecords/counter_1)
+  const logWrites = snapshot.map(r => {
+    const logKey   = 'tr_' + r.ts;
+    const logEntry = Object.assign({}, r, {
+      transferredFrom: COUNTER_NAMES[activeCounter-1],
+      transferredTo:   COUNTER_NAMES[0],
+      transferredAt:   now
+    });
+    return logRef.child(logKey).set(logEntry);
   });
 
-  // Step 1b: Also write to allRecords immediately — records are safe the moment
-  //          transfer is confirmed, regardless of whether Desk 2 ever saves for the day
-  const allRecordWrites = enrichedEntries.map(entry => {
-    const nameSlug = (entry.fullName||'unknown').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,12);
-    const key = 'rec_' + (entry.ts||0) + '_' + nameSlug;
-    return db.ref('allRecords/' + key).set(entry);
-  });
-
-  Promise.all(logWrites.concat(allRecordWrites))
+  Promise.all(logWrites)
     .then(() => {
-      // Step 2: delete originals from source counter only after both writes succeed
+      // Step 2: delete originals from source counter
       return srcRef.remove();
     })
     .then(() => {
@@ -1639,19 +1352,18 @@ function renderCbmList(){
 function exportCbmCsv(){
   if(typeof XLSX === 'undefined'){ showToast('⚠ Excel library not loaded yet — try again'); return; }
   if(activeCounter === 1){
-    // Desk 2: open the month picker so they choose which month to download
-    openDownloadMonthModal();
+    showToast('⏳ Preparing all records for export…');
+    rebuildCompiledRecords().then(function(){ _doExportRecords(compiledRecords); });
     return;
   }
   _doExportRecords(cbmRecords);
 }
 
-function _doExportRecords(recordsToExport, monthLabel){
+function _doExportRecords(recordsToExport){
   if(!recordsToExport.length){ showToast('⚠ No records to export'); return; }
   if(typeof XLSX === 'undefined'){ showToast('⚠ Excel library not loaded yet — try again'); return; }
 
   const counterName = activeCounter ? COUNTER_NAMES[activeCounter-1] : 'Counter';
-  const _exportMonthLabel = monthLabel || null;
 
   // ── Column layout (21 total) ──
   // A-G  = OFW Info (7)   H-I = Address (2)   J = Region (1)
@@ -1786,22 +1498,14 @@ function _doExportRecords(recordsToExport, monthLabel){
   XLSX.utils.book_append_sheet(wb, ws, 'Client Info');
 
   const date = new Date().toLocaleDateString('en-PH',{year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\//g,'-');
-  const monthPart = _exportMonthLabel ? '_' + _exportMonthLabel.replace(/[^a-zA-Z0-9]/g,'_').replace(/_+/g,'_') : '';
-  const fname = 'ClientInfo_' + counterName.replace(/\s+/g,'_') + monthPart + '_' + date + '.xlsx';
+  const fname = 'ClientInfo_' + counterName.replace(/\s+/g,'_') + '_' + date + '.xlsx';
   XLSX.writeFile(wb, fname, { cellStyles: true, bookSST: false });
-  showToast('\u2713 Downloaded ' + recordsToExport.length + ' record(s)' + (_exportMonthLabel ? ' for ' + _exportMonthLabel : ''));
+  showToast('✓ Excel file downloaded');
 }
 
 function printCbmRecords(){
-  if(activeCounter === 1){
-    openPrintMonthModal();
-    return;
-  }
-  _doPrintRecords(cbmRecords, null);
-}
-
-function _doPrintRecords(recordsToExport, monthLabel){
-  if(!recordsToExport || !recordsToExport.length){ showToast('⚠ No records to print'); return; }
+  const recordsToExport = (activeCounter === 1 && compiledRecords.length) ? compiledRecords : cbmRecords;
+  if(!recordsToExport.length){ showToast('⚠ No records to print'); return; }
   const counterName = activeCounter ? COUNTER_NAMES[activeCounter-1] : 'Counter';
   const date = new Date().toLocaleDateString('en-PH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   const rows = recordsToExport.map((r,i)=>{
@@ -1860,7 +1564,7 @@ function _doPrintRecords(recordsToExport, monthLabel){
   <div class="hdr">
     <div>
       <div class="hdr-title">📋 OFW Client Info Records</div>
-      <div class="hdr-sub">${counterName}${monthLabel ? ' — ' + monthLabel : ''}</div>
+      <div class="hdr-sub">${counterName}</div>
     </div>
     <div class="hdr-meta">
       <div>${date}</div>
@@ -2389,22 +2093,19 @@ function markUnserved(){
 }
 window.markUnserved=markUnserved;
 
-// ── Mark active ticket as No Show — called but client never appeared; do not re-queue ──
+// ── Mark active ticket as No Show — called but client never appeared; removed permanently ──
 function markNoShow(){
   if(activeTicketId===null) return;
   const t=sharedLog.find(x=>x.id===activeTicketId);
   if(!t) return;
-  // Mark as served so it leaves the queue, flagged distinctly as no-show
   t.served    = true;
-  t.noShow    = true;   // client was called but never appeared — not re-queued
+  t.noShow    = true;
   t.endTime   = Date.now();
   t.compliance  = false;
   t.paymentHold = false;
-  // Clear lastCall so display removes the announcement
   if(window._lastCall && window._lastCall.ticketId===activeTicketId){
     window._lastCall=null;
   }
-  // Track in local unserved log (reuse same log, noShow flag distinguishes it)
   myUnservedLog.unshift({
     id:       t.id,
     service:  t.service||'',
@@ -2932,13 +2633,13 @@ function confirmSaveForDay(){
       }));
     })
     .then(function(){
-      // Step 5: Reset live local state — records are now in allRecords (past month bucket)
+      // Step 5: Reset ALL local state — records are archived, counter starts fresh
       cbmRecords = [];
       transferredRecords = [];
       compiledRecords = [];
-      _allRecordsLoaded = false; // force full reload on next rebuildCompiledRecords
 
-      // Step 6: Clear UI lists immediately
+
+      // Step 7: Immediately render empty lists so the UI clears right away
       renderCbmList();
       var compList = document.getElementById('compiledList');
       var compEmpty = document.getElementById('compiledEmpty');
@@ -2956,16 +2657,8 @@ function confirmSaveForDay(){
       var compBadge = document.getElementById('tabCompiledCount');
       if(compBadge) compBadge.textContent = '0';
 
-      // Step 7: Re-attach listeners for new records after archive
+      // Step 8: Re-attach listeners for new records coming in after the archive
       initCbmListener();
-
-      // Step 8: Rebuild compiled records so the just-saved month appears
-      // in the month filter bar immediately (no page reload required)
-      rebuildCompiledRecords().then(function(){
-        // Switch to the newly saved month so staff can verify records
-        _compiledMonthFilter = dateKey.slice(0,7);
-        applyCompiledFilters();
-      });
 
       // Step 9: Close modal and notify
       closeSaveForDayModal();
@@ -3060,560 +2753,5 @@ window.confirmSaveForDay=confirmSaveForDay;
   </div>
 </div>
 
-
-<!-- ── Import JSON Modal (Desk 2 only) ── -->
-<div id="importJsonBackdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:9999;align-items:center;justify-content:center;backdrop-filter:blur(4px)">
-  <div style="background:#111118;border:1.5px solid rgba(230,126,34,0.55);border-radius:6px;width:min(540px,95vw);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.9);display:flex;flex-direction:column">
-    <!-- Header -->
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid rgba(230,126,34,0.25);background:rgba(230,126,34,0.08)">
-      <div style="display:flex;align-items:center;gap:9px">
-        <span style="font-size:18px">📥</span>
-        <div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:0.1em;color:var(--c1)">IMPORT FIREBASE JSON</div>
-          <div style="font-size:7.5px;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);margin-top:1px">DMW DESK 2 — RESTORE FROM EXPORTED DATA</div>
-        </div>
-      </div>
-      <button onclick="closeImportJsonModal()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:3px;padding:4px 10px;cursor:pointer;font-size:14px">✕</button>
-    </div>
-
-    <!-- Instructions -->
-    <div style="padding:14px 18px;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.02)">
-      <div style="font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">HOW TO EXPORT FROM FIREBASE</div>
-      <ol style="font-size:9px;color:rgba(238,238,246,0.65);line-height:1.9;padding-left:16px;margin:0">
-        <li>Go to <span style="color:var(--c1);font-family:'DM Mono',monospace">console.firebase.google.com</span></li>
-        <li>Open your project → Realtime Database</li>
-        <li>Click the <strong style="color:var(--text)">⋮ menu</strong> (top-right of the data panel) → <strong style="color:var(--text)">Export JSON</strong></li>
-        <li>Save the file, then drag it here or click to upload</li>
-      </ol>
-      <div style="margin-top:10px;font-size:8px;color:rgba(238,238,246,0.4);line-height:1.6">
-        Accepted nodes: <span style="color:var(--c1);font-family:'DM Mono',monospace">counterBmRecords</span>, <span style="color:var(--c1);font-family:'DM Mono',monospace">transferLog</span>, <span style="color:var(--c1);font-family:'DM Mono',monospace">allRecords</span>, <span style="color:var(--c1);font-family:'DM Mono',monospace">bmRecords</span>.<br>
-        Records already in Firebase will <strong style="color:var(--text)">not be overwritten</strong> — only missing ones are added.
-      </div>
-    </div>
-
-    <!-- Drop zone -->
-    <div style="padding:18px">
-      <div id="importDropZone" style="border:2px dashed rgba(230,126,34,0.4);border-radius:5px;padding:32px 20px;text-align:center;cursor:pointer;transition:all 0.2s;background:rgba(230,126,34,0.04)"
-        onclick="document.getElementById('importFileInput').click()"
-        ondragover="event.preventDefault();this.style.borderColor='var(--c1)';this.style.background='rgba(230,126,34,0.1)'"
-        ondragleave="this.style.borderColor='rgba(230,126,34,0.4)';this.style.background='rgba(230,126,34,0.04)'"
-        ondrop="event.preventDefault();this.style.borderColor='rgba(230,126,34,0.4)';this.style.background='rgba(230,126,34,0.04)';handleImportFileDrop(event.dataTransfer.files[0])">
-        <div style="font-size:28px;margin-bottom:8px">📂</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:0.1em;color:var(--c1)">DROP JSON FILE HERE</div>
-        <div style="font-size:9px;color:var(--muted);margin-top:4px;letter-spacing:0.08em">or click to browse</div>
-        <input type="file" id="importFileInput" accept=".json,application/json" style="display:none" onchange="handleImportFileSelect(this)">
-      </div>
-
-      <!-- Preview area -->
-      <div id="importPreview" style="display:none;margin-top:14px">
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px">
-          <div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:4px;padding:10px;text-align:center">
-            <div id="impCountOwn" style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--teal)">0</div>
-            <div style="font-size:7px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-top:2px">Counter Rec.</div>
-          </div>
-          <div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:4px;padding:10px;text-align:center">
-            <div id="impCountTransfer" style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--c2)">0</div>
-            <div style="font-size:7px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-top:2px">Transfer Log</div>
-          </div>
-          <div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:4px;padding:10px;text-align:center">
-            <div id="impCountAll" style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--green)">0</div>
-            <div style="font-size:7px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-top:2px">All Records</div>
-          </div>
-          <div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:4px;padding:10px;text-align:center">
-            <div id="impCountBm" style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--c1)">0</div>
-            <div style="font-size:7px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-top:2px">BM Records</div>
-          </div>
-        </div>
-        <div id="impFileName" style="font-size:8px;color:var(--muted);text-align:center;margin-bottom:12px;font-family:'DM Mono',monospace"></div>
-        <div style="display:flex;gap:8px">
-          <button onclick="resetImport()" style="flex:1;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;padding:10px;border-radius:3px;cursor:pointer;background:transparent;color:var(--muted);border:1.5px solid var(--border)">✕ Clear</button>
-          <button id="btnConfirmImport" onclick="confirmImport()" style="flex:2;font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:0.1em;padding:11px;border-radius:3px;cursor:pointer;background:rgba(230,126,34,0.85);color:#fff;border:none">📥 IMPORT TO FIREBASE</button>
-        </div>
-        <div id="impWarning" style="display:none;margin-top:8px;font-size:8px;color:var(--amber);background:rgba(154,111,0,0.1);border:1px solid rgba(154,111,0,0.3);border-radius:3px;padding:8px 10px;line-height:1.6"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-// ══════════════════════════════════════════════════════════
-//  IMPORT JSON — Desk 2 only
-// ══════════════════════════════════════════════════════════
-var _importParsed = null; // holds the parsed JSON data ready to import
-
-function openImportJsonModal(){
-  resetImport();
-  document.getElementById('importJsonBackdrop').style.display = 'flex';
-}
-function closeImportJsonModal(){
-  document.getElementById('importJsonBackdrop').style.display = 'none';
-  resetImport();
-}
-function resetImport(){
-  _importParsed = null;
-  document.getElementById('importPreview').style.display = 'none';
-  document.getElementById('importDropZone').style.display = '';
-  document.getElementById('impWarning').style.display = 'none';
-  var fi = document.getElementById('importFileInput');
-  if(fi) fi.value = '';
-}
-
-window.openImportJsonModal  = openImportJsonModal;
-window.closeImportJsonModal = closeImportJsonModal;
-window.resetImport          = resetImport;
-
-function handleImportFileSelect(input){
-  if(!input.files || !input.files[0]) return;
-  readImportFile(input.files[0]);
-}
-window.handleImportFileSelect = handleImportFileSelect;
-
-function handleImportFileDrop(file){
-  if(!file) return;
-  readImportFile(file);
-}
-window.handleImportFileDrop = handleImportFileDrop;
-
-function readImportFile(file){
-  if(!file.name.endsWith('.json') && file.type !== 'application/json'){
-    showToast('⚠ Please select a .json file');
-    return;
-  }
-  var reader = new FileReader();
-  reader.onload = function(e){
-    try {
-      var parsed = JSON.parse(e.target.result);
-      analyzeImport(parsed, file.name);
-    } catch(err) {
-      showToast('⚠ Invalid JSON — could not parse file');
-      console.error('JSON parse error:', err);
-    }
-  };
-  reader.readAsText(file);
-}
-
-function flattenFirebaseNode(node){
-  // Firebase exports objects keyed by push-id; return flat array of values
-  if(!node || typeof node !== 'object') return [];
-  return Object.values(node).filter(function(v){ return v && typeof v === 'object'; });
-}
-
-function analyzeImport(data, fileName){
-  // Firebase sometimes wraps the whole export under the database name as a root key,
-  // e.g. { "queuesystem-fe374-default-rtdb": { allRecords: {...}, ... } }
-  // Detect that and unwrap it automatically.
-  var KNOWN_NODES = ['counterBmRecords','transferLog','allRecords','bmRecords','queueState','eodSaves','cbmDailyArchive'];
-  var root = data;
-  var rootKeys = Object.keys(data || {});
-  if(rootKeys.length === 1 && !KNOWN_NODES.includes(rootKeys[0])){
-    // Likely a database-name wrapper — unwrap one level
-    root = data[rootKeys[0]];
-  }
-
-  var counterBmRecords = root.counterBmRecords || null;
-  var transferLog      = root.transferLog      || null;
-  var allRecords       = root.allRecords       || null;
-  var bmRecords        = root.bmRecords        || null;
-
-  // Count records in each section
-  var ownRecs = 0;
-  if(counterBmRecords){
-    Object.keys(counterBmRecords).forEach(function(k){
-      var sub = counterBmRecords[k];
-      if(sub && typeof sub === 'object') ownRecs += Object.keys(sub).length;
-    });
-  }
-
-  var trRecs = 0;
-  if(transferLog){
-    Object.keys(transferLog).forEach(function(k){
-      var sub = transferLog[k];
-      if(sub && typeof sub === 'object') trRecs += Object.keys(sub).length;
-    });
-  }
-
-  var allRecs = allRecords ? Object.keys(allRecords).length : 0;
-  var bmRecs  = bmRecords  ? Object.keys(bmRecords).length  : 0;
-
-  var total = ownRecs + trRecs + allRecs + bmRecs;
-  if(total === 0){
-    // Show what top-level keys were actually found to help diagnose
-    var foundKeys = Object.keys(root || {}).join(', ') || '(none)';
-    showToast('⚠ No records found. Top-level keys: ' + foundKeys);
-    console.warn('[Import] Top-level keys found:', Object.keys(root || {}));
-    return;
-  }
-
-  _importParsed = { counterBmRecords, transferLog, allRecords, bmRecords, fileName };
-
-  document.getElementById('impCountOwn').textContent      = ownRecs;
-  document.getElementById('impCountTransfer').textContent = trRecs;
-  document.getElementById('impCountAll').textContent      = allRecs;
-  document.getElementById('impCountBm').textContent       = bmRecs;
-  document.getElementById('impFileName').textContent      = '📄 ' + fileName + ' — ' + total + ' total record(s)';
-  document.getElementById('importPreview').style.display  = '';
-  document.getElementById('importDropZone').style.display = 'none';
-
-  // Warn if no allRecords — means transferred records may not be permanent
-  if(allRecs === 0 && (ownRecs > 0 || trRecs > 0)){
-    var warn = document.getElementById('impWarning');
-    warn.style.display = '';
-    warn.textContent = '⚠ This export has no allRecords node. Importing counterBmRecords and transferLog only — consider doing a full export for a complete restore.';
-  }
-}
-
-function confirmImport(){
-  if(!_importParsed){ showToast('⚠ No file loaded'); return; }
-  var btn = document.getElementById('btnConfirmImport');
-  btn.disabled = true;
-  btn.textContent = 'IMPORTING...';
-
-  var writes = [];
-  var skipped = 0;
-  var total = 0;
-
-  // Helper: write a node to Firebase using update() so existing records are NOT overwritten
-  function mergeNode(fbPath, nodeData){
-    if(!nodeData || typeof nodeData !== 'object') return;
-    Object.keys(nodeData).forEach(function(key){
-      var val = nodeData[key];
-      if(val && typeof val === 'object'){
-        // Check if this is a leaf record (has typical BM fields) or a sub-node
-        if(val.fullName || val.firstName || val.lastName || val.ts || val.records){
-          // It's a record — use set with a transaction-like approach:
-          // We use update on the parent so only MISSING keys are written
-          total++;
-          writes.push(
-            db.ref(fbPath + '/' + key).once('value').then(function(snap){
-              if(snap.exists()){
-                skipped++;
-                return Promise.resolve(); // already exists — skip
-              }
-              return db.ref(fbPath + '/' + key).set(val);
-            })
-          );
-        } else {
-          // It's a sub-node (e.g. counter_1, counter_2) — recurse
-          mergeNode(fbPath + '/' + key, val);
-        }
-      }
-    });
-  }
-
-  // For counterBmRecords and transferLog: also mirror each record into allRecords
-  // so they show up in the All Records tab immediately after import
-  var _importNow = Date.now();
-  var _importDateKey = new Date(_importNow).toISOString().slice(0,10); // 'YYYY-MM-DD'
-
-  function mirrorToAllRecords(nodeData){
-    if(!nodeData || typeof nodeData !== 'object') return;
-    Object.keys(nodeData).forEach(function(key){
-      var val = nodeData[key];
-      if(val && typeof val === 'object'){
-        if(val.fullName || val.firstName || val.lastName || val.ts){
-          var nameSlug = ((val.fullName||val.firstName||'unknown')).toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,12);
-          var allKey = 'rec_' + (val.ts||_importNow) + '_' + nameSlug;
-          // Stamp savedDate so _getMonthKey places this in the correct past-month bucket.
-          // Use the record's own date if it has one, otherwise today.
-          var recDateKey = val.savedDate || (val.ts ? new Date(val.ts).toISOString().slice(0,10) : _importDateKey);
-          var record = Object.assign({}, val, {
-            _source:    'imported',
-            importedAt: _importNow,
-            savedDate:  recDateKey   // ← makes it visible in past-month filters
-          });
-          writes.push(
-            db.ref('allRecords/' + allKey).once('value').then(function(snap){
-              if(snap.exists()) return Promise.resolve();
-              return db.ref('allRecords/' + allKey).set(record);
-            })
-          );
-        } else {
-          mirrorToAllRecords(val); // recurse into sub-nodes like counter_1
-        }
-      }
-    });
-  }
-
-  if(_importParsed.counterBmRecords){ mergeNode('counterBmRecords', _importParsed.counterBmRecords); mirrorToAllRecords(_importParsed.counterBmRecords); }
-  if(_importParsed.transferLog)     { mergeNode('transferLog',      _importParsed.transferLog);      mirrorToAllRecords(_importParsed.transferLog); }
-  if(_importParsed.allRecords)        mergeNode('allRecords',       _importParsed.allRecords);
-  if(_importParsed.bmRecords)         mergeNode('bmRecords',        _importParsed.bmRecords);
-
-  if(!writes.length){
-    showToast('⚠ Nothing to import from this file');
-    btn.disabled = false; btn.textContent = '📥 IMPORT TO FIREBASE';
-    return;
-  }
-
-  Promise.all(writes)
-    .then(function(){
-      var imported = total - skipped;
-      showToast('✓ Imported ' + imported + ' record(s) — ' + skipped + ' already existed (skipped)');
-      closeImportJsonModal();
-      // Refresh the All Records tab and switch to the imported month so records are visible
-      rebuildCompiledRecords().then(function(){
-        _compiledMonthFilter = _importDateKey.slice(0,7); // jump to imported month
-        applyCompiledFilters();
-        // Open compiled tab if not already open
-        var compBtn = document.getElementById('tabCompiled');
-        if(compBtn && compBtn.style.display !== 'none') switchCiTab('compiled');
-      });
-      btn.disabled = false; btn.textContent = '📥 IMPORT TO FIREBASE';
-    })
-    .catch(function(err){
-      console.error('Import error:', err);
-      showToast('⚠ Import failed — ' + (err.message || 'check connection'));
-      btn.disabled = false; btn.textContent = '📥 IMPORT TO FIREBASE';
-    });
-}
-window.confirmImport = confirmImport;
-</script>
-
-
-<!-- ── Download by Month Modal (Desk 2 only) ── -->
-<div id="downloadMonthBackdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:9999;align-items:center;justify-content:center;backdrop-filter:blur(4px)">
-  <div style="background:#111118;border:1.5px solid rgba(61,220,132,0.45);border-radius:6px;width:min(480px,95vw);max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.9);display:flex;flex-direction:column">
-
-    <!-- Header -->
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid rgba(61,220,132,0.2);background:rgba(61,220,132,0.07)">
-      <div style="display:flex;align-items:center;gap:9px">
-        <span style="font-size:18px">📥</span>
-        <div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:0.1em;color:#3ddc84">DOWNLOAD RECORDS</div>
-          <div style="font-size:7.5px;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);margin-top:1px">SELECT A MONTH TO EXPORT AS EXCEL</div>
-        </div>
-      </div>
-      <button onclick="closeDownloadMonthModal()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:3px;padding:4px 10px;cursor:pointer;font-size:14px">✕</button>
-    </div>
-
-    <!-- Month list -->
-    <div style="padding:16px 18px;flex:1">
-      <div id="dlMonthList" style="display:flex;flex-direction:column;gap:8px">
-        <!-- populated by openDownloadMonthModal() -->
-      </div>
-      <div id="dlMonthEmpty" style="display:none;text-align:center;padding:28px;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted)">
-        No saved months found.<br>Run Save for Day first to archive records.
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<script>
-// ══════════════════════════════════════════════════════════
-//  DOWNLOAD BY MONTH — Desk 2 only
-// ══════════════════════════════════════════════════════════
-
-function openDownloadMonthModal(){
-  // Ensure allRecords are loaded before opening
-  var backdrop = document.getElementById('downloadMonthBackdrop');
-  var list     = document.getElementById('dlMonthList');
-  var empty    = document.getElementById('dlMonthEmpty');
-  if(!backdrop || !list) return;
-
-  list.innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:9px;letter-spacing:0.1em">Loading…</div>';
-  empty.style.display = 'none';
-  backdrop.style.display = 'flex';
-
-  // Rebuild to make sure _allRecordsByMonth is fresh
-  rebuildCompiledRecords().then(function(){
-    list.innerHTML = '';
-    var months = Object.keys(_allRecordsByMonth).sort().reverse(); // newest first
-
-    // Also offer "Current (unsaved)" if there are live records
-    var allMonthItems = [];
-
-    if(compiledRecords.length){
-      allMonthItems.push({ key: 'current', label: 'Current — Unsaved', count: compiledRecords.length, isLive: true });
-    }
-    months.forEach(function(m){
-      var recs = _allRecordsByMonth[m] || [];
-      if(!recs.length) return;
-      var d = new Date(m + '-02');
-      var label = d.toLocaleDateString('en-PH', { month: 'long', year: 'numeric' });
-      allMonthItems.push({ key: m, label: label, count: recs.length, isLive: false });
-    });
-
-    if(!allMonthItems.length){
-      list.innerHTML = '';
-      empty.style.display = '';
-      return;
-    }
-
-    allMonthItems.forEach(function(item){
-      var row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1px solid var(--border);border-radius:4px;cursor:pointer;transition:all 0.15s;background:rgba(255,255,255,0.02)';
-      row.onmouseover = function(){ this.style.background = 'rgba(61,220,132,0.07)'; this.style.borderColor = 'rgba(61,220,132,0.4)'; };
-      row.onmouseout  = function(){ this.style.background = 'rgba(255,255,255,0.02)'; this.style.borderColor = 'var(--border)'; };
-
-      var left = document.createElement('div');
-      left.innerHTML = '<div style="font-family:Bebas Neue,sans-serif;font-size:17px;letter-spacing:0.08em;color:' + (item.isLive ? 'var(--teal)' : '#3ddc84') + '">'
-        + (item.isLive ? '📋 ' : '📅 ') + item.label + '</div>'
-        + '<div style="font-size:8px;color:var(--muted);margin-top:2px;letter-spacing:0.1em">'
-        + item.count + ' record' + (item.count !== 1 ? 's' : '')
-        + (item.isLive ? ' — not yet saved for day' : ' — archived')
-        + '</div>';
-
-      var dlBtn = document.createElement('button');
-      dlBtn.innerHTML = '⬇ Excel';
-      dlBtn.style.cssText = 'font-family:DM Mono,monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(61,220,132,0.1);border:1px solid rgba(61,220,132,0.4);color:#3ddc84;border-radius:3px;padding:7px 13px;cursor:pointer;white-space:nowrap';
-      dlBtn.onclick = function(e){
-        e.stopPropagation();
-        _downloadMonthRecords(item.key, item.label);
-      };
-
-      row.appendChild(left);
-      row.appendChild(dlBtn);
-      row.onclick = function(){ _downloadMonthRecords(item.key, item.label); };
-      list.appendChild(row);
-    });
-  });
-}
-window.openDownloadMonthModal = openDownloadMonthModal;
-
-function closeDownloadMonthModal(){
-  var backdrop = document.getElementById('downloadMonthBackdrop');
-  if(backdrop) backdrop.style.display = 'none';
-}
-window.closeDownloadMonthModal = closeDownloadMonthModal;
-
-function _downloadMonthRecords(monthKey, monthLabel){
-  if(typeof XLSX === 'undefined'){ showToast('⚠ Excel library not loaded'); return; }
-
-  var records;
-  if(monthKey === 'current'){
-    records = compiledRecords.slice();
-  } else {
-    records = (_allRecordsByMonth[monthKey] || []).slice();
-  }
-
-  if(!records.length){
-    showToast('⚠ No records found for ' + monthLabel);
-    return;
-  }
-
-  showToast('⏳ Preparing ' + records.length + ' record(s) for ' + monthLabel + '…');
-  closeDownloadMonthModal();
-
-  // Small delay so toast shows before heavy XLSX work
-  setTimeout(function(){
-    _doExportRecords(records, monthLabel);
-  }, 80);
-}
-window._downloadMonthRecords = _downloadMonthRecords;
-</script>
-
-<!-- ── Print by Month Modal (Desk 2 only) ── -->
-<div id="printMonthBackdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:9999;align-items:center;justify-content:center;backdrop-filter:blur(4px)">
-  <div style="background:#111118;border:1.5px solid rgba(36,113,163,0.45);border-radius:6px;width:min(480px,95vw);max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.9);display:flex;flex-direction:column">
-
-    <!-- Header -->
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid rgba(36,113,163,0.2);background:rgba(36,113,163,0.07)">
-      <div style="display:flex;align-items:center;gap:9px">
-        <span style="font-size:18px">🖨️</span>
-        <div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:0.1em;color:#5dade2">PRINT RECORDS</div>
-          <div style="font-size:7.5px;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);margin-top:1px">SELECT A MONTH TO PRINT</div>
-        </div>
-      </div>
-      <button onclick="closePrintMonthModal()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:3px;padding:4px 10px;cursor:pointer;font-size:14px">✕</button>
-    </div>
-
-    <!-- Month list -->
-    <div style="padding:16px 18px;flex:1">
-      <div id="pmMonthList" style="display:flex;flex-direction:column;gap:8px"></div>
-      <div id="pmMonthEmpty" style="display:none;text-align:center;padding:28px;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted)">
-        No saved months found.<br>Run Save for Day first to archive records.
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<script>
-// ══════════════════════════════════════════════════════════
-//  PRINT BY MONTH — Desk 2 only
-// ══════════════════════════════════════════════════════════
-
-function openPrintMonthModal(){
-  var backdrop = document.getElementById('printMonthBackdrop');
-  var list     = document.getElementById('pmMonthList');
-  var empty    = document.getElementById('pmMonthEmpty');
-  if(!backdrop || !list) return;
-
-  list.innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:9px;letter-spacing:0.1em">Loading…</div>';
-  empty.style.display = 'none';
-  backdrop.style.display = 'flex';
-
-  rebuildCompiledRecords().then(function(){
-    list.innerHTML = '';
-    var months = Object.keys(_allRecordsByMonth).sort().reverse();
-    var items = [];
-
-    if(compiledRecords.length){
-      items.push({ key: 'current', label: 'Current — Unsaved', count: compiledRecords.length, isLive: true });
-    }
-    months.forEach(function(m){
-      var recs = _allRecordsByMonth[m] || [];
-      if(!recs.length) return;
-      var d = new Date(m + '-02');
-      var label = d.toLocaleDateString('en-PH', { month: 'long', year: 'numeric' });
-      items.push({ key: m, label: label, count: recs.length, isLive: false });
-    });
-
-    if(!items.length){
-      list.innerHTML = '';
-      empty.style.display = '';
-      return;
-    }
-
-    items.forEach(function(item){
-      var row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1px solid var(--border);border-radius:4px;cursor:pointer;transition:all 0.15s;background:rgba(255,255,255,0.02)';
-      row.onmouseover = function(){ this.style.background='rgba(36,113,163,0.08)'; this.style.borderColor='rgba(36,113,163,0.4)'; };
-      row.onmouseout  = function(){ this.style.background='rgba(255,255,255,0.02)'; this.style.borderColor='var(--border)'; };
-
-      var left = document.createElement('div');
-      left.innerHTML = '<div style="font-family:Bebas Neue,sans-serif;font-size:17px;letter-spacing:0.08em;color:' + (item.isLive ? 'var(--teal)' : '#5dade2') + '">'
-        + (item.isLive ? '📋 ' : '📅 ') + item.label + '</div>'
-        + '<div style="font-size:8px;color:var(--muted);margin-top:2px;letter-spacing:0.1em">'
-        + item.count + ' record' + (item.count !== 1 ? 's' : '')
-        + (item.isLive ? ' — not yet saved for day' : ' — archived')
-        + '</div>';
-
-      var pBtn = document.createElement('button');
-      pBtn.innerHTML = '🖨 Print';
-      pBtn.style.cssText = 'font-family:DM Mono,monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;background:rgba(36,113,163,0.1);border:1px solid rgba(36,113,163,0.4);color:#5dade2;border-radius:3px;padding:7px 13px;cursor:pointer;white-space:nowrap';
-      pBtn.onclick = function(e){
-        e.stopPropagation();
-        _printMonthRecords(item.key, item.label);
-      };
-
-      row.appendChild(left);
-      row.appendChild(pBtn);
-      row.onclick = function(){ _printMonthRecords(item.key, item.label); };
-      list.appendChild(row);
-    });
-  });
-}
-window.openPrintMonthModal = openPrintMonthModal;
-
-function closePrintMonthModal(){
-  var b = document.getElementById('printMonthBackdrop');
-  if(b) b.style.display = 'none';
-}
-window.closePrintMonthModal = closePrintMonthModal;
-
-function _printMonthRecords(monthKey, monthLabel){
-  var records = monthKey === 'current'
-    ? compiledRecords.slice()
-    : (_allRecordsByMonth[monthKey] || []).slice();
-
-  if(!records.length){ showToast('⚠ No records found for ' + monthLabel); return; }
-  closePrintMonthModal();
-  setTimeout(function(){ _doPrintRecords(records, monthLabel); }, 80);
-}
-window._printMonthRecords = _printMonthRecords;
-</script>
 </body>
 </html>
